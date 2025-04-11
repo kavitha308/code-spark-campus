@@ -14,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 258 84% 75%;
+    --primary: 262 83% 65%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -23,7 +23,7 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 258 55% 70%;
+    --accent: 262 83% 65%;
     --accent-foreground: 222 47% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -31,18 +31,18 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 258 84% 75%;
+    --ring: 262 83% 65%;
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 258 84% 75%;
+    --sidebar-primary: 262 83% 65%;
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 258 84% 75%;
+    --sidebar-ring: 262 83% 65%;
   }
 
   .dark {
@@ -55,7 +55,7 @@
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 258 84% 75%;
+    --primary: 262 83% 65%;
     --primary-foreground: 222 47% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -64,7 +64,7 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 258 55% 70%;
+    --accent: 262 83% 65%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -72,16 +72,16 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 258 84% 75%;
+    --ring: 262 83% 65%;
     
     --sidebar-background: 222 47% 11%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 258 84% 75%;
+    --sidebar-primary: 262 83% 65%;
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 215 25% 27%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 215 25% 27%;
-    --sidebar-ring: 258 84% 75%;
+    --sidebar-ring: 262 83% 65%;
   }
 }
 
@@ -110,5 +110,37 @@
   
   .code-editor {
     @apply font-mono bg-gray-900 text-gray-100 p-4 rounded-md;
+  }
+  
+  .gradient-card {
+    @apply bg-gradient-to-br from-white to-purple-50 shadow-md hover:shadow-lg transition-all duration-300;
+  }
+  
+  .gradient-purple {
+    @apply bg-gradient-purple text-white;
+  }
+  
+  .gradient-blue {
+    @apply bg-gradient-blue text-white;
+  }
+  
+  .gradient-green {
+    @apply bg-gradient-green text-white;
+  }
+  
+  .gradient-pink {
+    @apply bg-gradient-pink text-white;
+  }
+  
+  .gradient-orange {
+    @apply bg-gradient-orange text-white;
+  }
+  
+  .gradient-yellow {
+    @apply bg-gradient-yellow text-white;
+  }
+  
+  .animate-hover {
+    @apply transition-all duration-300 hover:scale-105;
   }
 }

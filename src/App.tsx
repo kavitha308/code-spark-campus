@@ -12,6 +12,8 @@ import Assignments from "./pages/Assignments";
 import Profile from "./pages/Profile";
 import Leaderboard from "./pages/Leaderboard";
 import Auth from "./pages/Auth";
+import Performance from "./pages/Performance";
+import JobMatches from "./pages/JobMatches";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +73,18 @@ const App = () => (
           <Route path="/leaderboard" element={
             <ProtectedRoute>
               <Leaderboard />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/performance" element={
+            <ProtectedRoute>
+              <Performance />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/job-matches" element={
+            <ProtectedRoute>
+              <JobMatches />
             </ProtectedRoute>
           } />
           

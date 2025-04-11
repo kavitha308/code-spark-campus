@@ -3,15 +3,10 @@ import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
-  LayoutDashboard,
-  BookOpen,
-  Code,
-  PenTool,
-  User,
-  LogOut,
   BellRing,
-  Trophy,
+  LogOut,
   Settings,
+  User,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -23,11 +18,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
+import NavigationMenuDemo from "./NavigationMenu";
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const isActive = (path: string) => location.pathname === path;
 
   const handleLogout = () => {
     // In a real app, you would handle the logout process here
@@ -57,74 +52,18 @@ const Navbar = () => {
           </Link>
         </div>
 
-        <nav className="hidden md:flex items-center gap-6">
-          <Link
-            to="/"
-            className={`nav-link flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-              isActive("/") 
-                ? "bg-gradient-to-r from-campus-purple/20 to-campus-blue/20 text-campus-purple" 
-                : "hover:bg-purple-50"
-            }`}
-          >
-            <LayoutDashboard className="h-4 w-4" />
-            Dashboard
-          </Link>
-          <Link
-            to="/courses"
-            className={`nav-link flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-              isActive("/courses") 
-                ? "bg-gradient-to-r from-campus-purple/20 to-campus-blue/20 text-campus-purple" 
-                : "hover:bg-purple-50"
-            }`}
-          >
-            <BookOpen className="h-4 w-4" />
-            Courses
-          </Link>
-          <Link
-            to="/coding"
-            className={`nav-link flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-              isActive("/coding") 
-                ? "bg-gradient-to-r from-campus-purple/20 to-campus-blue/20 text-campus-purple" 
-                : "hover:bg-purple-50"
-            }`}
-          >
-            <Code className="h-4 w-4" />
-            Coding
-          </Link>
-          <Link
-            to="/assignments"
-            className={`nav-link flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-              isActive("/assignments") 
-                ? "bg-gradient-to-r from-campus-purple/20 to-campus-blue/20 text-campus-purple" 
-                : "hover:bg-purple-50"
-            }`}
-          >
-            <PenTool className="h-4 w-4" />
-            Assignments
-          </Link>
-          <Link
-            to="/leaderboard"
-            className={`nav-link flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-              isActive("/leaderboard") 
-                ? "bg-gradient-to-r from-campus-purple/20 to-campus-blue/20 text-campus-purple" 
-                : "hover:bg-purple-50"
-            }`}
-          >
-            <Trophy className="h-4 w-4" />
-            Leaderboard
-          </Link>
-        </nav>
+        <NavigationMenuDemo />
 
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
-            className="relative"
+            className="relative animate-hover"
             aria-label="Notifications"
             onClick={handleNotificationClick}
           >
             <BellRing className="h-5 w-5" />
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-red-500 text-white text-xs">
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-campus-red text-white text-xs">
               3
             </Badge>
           </Button>
@@ -133,11 +72,11 @@ const Navbar = () => {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="relative h-10 w-10 rounded-full"
+                className="relative h-10 w-10 rounded-full animate-hover"
               >
                 <Avatar>
                   <AvatarImage src="" alt="User" />
-                  <AvatarFallback className="bg-gradient-to-br from-campus-purple to-campus-blue text-white">
+                  <AvatarFallback className="bg-gradient-purple text-white">
                     JD
                   </AvatarFallback>
                 </Avatar>
@@ -147,7 +86,7 @@ const Navbar = () => {
               <div className="flex items-center justify-start gap-2 p-2">
                 <Avatar>
                   <AvatarImage src="" alt="User" />
-                  <AvatarFallback className="bg-gradient-to-br from-campus-purple to-campus-blue text-white">
+                  <AvatarFallback className="bg-gradient-purple text-white">
                     JD
                   </AvatarFallback>
                 </Avatar>

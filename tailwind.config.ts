@@ -64,12 +64,27 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         campus: {
-          purple: "#9b87f5",
-          "deep-purple": "#7E69AB",
-          "dark-purple": "#6E59A5",
-          blue: "#4a5568",
-          "deep-blue": "#2d3748",
+          purple: "#8B5CF6", // Brighter, more vibrant purple
+          "deep-purple": "#7C3AED",
+          "dark-purple": "#6D28D9",
+          blue: "#4F46E5", // Brighter blue
+          "deep-blue": "#4338CA",
+          "light-blue": "#60A5FA",
+          green: "#10B981", // Added green
+          yellow: "#FBBF24", // Added yellow
+          orange: "#F97316", // Added orange
+          pink: "#EC4899", // Added pink
+          red: "#EF4444", // Added red
         },
+      },
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "gradient-purple": "linear-gradient(to right, #8B5CF6, #4F46E5)",
+        "gradient-blue": "linear-gradient(to right, #60A5FA, #4F46E5)",
+        "gradient-green": "linear-gradient(to right, #10B981, #059669)",
+        "gradient-pink": "linear-gradient(to right, #EC4899, #DB2777)",
+        "gradient-orange": "linear-gradient(to right, #F97316, #EA580C)",
+        "gradient-yellow": "linear-gradient(to right, #FBBF24, #D97706)",
       },
       borderRadius: {
         lg: "var(--radius)",

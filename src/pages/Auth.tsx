@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/use-toast";
-import { Code, LucideGraduationCap, UserPlus, LogIn } from "lucide-react";
+import { Code, LucideGraduationCap, UserPlus, LogIn, UserCog } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -16,6 +16,7 @@ const Auth = () => {
   const [loginData, setLoginData] = useState({
     email: "",
     password: "",
+    userType: "student", // student, teacher, admin
   });
   
   const [registerData, setRegisterData] = useState({
@@ -23,17 +24,18 @@ const Auth = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    userType: "student", // student, faculty, admin
+    userType: "student", // student, teacher, admin
   });
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
     // In a real app, you would validate and authenticate
-    // For demo purposes, we'll just navigate to dashboard
+    // For demo purposes, we'll just navigate to dashboard with a toast message
     toast({
-      title: "Login successful",
-      description: "Welcome back to Campus Bridge!",
+      title: `Logged in as ${loginData.userType}`,
+      description: `Welcome back to Campus Bridge! You are now logged in as a ${loginData.userType}.`,
+      variant: "default",
     });
     
     navigate("/");
@@ -46,39 +48,39 @@ const Auth = () => {
     // For demo purposes, we'll just show a success message
     toast({
       title: "Registration successful",
-      description: "Your account has been created. You can now log in.",
+      description: `Your account has been created as a ${registerData.userType}. You can now log in.`,
+      variant: "default",
     });
     
     setActiveTab("login");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-purple-50 to-blue-50 p-4">
-      <div className="absolute top-0 right-0 -z-10 h-[300px] w-[300px] rounded-full bg-purple-200 opacity-20 blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 -z-10 h-[250px] w-[250px] rounded-full bg-blue-200 opacity-20 blur-3xl"></div>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[url('https://images.unsplash.com/photo-1588075592446-265fd1e6e76f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2072&q=80')] bg-cover bg-center bg-no-repeat">
+      <div className="absolute inset-0 bg-gradient-to-br from-campus-purple/80 to-campus-blue/80 backdrop-blur-sm"></div>
       
-      <div className="w-full max-w-md">
+      <div className="relative w-full max-w-md z-10">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-2">
-            <div className="p-3 rounded-full bg-gradient-to-br from-campus-purple to-campus-blue">
-              <LucideGraduationCap className="h-8 w-8 text-white" />
+            <div className="p-3 rounded-full bg-white shadow-lg">
+              <LucideGraduationCap className="h-8 w-8 text-campus-purple" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-campus-purple to-campus-blue bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-white drop-shadow-md">
             Campus Bridge
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-white/90 mt-1 drop-shadow-md">
             Your integrated academic and coding platform
           </p>
         </div>
 
-        <Card className="border-purple-100 shadow-lg shadow-purple-100/20">
+        <Card className="backdrop-blur-md bg-white/90 border-white/20 shadow-2xl animate-fade-in">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-2 bg-purple-100 text-purple-800">
-              <TabsTrigger value="login" className="data-[state=active]:bg-white">
+            <TabsList className="grid grid-cols-2 bg-campus-purple/10 text-campus-purple">
+              <TabsTrigger value="login" className="data-[state=active]:bg-white data-[state=active]:text-campus-purple">
                 <LogIn className="h-4 w-4 mr-1" /> Log In
               </TabsTrigger>
-              <TabsTrigger value="register" className="data-[state=active]:bg-white">
+              <TabsTrigger value="register" className="data-[state=active]:bg-white data-[state=active]:text-campus-purple">
                 <UserPlus className="h-4 w-4 mr-1" /> Register
               </TabsTrigger>
             </TabsList>
@@ -101,6 +103,7 @@ const Auth = () => {
                       value={loginData.email}
                       onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                       required
+                      className="bg-white"
                     />
                   </div>
                   <div className="space-y-2">
@@ -116,11 +119,50 @@ const Auth = () => {
                       value={loginData.password}
                       onChange={(e) => setLoginData({...loginData, password: e.target.value})}
                       required
+                      className="bg-white"
                     />
+                  </div>
+                  <div className="space-y-2 pt-2">
+                    <Label>I am a</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button
+                        type="button"
+                        variant={loginData.userType === "student" ? "default" : "outline"}
+                        className={`${loginData.userType === "student" ? "gradient-purple" : ""}`}
+                        onClick={() => setLoginData({...loginData, userType: "student"})}
+                      >
+                        <LucideGraduationCap className="h-4 w-4 mr-1" />
+                        Student
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={loginData.userType === "teacher" ? "default" : "outline"}
+                        className={`${loginData.userType === "teacher" ? "gradient-blue" : ""}`}
+                        onClick={() => setLoginData({...loginData, userType: "teacher"})}
+                      >
+                        <Code className="h-4 w-4 mr-1" />
+                        Teacher
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={loginData.userType === "admin" ? "default" : "outline"}
+                        className={`${loginData.userType === "admin" ? "gradient-green" : ""}`}
+                        onClick={() => setLoginData({...loginData, userType: "admin"})}
+                      >
+                        <UserCog className="h-4 w-4 mr-1" />
+                        Admin
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button type="submit" className="w-full bg-gradient-to-r from-campus-purple to-campus-blue">
+                  <Button 
+                    type="submit" 
+                    className={`w-full ${
+                      loginData.userType === "student" ? "gradient-purple" :
+                      loginData.userType === "teacher" ? "gradient-blue" : "gradient-green"
+                    } animate-hover`}
+                  >
                     Log In
                   </Button>
                 </CardFooter>
@@ -144,6 +186,7 @@ const Auth = () => {
                       value={registerData.name}
                       onChange={(e) => setRegisterData({...registerData, name: e.target.value})}
                       required
+                      className="bg-white"
                     />
                   </div>
                   <div className="space-y-2">
@@ -155,6 +198,7 @@ const Auth = () => {
                       value={registerData.email}
                       onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
                       required
+                      className="bg-white"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -166,6 +210,7 @@ const Auth = () => {
                         value={registerData.password}
                         onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
                         required
+                        className="bg-white"
                       />
                     </div>
                     <div className="space-y-2">
@@ -176,6 +221,7 @@ const Auth = () => {
                         value={registerData.confirmPassword}
                         onChange={(e) => setRegisterData({...registerData, confirmPassword: e.target.value})}
                         required
+                        className="bg-white"
                       />
                     </div>
                   </div>
@@ -185,7 +231,7 @@ const Auth = () => {
                       <Button
                         type="button"
                         variant={registerData.userType === "student" ? "default" : "outline"}
-                        className={`${registerData.userType === "student" ? "bg-gradient-to-r from-campus-purple to-campus-blue" : ""}`}
+                        className={`${registerData.userType === "student" ? "gradient-purple" : ""}`}
                         onClick={() => setRegisterData({...registerData, userType: "student"})}
                       >
                         <LucideGraduationCap className="h-4 w-4 mr-1" />
@@ -193,27 +239,33 @@ const Auth = () => {
                       </Button>
                       <Button
                         type="button"
-                        variant={registerData.userType === "faculty" ? "default" : "outline"}
-                        className={`${registerData.userType === "faculty" ? "bg-gradient-to-r from-campus-purple to-campus-blue" : ""}`}
-                        onClick={() => setRegisterData({...registerData, userType: "faculty"})}
+                        variant={registerData.userType === "teacher" ? "default" : "outline"}
+                        className={`${registerData.userType === "teacher" ? "gradient-blue" : ""}`}
+                        onClick={() => setRegisterData({...registerData, userType: "teacher"})}
                       >
                         <Code className="h-4 w-4 mr-1" />
-                        Faculty
+                        Teacher
                       </Button>
                       <Button
                         type="button"
                         variant={registerData.userType === "admin" ? "default" : "outline"}
-                        className={`${registerData.userType === "admin" ? "bg-gradient-to-r from-campus-purple to-campus-blue" : ""}`}
+                        className={`${registerData.userType === "admin" ? "gradient-green" : ""}`}
                         onClick={() => setRegisterData({...registerData, userType: "admin"})}
                       >
-                        <UserPlus className="h-4 w-4 mr-1" />
+                        <UserCog className="h-4 w-4 mr-1" />
                         Admin
                       </Button>
                     </div>
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button type="submit" className="w-full bg-gradient-to-r from-campus-purple to-campus-blue">
+                  <Button 
+                    type="submit" 
+                    className={`w-full ${
+                      registerData.userType === "student" ? "gradient-purple" :
+                      registerData.userType === "teacher" ? "gradient-blue" : "gradient-green"
+                    } animate-hover`}
+                  >
                     Create Account
                   </Button>
                 </CardFooter>

@@ -13,6 +13,12 @@ import {
   Settings,
   Trophy,
   Bell,
+  BarChart3,
+  Calendar,
+  FileCheck,
+  Users,
+  MessageSquare,
+  Briefcase,
 } from "lucide-react";
 import {
   Sheet,
@@ -26,6 +32,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const MobileNav = () => {
   const [open, setOpen] = useState(false);
@@ -74,7 +86,7 @@ const MobileNav = () => {
               <div className="flex items-center gap-3">
                 <Avatar>
                   <AvatarImage src="" alt="User" />
-                  <AvatarFallback className="bg-gradient-to-br from-campus-purple to-campus-blue text-white">
+                  <AvatarFallback className="bg-gradient-purple text-white">
                     JD
                   </AvatarFallback>
                 </Avatar>
@@ -85,65 +97,164 @@ const MobileNav = () => {
               </div>
             </div>
             
-            <div className="flex-1 overflow-auto px-6 py-4">
-              <div className="mb-4">
-                <div className="text-xs uppercase text-muted-foreground font-semibold tracking-wider mb-2">
-                  Main Menu
-                </div>
-                <nav className="flex flex-col gap-1">
-                  <Button
-                    variant="ghost"
-                    className={`justify-start ${isActive("/") ? "bg-purple-100 text-campus-purple" : ""}`}
-                    onClick={() => handleNavigation("/")}
-                  >
-                    <LayoutDashboard className="h-5 w-5 mr-2" />
-                    Dashboard
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className={`justify-start ${isActive("/courses") ? "bg-purple-100 text-campus-purple" : ""}`}
-                    onClick={() => handleNavigation("/courses")}
-                  >
-                    <BookOpen className="h-5 w-5 mr-2" />
-                    Courses
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className={`justify-start ${isActive("/coding") ? "bg-purple-100 text-campus-purple" : ""}`}
-                    onClick={() => handleNavigation("/coding")}
-                  >
-                    <Code className="h-5 w-5 mr-2" />
-                    Coding
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className={`justify-start ${isActive("/assignments") ? "bg-purple-100 text-campus-purple" : ""}`}
-                    onClick={() => handleNavigation("/assignments")}
-                  >
-                    <PenTool className="h-5 w-5 mr-2" />
-                    Assignments
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className={`justify-start ${isActive("/leaderboard") ? "bg-purple-100 text-campus-purple" : ""}`}
-                    onClick={() => handleNavigation("/leaderboard")}
-                  >
-                    <Trophy className="h-5 w-5 mr-2" />
-                    Leaderboard
-                  </Button>
-                </nav>
+            <div className="flex-1 overflow-auto px-2 py-4">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="dashboard">
+                  <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/") ? "bg-purple-100 text-campus-purple" : ""}`}>
+                    <div className="flex items-center gap-2">
+                      <LayoutDashboard className="h-5 w-5" />
+                      <span>Dashboard</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pl-9 space-y-1">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/")}
+                      >
+                        Overview
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/performance")}
+                      >
+                        <BarChart3 className="h-4 w-4 mr-2" />
+                        Performance Analytics
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/calendar")}
+                      >
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Calendar
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/attendance")}
+                      >
+                        <FileCheck className="h-4 w-4 mr-2" />
+                        Attendance
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                
+                <AccordionItem value="academics">
+                  <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/courses") ? "bg-purple-100 text-campus-purple" : ""}`}>
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5" />
+                      <span>Academics</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pl-9 space-y-1">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/courses")}
+                      >
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Courses
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/assignments")}
+                      >
+                        <PenTool className="h-4 w-4 mr-2" />
+                        Assignments
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/faculty")}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Faculty
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/discussions")}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Discussions
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                
+                <AccordionItem value="coding">
+                  <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/coding") ? "bg-purple-100 text-campus-purple" : ""}`}>
+                    <div className="flex items-center gap-2">
+                      <Code className="h-5 w-5" />
+                      <span>Coding</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pl-9 space-y-1">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/coding")}
+                      >
+                        <Code className="h-4 w-4 mr-2" />
+                        Code Editor
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/coding-challenges")}
+                      >
+                        <PenTool className="h-4 w-4 mr-2" />
+                        Challenges
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/leaderboard")}
+                      >
+                        <Trophy className="h-4 w-4 mr-2" />
+                        Leaderboard
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/job-matches")}
+                      >
+                        <Briefcase className="h-4 w-4 mr-2" />
+                        Job Matches
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+              
+              <div className="mt-2">
+                <Button 
+                  variant="ghost" 
+                  className={`w-full justify-start px-4 py-2 ${isActive("/leaderboard") ? "bg-purple-100 text-campus-purple" : ""}`}
+                  onClick={() => handleNavigation("/leaderboard")}
+                >
+                  <Trophy className="h-5 w-5 mr-2" />
+                  Leaderboard
+                </Button>
               </div>
               
               <Separator className="my-4" />
               
               <div>
-                <div className="text-xs uppercase text-muted-foreground font-semibold tracking-wider mb-2">
+                <div className="text-xs uppercase text-muted-foreground font-semibold tracking-wider mb-2 px-4">
                   Account
                 </div>
                 <nav className="flex flex-col gap-1">
                   <Button
                     variant="ghost"
-                    className={`justify-start ${isActive("/profile") ? "bg-purple-100 text-campus-purple" : ""}`}
+                    className={`justify-start px-4 py-2 ${isActive("/profile") ? "bg-purple-100 text-campus-purple" : ""}`}
                     onClick={() => handleNavigation("/profile")}
                   >
                     <User className="h-5 w-5 mr-2" />
@@ -151,15 +262,15 @@ const MobileNav = () => {
                   </Button>
                   <Button
                     variant="ghost"
-                    className="justify-start"
+                    className="justify-start px-4 py-2"
                   >
                     <Bell className="h-5 w-5 mr-2" />
                     Notifications
-                    <Badge className="ml-auto bg-red-500">3</Badge>
+                    <Badge className="ml-auto bg-campus-red">3</Badge>
                   </Button>
                   <Button
                     variant="ghost"
-                    className="justify-start"
+                    className="justify-start px-4 py-2"
                   >
                     <Settings className="h-5 w-5 mr-2" />
                     Settings
