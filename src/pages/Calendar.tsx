@@ -2,7 +2,7 @@
 import React from "react";
 import PageLayout from "@/components/layout/PageLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar as CalendarIcon, Bookmark, Notification } from "lucide-react";
+import { Calendar as CalendarIcon, Bookmark, BellRing } from "lucide-react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 const Calendar = () => {
@@ -49,7 +49,7 @@ const Calendar = () => {
             <Card className="gradient-card">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Notification className="mr-2 h-5 w-5 text-campus-orange" />
+                  <BellRing className="mr-2 h-5 w-5 text-campus-orange" />
                   Upcoming Events
                 </CardTitle>
               </CardHeader>
