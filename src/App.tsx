@@ -99,7 +99,7 @@ const App = () => (
             </ProtectedRoute>
           } />
           
-          {/* New Pages */}
+          {/* Additional Pages */}
           <Route path="/calendar" element={
             <ProtectedRoute>
               <Calendar />

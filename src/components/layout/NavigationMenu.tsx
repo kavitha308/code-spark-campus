@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -11,253 +11,236 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import {
-  LayoutDashboard,
-  BookOpen,
+  BookOpenText,
   Code,
-  PenTool,
+  BarChart,
+  ListChecks,
+  CalendarDays,
+  UserCircle,
   Trophy,
-  UserPlus,
-  BarChart3,
-  Users,
-  Calendar,
-  FileCheck,
-  MessageSquare,
   Briefcase,
-  Home,
-  Layers,
-  Video,
+  LucideIcon,
+  Users,
+  GraduationCap,
+  MessageSquare,
+  Code2,
+  FileCode,
+  GitBranch,
+  MapPin,
+  Home
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+
+interface NavItem {
+  title: string;
+  path: string;
+  icon: LucideIcon;
+}
 
 const NavigationMenuDemo = () => {
-  const location = useLocation();
-  const isActive = (path: string) => location.pathname === path;
+  const academicItems: NavItem[] = [
+    {
+      title: "Courses",
+      path: "/courses",
+      icon: BookOpenText,
+    },
+    {
+      title: "Assignments",
+      path: "/assignments",
+      icon: ListChecks,
+    },
+    {
+      title: "Calendar",
+      path: "/calendar",
+      icon: CalendarDays,
+    },
+    {
+      title: "Attendance",
+      path: "/attendance",
+      icon: BarChart,
+    },
+    {
+      title: "Faculty",
+      path: "/faculty",
+      icon: Users,
+    },
+    {
+      title: "Discussions",
+      path: "/discussions",
+      icon: MessageSquare,
+    },
+  ];
+
+  const codingItems: NavItem[] = [
+    {
+      title: "Practice",
+      path: "/coding",
+      icon: Code,
+    },
+    {
+      title: "Challenges",
+      path: "/coding-challenges",
+      icon: Code2,
+    },
+    {
+      title: "Live Coding",
+      path: "/live-coding",
+      icon: FileCode,
+    },
+    {
+      title: "Learning Paths",
+      path: "/learning-paths",
+      icon: GitBranch,
+    },
+  ];
+
+  const careerItems: NavItem[] = [
+    {
+      title: "Performance",
+      path: "/performance",
+      icon: BarChart,
+    },
+    {
+      title: "Leaderboard",
+      path: "/leaderboard",
+      icon: Trophy,
+    },
+    {
+      title: "Job Matches",
+      path: "/job-matches",
+      icon: Briefcase,
+    },
+  ];
 
   return (
     <NavigationMenu className="hidden md:flex">
       <NavigationMenuList>
         <NavigationMenuItem>
-          <NavigationMenuLink
-            asChild
-            className={cn(
-              navigationMenuTriggerStyle(),
-              isActive("/") ? "bg-purple-100 text-campus-purple" : ""
-            )}
-          >
-            <Link to="/">
-              <Home className="w-4 h-4 mr-1" /> Home
-            </Link>
-          </NavigationMenuLink>
+          <Link to="/">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              <Home className="mr-2 h-4 w-4" />
+              Home
+            </NavigationMenuLink>
+          </Link>
         </NavigationMenuItem>
         
         <NavigationMenuItem>
-          <NavigationMenuTrigger
-            className={isActive("/dashboard") ? "bg-purple-100 text-campus-purple" : ""}
-          >
-            <LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard
-          </NavigationMenuTrigger>
-          <NavigationMenuContent className="bg-white">
-            <ul className="grid gap-3 p-4 w-[400px] md:w-[500px] lg:w-[600px] grid-cols-2">
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link
-                    to="/dashboard"
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-blue/20 to-campus-purple/20 p-6 no-underline outline-none focus:shadow-md"
-                  >
-                    <LayoutDashboard className="h-6 w-6 text-campus-purple" />
-                    <div className="mb-2 mt-4 text-lg font-medium">Overview</div>
-                    <p className="text-sm text-muted-foreground">
-                      View your academic and coding progress at a glance
-                    </p>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link
-                    to="/performance"
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-green/20 to-campus-blue/20 p-6 no-underline outline-none focus:shadow-md"
-                  >
-                    <BarChart3 className="h-6 w-6 text-campus-blue" />
-                    <div className="mb-2 mt-4 text-lg font-medium">Performance Analytics</div>
-                    <p className="text-sm text-muted-foreground">
-                      Detailed insights into your academic and coding metrics
-                    </p>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link
-                    to="/calendar"
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-yellow/20 to-campus-orange/20 p-6 no-underline outline-none focus:shadow-md"
-                  >
-                    <Calendar className="h-6 w-6 text-campus-orange" />
-                    <div className="mb-2 mt-4 text-lg font-medium">Calendar</div>
-                    <p className="text-sm text-muted-foreground">
-                      View upcoming classes, deadlines and events
-                    </p>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link
-                    to="/attendance"
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-pink/20 to-campus-purple/20 p-6 no-underline outline-none focus:shadow-md"
-                  >
-                    <FileCheck className="h-6 w-6 text-campus-pink" />
-                    <div className="mb-2 mt-4 text-lg font-medium">Attendance</div>
-                    <p className="text-sm text-muted-foreground">
-                      Monitor your attendance records and history
-                    </p>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-            </ul>
-          </NavigationMenuContent>
+          <Link to="/dashboard">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              <BarChart className="mr-2 h-4 w-4" />
+              Dashboard
+            </NavigationMenuLink>
+          </Link>
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <NavigationMenuTrigger
-            className={isActive("/courses") ? "bg-purple-100 text-campus-purple" : ""}
-          >
-            <BookOpen className="w-4 h-4 mr-1" /> Academics
-          </NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] lg:w-[600px] grid-cols-2">
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link to="/courses" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
-                    <BookOpen className="h-5 w-5 text-campus-green" />
-                    <div>
-                      <div className="font-medium">Courses</div>
-                      <p className="text-sm text-muted-foreground">Access all your enrolled courses</p>
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link to="/assignments" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
-                    <PenTool className="h-5 w-5 text-campus-purple" />
-                    <div>
-                      <div className="font-medium">Assignments</div>
-                      <p className="text-sm text-muted-foreground">View and submit assignments</p>
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link to="/faculty" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
-                    <Users className="h-5 w-5 text-campus-blue" />
-                    <div>
-                      <div className="font-medium">Faculty</div>
-                      <p className="text-sm text-muted-foreground">Connect with professors and instructors</p>
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link to="/discussions" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
-                    <MessageSquare className="h-5 w-5 text-campus-orange" />
-                    <div>
-                      <div className="font-medium">Discussions</div>
-                      <p className="text-sm text-muted-foreground">Participate in course discussions</p>
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-            </ul>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
-
-        <NavigationMenuItem>
-          <NavigationMenuTrigger
-            className={isActive("/coding") ? "bg-purple-100 text-campus-purple" : ""}
-          >
-            <Code className="w-4 h-4 mr-1" /> Coding
+          <NavigationMenuTrigger>
+            <GraduationCap className="mr-2 h-4 w-4" />
+            Academic
           </NavigationMenuTrigger>
           <NavigationMenuContent>
             <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link to="/coding" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
-                    <Code className="h-5 w-5 text-campus-blue" />
-                    <div>
-                      <div className="font-medium">Code Editor</div>
-                      <p className="text-sm text-muted-foreground">Practice coding with our online editor</p>
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link to="/coding-challenges" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
-                    <PenTool className="h-5 w-5 text-campus-green" />
-                    <div>
-                      <div className="font-medium">Challenges</div>
-                      <p className="text-sm text-muted-foreground">Solve coding challenges and problems</p>
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link to="/leaderboard" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
-                    <Trophy className="h-5 w-5 text-campus-orange" />
-                    <div>
-                      <div className="font-medium">Leaderboard</div>
-                      <p className="text-sm text-muted-foreground">See how you rank among peers</p>
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link to="/job-matches" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
-                    <Briefcase className="h-5 w-5 text-campus-pink" />
-                    <div>
-                      <div className="font-medium">Job Matches</div>
-                      <p className="text-sm text-muted-foreground">Find job opportunities that match your skills</p>
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link to="/live-coding" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
-                    <Video className="h-5 w-5 text-campus-purple" />
-                    <div>
-                      <div className="font-medium">Live Coding</div>
-                      <p className="text-sm text-muted-foreground">Collaborate in real-time with peers</p>
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link to="/learning-paths" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
-                    <Layers className="h-5 w-5 text-campus-blue" />
-                    <div>
-                      <div className="font-medium">Learning Paths</div>
-                      <p className="text-sm text-muted-foreground">Structured learning for skill development</p>
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
+              {academicItems.map((item) => (
+                <li key={item.title}>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      to={item.path}
+                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                    >
+                      <div className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4 text-campus-purple" />
+                        <div className="text-sm font-medium leading-none">
+                          {item.title}
+                        </div>
+                      </div>
+                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                        Access and manage your {item.title.toLowerCase()}.
+                      </p>
+                    </Link>
+                  </NavigationMenuLink>
+                </li>
+              ))}
             </ul>
           </NavigationMenuContent>
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <Link to="/leaderboard" className={cn(
-            navigationMenuTriggerStyle(),
-            isActive("/leaderboard") ? "bg-purple-100 text-campus-purple" : ""
-          )}>
-            <Trophy className="w-4 h-4 mr-1" /> Leaderboard
+          <NavigationMenuTrigger>
+            <Code className="mr-2 h-4 w-4" />
+            Coding
+          </NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+              {codingItems.map((item) => (
+                <li key={item.title}>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      to={item.path}
+                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                    >
+                      <div className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4 text-campus-blue" />
+                        <div className="text-sm font-medium leading-none">
+                          {item.title}
+                        </div>
+                      </div>
+                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                        {item.title === "Practice"
+                          ? "Practice coding with interactive challenges."
+                          : item.title === "Challenges"
+                          ? "Test your skills with competitive challenges."
+                          : item.title === "Live Coding"
+                          ? "Collaborate and code in real-time."
+                          : "Follow structured paths to improve your skills."}
+                      </p>
+                    </Link>
+                  </NavigationMenuLink>
+                </li>
+              ))}
+            </ul>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>
+            <MapPin className="mr-2 h-4 w-4" />
+            Career
+          </NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+              {careerItems.map((item) => (
+                <li key={item.title}>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      to={item.path}
+                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                    >
+                      <div className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4 text-campus-green" />
+                        <div className="text-sm font-medium leading-none">
+                          {item.title}
+                        </div>
+                      </div>
+                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                        {item.title === "Performance"
+                          ? "Track your academic and coding performance."
+                          : item.title === "Leaderboard"
+                          ? "See how you rank among your peers."
+                          : "Find job opportunities matching your skills."}
+                      </p>
+                    </Link>
+                  </NavigationMenuLink>
+                </li>
+              ))}
+            </ul>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+          <Link to="/profile">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              <UserCircle className="mr-2 h-4 w-4" />
+              Profile
+            </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
       </NavigationMenuList>
