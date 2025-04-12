@@ -19,6 +19,9 @@ import {
   Users,
   MessageSquare,
   Briefcase,
+  Home,
+  Layers,
+  Video,
 } from "lucide-react";
 import {
   Sheet,
@@ -98,9 +101,18 @@ const MobileNav = () => {
             </div>
             
             <div className="flex-1 overflow-auto px-2 py-4">
+              <Button 
+                variant="ghost" 
+                className={`w-full justify-start px-4 py-2 ${isActive("/") ? "bg-purple-100 text-campus-purple" : ""}`}
+                onClick={() => handleNavigation("/")}
+              >
+                <Home className="h-5 w-5 mr-2" />
+                Home
+              </Button>
+            
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="dashboard">
-                  <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/") ? "bg-purple-100 text-campus-purple" : ""}`}>
+                  <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/dashboard") ? "bg-purple-100 text-campus-purple" : ""}`}>
                     <div className="flex items-center gap-2">
                       <LayoutDashboard className="h-5 w-5" />
                       <span>Dashboard</span>
@@ -111,7 +123,7 @@ const MobileNav = () => {
                       <Button 
                         variant="ghost" 
                         className="w-full justify-start"
-                        onClick={() => handleNavigation("/")}
+                        onClick={() => handleNavigation("/dashboard")}
                       >
                         Overview
                       </Button>
@@ -212,6 +224,22 @@ const MobileNav = () => {
                       >
                         <PenTool className="h-4 w-4 mr-2" />
                         Challenges
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/live-coding")}
+                      >
+                        <Video className="h-4 w-4 mr-2" />
+                        Live Coding
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/learning-paths")}
+                      >
+                        <Layers className="h-4 w-4 mr-2" />
+                        Learning Paths
                       </Button>
                       <Button 
                         variant="ghost" 

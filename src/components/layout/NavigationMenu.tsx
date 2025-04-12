@@ -23,6 +23,9 @@ import {
   FileCheck,
   MessageSquare,
   Briefcase,
+  Home,
+  Layers,
+  Video,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,8 +37,22 @@ const NavigationMenuDemo = () => {
     <NavigationMenu className="hidden md:flex">
       <NavigationMenuList>
         <NavigationMenuItem>
+          <NavigationMenuLink
+            asChild
+            className={cn(
+              navigationMenuTriggerStyle(),
+              isActive("/") ? "bg-purple-100 text-campus-purple" : ""
+            )}
+          >
+            <Link to="/">
+              <Home className="w-4 h-4 mr-1" /> Home
+            </Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+        
+        <NavigationMenuItem>
           <NavigationMenuTrigger
-            className={isActive("/") ? "bg-purple-100 text-campus-purple" : ""}
+            className={isActive("/dashboard") ? "bg-purple-100 text-campus-purple" : ""}
           >
             <LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard
           </NavigationMenuTrigger>
@@ -44,7 +61,7 @@ const NavigationMenuDemo = () => {
               <li>
                 <NavigationMenuLink asChild>
                   <Link
-                    to="/"
+                    to="/dashboard"
                     className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-blue/20 to-campus-purple/20 p-6 no-underline outline-none focus:shadow-md"
                   >
                     <LayoutDashboard className="h-6 w-6 text-campus-purple" />
@@ -205,6 +222,28 @@ const NavigationMenuDemo = () => {
                     <div>
                       <div className="font-medium">Job Matches</div>
                       <p className="text-sm text-muted-foreground">Find job opportunities that match your skills</p>
+                    </div>
+                  </Link>
+                </NavigationMenuLink>
+              </li>
+              <li>
+                <NavigationMenuLink asChild>
+                  <Link to="/live-coding" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
+                    <Video className="h-5 w-5 text-campus-purple" />
+                    <div>
+                      <div className="font-medium">Live Coding</div>
+                      <p className="text-sm text-muted-foreground">Collaborate in real-time with peers</p>
+                    </div>
+                  </Link>
+                </NavigationMenuLink>
+              </li>
+              <li>
+                <NavigationMenuLink asChild>
+                  <Link to="/learning-paths" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
+                    <Layers className="h-5 w-5 text-campus-blue" />
+                    <div>
+                      <div className="font-medium">Learning Paths</div>
+                      <p className="text-sm text-muted-foreground">Structured learning for skill development</p>
                     </div>
                   </Link>
                 </NavigationMenuLink>

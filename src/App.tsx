@@ -14,6 +14,14 @@ import Leaderboard from "./pages/Leaderboard";
 import Auth from "./pages/Auth";
 import Performance from "./pages/Performance";
 import JobMatches from "./pages/JobMatches";
+import Calendar from "./pages/Calendar";
+import Attendance from "./pages/Attendance";
+import Faculty from "./pages/Faculty";
+import Discussions from "./pages/Discussions";
+import CodingChallenges from "./pages/CodingChallenges";
+import LiveCoding from "./pages/LiveCoding";
+import LearningPaths from "./pages/LearningPaths";
+import Home from "./pages/Home";
 
 const queryClient = new QueryClient();
 
@@ -40,7 +48,10 @@ const App = () => (
         <Routes>
           <Route path="/auth" element={<Auth />} />
           
-          <Route path="/" element={
+          {/* Home page as the entry point */}
+          <Route path="/" element={<Home />} />
+          
+          <Route path="/dashboard" element={
             <ProtectedRoute>
               <Index />
             </ProtectedRoute>
@@ -85,6 +96,49 @@ const App = () => (
           <Route path="/job-matches" element={
             <ProtectedRoute>
               <JobMatches />
+            </ProtectedRoute>
+          } />
+          
+          {/* New Pages */}
+          <Route path="/calendar" element={
+            <ProtectedRoute>
+              <Calendar />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/attendance" element={
+            <ProtectedRoute>
+              <Attendance />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/faculty" element={
+            <ProtectedRoute>
+              <Faculty />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/discussions" element={
+            <ProtectedRoute>
+              <Discussions />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/coding-challenges" element={
+            <ProtectedRoute>
+              <CodingChallenges />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/live-coding" element={
+            <ProtectedRoute>
+              <LiveCoding />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/learning-paths" element={
+            <ProtectedRoute>
+              <LearningPaths />
             </ProtectedRoute>
           } />
           
