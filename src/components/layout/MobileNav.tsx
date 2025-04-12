@@ -1,232 +1,298 @@
 
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
-  BookOpenText,
+  LayoutDashboard,
+  BookOpen,
   Code,
-  BarChart,
-  ListChecks,
-  CalendarDays,
-  UserCircle,
-  Trophy,
-  Briefcase,
+  PenTool,
   Menu,
-  Home,
-  GraduationCap,
+  User,
+  LogOut,
+  Settings,
+  Trophy,
+  Bell,
+  BarChart3,
+  Calendar,
+  FileCheck,
   Users,
   MessageSquare,
-  Code2,
-  FileCode,
-  GitBranch,
-  MapPin,
+  Briefcase,
 } from "lucide-react";
-
-interface NavItem {
-  title: string;
-  path: string;
-  icon: React.ElementType;
-}
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "@/components/ui/use-toast";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const MobileNav = () => {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isActive = (path: string) => location.pathname === path;
 
-  const closeSheet = () => {
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setOpen(false);
+  };
+  
+  const handleLogout = () => {
+    // In a real app, you would handle the logout process here
+    toast({
+      title: "Logged out successfully",
+      description: "You have been logged out from your account.",
+    });
+    
+    navigate("/auth");
     setOpen(false);
   };
 
-  const academicItems: NavItem[] = [
-    {
-      title: "Courses",
-      path: "/courses",
-      icon: BookOpenText,
-    },
-    {
-      title: "Assignments",
-      path: "/assignments",
-      icon: ListChecks,
-    },
-    {
-      title: "Calendar",
-      path: "/calendar",
-      icon: CalendarDays,
-    },
-    {
-      title: "Attendance",
-      path: "/attendance",
-      icon: BarChart,
-    },
-    {
-      title: "Faculty",
-      path: "/faculty",
-      icon: Users,
-    },
-    {
-      title: "Discussions",
-      path: "/discussions",
-      icon: MessageSquare,
-    },
-  ];
-
-  const codingItems: NavItem[] = [
-    {
-      title: "Practice",
-      path: "/coding",
-      icon: Code,
-    },
-    {
-      title: "Challenges",
-      path: "/coding-challenges",
-      icon: Code2,
-    },
-    {
-      title: "Live Coding",
-      path: "/live-coding",
-      icon: FileCode,
-    },
-    {
-      title: "Learning Paths",
-      path: "/learning-paths",
-      icon: GitBranch,
-    },
-  ];
-
-  const careerItems: NavItem[] = [
-    {
-      title: "Performance",
-      path: "/performance",
-      icon: BarChart,
-    },
-    {
-      title: "Leaderboard",
-      path: "/leaderboard",
-      icon: Trophy,
-    },
-    {
-      title: "Job Matches",
-      path: "/job-matches",
-      icon: Briefcase,
-    },
-  ];
-
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="md:hidden"
-          aria-label="Menu"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="left" className="overflow-y-auto">
-        <div className="space-y-6 py-6">
-          <div className="space-y-3">
-            <Link
-              to="/"
-              className="flex items-center gap-2 font-semibold text-lg"
-              onClick={closeSheet}
-            >
-              <Home className="h-5 w-5 text-campus-purple" />
-              <span className="bg-gradient-to-r from-campus-purple to-campus-blue bg-clip-text text-transparent">
-                Home
-              </span>
-            </Link>
-            <Link
-              to="/dashboard"
-              className="flex items-center gap-2 font-semibold"
-              onClick={closeSheet}
-            >
-              <BarChart className="h-5 w-5 text-campus-blue" />
-              Dashboard
-            </Link>
+    <div className="md:hidden">
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Menu"
+            className="md:hidden"
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-[280px] sm:w-[300px] p-0">
+          <div className="h-full flex flex-col">
+            <SheetHeader className="px-6 py-4 border-b">
+              <SheetTitle className="text-left text-xl font-bold bg-gradient-to-r from-campus-purple to-campus-blue bg-clip-text text-transparent">
+                Campus Bridge
+              </SheetTitle>
+            </SheetHeader>
+            
+            <div className="px-6 py-4 border-b">
+              <div className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarImage src="" alt="User" />
+                  <AvatarFallback className="bg-gradient-purple text-white">
+                    JD
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="font-medium">John Doe</div>
+                  <div className="text-xs text-muted-foreground">john.doe@university.edu</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-auto px-2 py-4">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="dashboard">
+                  <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/") ? "bg-purple-100 text-campus-purple" : ""}`}>
+                    <div className="flex items-center gap-2">
+                      <LayoutDashboard className="h-5 w-5" />
+                      <span>Dashboard</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pl-9 space-y-1">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/")}
+                      >
+                        Overview
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/performance")}
+                      >
+                        <BarChart3 className="h-4 w-4 mr-2" />
+                        Performance Analytics
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/calendar")}
+                      >
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Calendar
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/attendance")}
+                      >
+                        <FileCheck className="h-4 w-4 mr-2" />
+                        Attendance
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                
+                <AccordionItem value="academics">
+                  <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/courses") ? "bg-purple-100 text-campus-purple" : ""}`}>
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5" />
+                      <span>Academics</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pl-9 space-y-1">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/courses")}
+                      >
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Courses
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/assignments")}
+                      >
+                        <PenTool className="h-4 w-4 mr-2" />
+                        Assignments
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/faculty")}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Faculty
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/discussions")}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Discussions
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                
+                <AccordionItem value="coding">
+                  <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/coding") ? "bg-purple-100 text-campus-purple" : ""}`}>
+                    <div className="flex items-center gap-2">
+                      <Code className="h-5 w-5" />
+                      <span>Coding</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pl-9 space-y-1">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/coding")}
+                      >
+                        <Code className="h-4 w-4 mr-2" />
+                        Code Editor
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/coding-challenges")}
+                      >
+                        <PenTool className="h-4 w-4 mr-2" />
+                        Challenges
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/leaderboard")}
+                      >
+                        <Trophy className="h-4 w-4 mr-2" />
+                        Leaderboard
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/job-matches")}
+                      >
+                        <Briefcase className="h-4 w-4 mr-2" />
+                        Job Matches
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+              
+              <div className="mt-2">
+                <Button 
+                  variant="ghost" 
+                  className={`w-full justify-start px-4 py-2 ${isActive("/leaderboard") ? "bg-purple-100 text-campus-purple" : ""}`}
+                  onClick={() => handleNavigation("/leaderboard")}
+                >
+                  <Trophy className="h-5 w-5 mr-2" />
+                  Leaderboard
+                </Button>
+              </div>
+              
+              <Separator className="my-4" />
+              
+              <div>
+                <div className="text-xs uppercase text-muted-foreground font-semibold tracking-wider mb-2 px-4">
+                  Account
+                </div>
+                <nav className="flex flex-col gap-1">
+                  <Button
+                    variant="ghost"
+                    className={`justify-start px-4 py-2 ${isActive("/profile") ? "bg-purple-100 text-campus-purple" : ""}`}
+                    onClick={() => handleNavigation("/profile")}
+                  >
+                    <User className="h-5 w-5 mr-2" />
+                    Profile
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="justify-start px-4 py-2"
+                  >
+                    <Bell className="h-5 w-5 mr-2" />
+                    Notifications
+                    <Badge className="ml-auto bg-campus-red">3</Badge>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="justify-start px-4 py-2"
+                  >
+                    <Settings className="h-5 w-5 mr-2" />
+                    Settings
+                  </Button>
+                </nav>
+              </div>
+            </div>
+            
+            <SheetFooter className="p-6 border-t">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-5 w-5 mr-2" />
+                Logout
+              </Button>
+            </SheetFooter>
           </div>
-
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="academics">
-              <AccordionTrigger className="flex items-center gap-2 font-semibold text-left">
-                <GraduationCap className="h-5 w-5 text-campus-purple" />
-                Academic
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-2 pl-6">
-                  {academicItems.map((item) => (
-                    <Link
-                      key={item.title}
-                      to={item.path}
-                      className="flex items-center gap-2 hover:text-campus-purple py-1"
-                      onClick={closeSheet}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.title}
-                    </Link>
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="coding">
-              <AccordionTrigger className="flex items-center gap-2 font-semibold text-left">
-                <Code className="h-5 w-5 text-campus-blue" />
-                Coding
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-2 pl-6">
-                  {codingItems.map((item) => (
-                    <Link
-                      key={item.title}
-                      to={item.path}
-                      className="flex items-center gap-2 hover:text-campus-blue py-1"
-                      onClick={closeSheet}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.title}
-                    </Link>
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="career">
-              <AccordionTrigger className="flex items-center gap-2 font-semibold text-left">
-                <MapPin className="h-5 w-5 text-campus-green" />
-                Career
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-2 pl-6">
-                  {careerItems.map((item) => (
-                    <Link
-                      key={item.title}
-                      to={item.path}
-                      className="flex items-center gap-2 hover:text-campus-green py-1"
-                      onClick={closeSheet}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.title}
-                    </Link>
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-
-          <div className="space-y-3">
-            <Link
-              to="/profile"
-              className="flex items-center gap-2 font-semibold"
-              onClick={closeSheet}
-            >
-              <UserCircle className="h-5 w-5 text-campus-orange" />
-              Profile
-            </Link>
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </SheetContent>
+      </Sheet>
+    </div>
   );
 };
 
