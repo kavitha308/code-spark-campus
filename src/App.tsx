@@ -78,7 +78,7 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       
-      <Route path="/assignments" element={
+      <Route path="/assignments/*" element={
         <ProtectedRoute>
           <Assignments />
         </ProtectedRoute>

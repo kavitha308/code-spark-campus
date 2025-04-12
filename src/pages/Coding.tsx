@@ -7,9 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Code, Brain, Users, ArrowRight, Star, Clock } from "lucide-react";
 import CodeEditor from "@/components/coding/CodeEditor";
-import AiAssistant from "@/components/coding/AiAssistant";
+import AiAssistantWithContext from "@/components/coding/AiAssistantWithContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const CodingPage = () => {
+  const navigate = useNavigate();
+
   return (
     <PageLayout>
       <div className="container py-6">
@@ -77,11 +81,20 @@ const CodingPage = () => {
                   </Card>
 
                   <CodeEditor />
+
+                  <div className="flex justify-end">
+                    <Button 
+                      className="bg-campus-purple hover:bg-campus-purple/90"
+                      onClick={() => toast.success("Solution submitted successfully!")}
+                    >
+                      Submit Solution
+                    </Button>
+                  </div>
                 </div>
               </div>
 
               <div>
-                <AiAssistant />
+                <AiAssistantWithContext />
               </div>
             </div>
           </TabsContent>
@@ -112,7 +125,7 @@ const CodingPage = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="border-t pt-3">
-                  <Button className="w-full">
+                  <Button className="w-full" onClick={() => navigate('/coding')}>
                     Solve Challenge <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardFooter>
@@ -143,7 +156,7 @@ const CodingPage = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="border-t pt-3">
-                  <Button className="w-full">
+                  <Button className="w-full" onClick={() => navigate('/coding')}>
                     Solve Challenge <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardFooter>
@@ -173,7 +186,7 @@ const CodingPage = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="border-t pt-3">
-                  <Button className="w-full">
+                  <Button className="w-full" onClick={() => navigate('/coding')}>
                     Solve Challenge <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardFooter>
@@ -203,7 +216,7 @@ const CodingPage = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="border-t pt-3">
-                  <Button className="w-full">
+                  <Button className="w-full" onClick={() => navigate('/coding')}>
                     Solve Challenge <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardFooter>
@@ -243,7 +256,9 @@ const CodingPage = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="border-t pt-3">
-                  <Button className="w-full">Enroll in Track</Button>
+                  <Button className="w-full" onClick={() => toast.success("Enrolled in Data Structures Mastery track")}>
+                    Enroll in Track
+                  </Button>
                 </CardFooter>
               </Card>
               
@@ -276,7 +291,9 @@ const CodingPage = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="border-t pt-3">
-                  <Button className="w-full">Enroll in Track</Button>
+                  <Button className="w-full" onClick={() => toast.success("Enrolled in Algorithm Techniques track")}>
+                    Enroll in Track
+                  </Button>
                 </CardFooter>
               </Card>
               
@@ -308,7 +325,9 @@ const CodingPage = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="border-t pt-3">
-                  <Button className="w-full">Enroll in Track</Button>
+                  <Button className="w-full" onClick={() => toast.success("Enrolled in Interview Preparation track")}>
+                    Enroll in Track
+                  </Button>
                 </CardFooter>
               </Card>
               
@@ -341,7 +360,9 @@ const CodingPage = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="border-t pt-3">
-                  <Button className="w-full">Enroll in Track</Button>
+                  <Button className="w-full" onClick={() => toast.success("Enrolled in Web Development Coding track")}>
+                    Enroll in Track
+                  </Button>
                 </CardFooter>
               </Card>
             </div>
@@ -375,7 +396,9 @@ const CodingPage = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="border-t pt-3">
-                  <Button className="w-full">Join Group</Button>
+                  <Button className="w-full" onClick={() => toast.success("Joined Algorithm Study Group")}>
+                    Join Group
+                  </Button>
                 </CardFooter>
               </Card>
               
@@ -405,7 +428,9 @@ const CodingPage = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="border-t pt-3">
-                  <Button className="w-full">Find Team</Button>
+                  <Button className="w-full" onClick={() => toast.success("Team matching initiated")}>
+                    Find Team
+                  </Button>
                 </CardFooter>
               </Card>
               
@@ -441,7 +466,9 @@ const CodingPage = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="border-t pt-3">
-                  <Button className="w-full">Join a Room</Button>
+                  <Button className="w-full" onClick={() => toast.success("Joined coding room")}>
+                    Join a Room
+                  </Button>
                 </CardFooter>
               </Card>
             </div>

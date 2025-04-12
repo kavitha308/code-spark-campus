@@ -7,8 +7,121 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { BookOpen, Clock, FileText, Video, Users, Award } from "lucide-react";
+import CourseCard from "@/components/dashboard/CourseCard";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "sonner";
+
+// Courses data
+const enrolledCourses = [
+  {
+    id: "1",
+    title: "Data Structures & Algorithms",
+    instructor: "Dr. Robert Chan",
+    description: "Learn fundamental data structures and algorithms for efficient problem-solving",
+    progress: 78,
+    nextClass: "Tomorrow, 2:00 PM",
+    students: 65,
+    category: "Computer Science",
+  },
+  {
+    id: "2",
+    title: "Advanced Web Development",
+    instructor: "Prof. Sarah Wilson",
+    description: "Master modern web technologies and frameworks for building scalable applications",
+    progress: 45,
+    nextClass: "Wednesday, 10:00 AM",
+    students: 48,
+    category: "Web Development",
+  },
+  {
+    id: "3",
+    title: "Database Management Systems",
+    instructor: "Dr. Michael Lee",
+    description: "Design and implement efficient database solutions for complex applications",
+    progress: 92,
+    nextClass: "Friday, 1:00 PM",
+    students: 55,
+    category: "Database",
+  },
+  {
+    id: "4",
+    title: "Machine Learning Fundamentals",
+    instructor: "Dr. Lisa Chen",
+    description: "Learn core ML algorithms and how to apply them to real-world problems",
+    progress: 32,
+    nextClass: "Thursday, 3:00 PM",
+    students: 72,
+    category: "AI/ML",
+  }
+];
+
+const completedCourses = [
+  {
+    id: "5",
+    title: "Introduction to Programming",
+    instructor: "Dr. James Miller",
+    description: "Fundamentals of programming using Python",
+    progress: 100,
+    nextClass: "N/A",
+    students: 120,
+    category: "Programming",
+    grade: "A (95%)",
+  },
+  {
+    id: "6",
+    title: "Object-Oriented Programming",
+    instructor: "Prof. Emily Johnson",
+    description: "OOP principles and patterns using Java",
+    progress: 100,
+    nextClass: "N/A",
+    students: 85,
+    category: "Programming",
+    grade: "A- (92%)",
+  }
+];
+
+const availableCourses = [
+  {
+    id: "7",
+    title: "Cloud Computing",
+    instructor: "Dr. Alan Richards",
+    description: "Learn to design, deploy, and manage cloud infrastructure",
+    duration: "10 weeks",
+    hoursPerWeek: "6 hrs/week",
+    students: 42,
+    category: "Cloud",
+  },
+  {
+    id: "8",
+    title: "Mobile App Development",
+    instructor: "Prof. Tina Brooks",
+    description: "Build cross-platform mobile applications",
+    duration: "12 weeks",
+    hoursPerWeek: "8 hrs/week",
+    students: 58,
+    category: "Mobile",
+  },
+  {
+    id: "9",
+    title: "Cybersecurity Fundamentals",
+    instructor: "Dr. Nathan Hayes",
+    description: "Protect systems and networks from digital attacks",
+    duration: "14 weeks",
+    hoursPerWeek: "7 hrs/week",
+    students: 63,
+    category: "Security",
+  }
+];
 
 const CoursesPage = () => {
+  const [showCertificateDialog, setShowCertificateDialog] = React.useState(false);
+  const [selectedCourse, setSelectedCourse] = React.useState<any>(null);
+
+  const handleViewCertificate = (course: any) => {
+    setSelectedCourse(course);
+    setShowCertificateDialog(true);
+  };
+
   return (
     <PageLayout>
       <div className="container py-6">
@@ -30,392 +143,175 @@ const CoursesPage = () => {
 
           <TabsContent value="enrolled" className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Data Structures & Algorithms */}
-              <Card className="card-hover">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between">
-                    <Badge className="bg-campus-purple">In Progress</Badge>
-                    <Badge variant="outline">CS301</Badge>
-                  </div>
-                  <CardTitle className="mt-2">Data Structures & Algorithms</CardTitle>
-                  <CardDescription>Learn fundamental data structures and algorithms for efficient problem-solving</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">12 weeks</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">4 hrs/week</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Progress</span>
-                        <span>78%</span>
-                      </div>
-                      <Progress value={78} className="h-2" />
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-campus-purple/10 mb-1">
-                          <Video className="h-4 w-4 text-campus-purple" />
-                        </div>
-                        <span className="text-xs">24 Lectures</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-campus-purple/10 mb-1">
-                          <FileText className="h-4 w-4 text-campus-purple" />
-                        </div>
-                        <span className="text-xs">8 Assignments</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-campus-purple/10 mb-1">
-                          <Award className="h-4 w-4 text-campus-purple" />
-                        </div>
-                        <span className="text-xs">5 Quizzes</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-4 flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">65 students</span>
-                  </div>
-                  <Button size="sm">Continue Learning</Button>
-                </CardFooter>
-              </Card>
-              
-              {/* Advanced Web Development */}
-              <Card className="card-hover">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between">
-                    <Badge className="bg-campus-purple">In Progress</Badge>
-                    <Badge variant="outline">CS415</Badge>
-                  </div>
-                  <CardTitle className="mt-2">Advanced Web Development</CardTitle>
-                  <CardDescription>Master modern web technologies and frameworks for building scalable applications</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">10 weeks</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">6 hrs/week</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Progress</span>
-                        <span>45%</span>
-                      </div>
-                      <Progress value={45} className="h-2" />
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-campus-purple/10 mb-1">
-                          <Video className="h-4 w-4 text-campus-purple" />
-                        </div>
-                        <span className="text-xs">18 Lectures</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-campus-purple/10 mb-1">
-                          <FileText className="h-4 w-4 text-campus-purple" />
-                        </div>
-                        <span className="text-xs">6 Assignments</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-campus-purple/10 mb-1">
-                          <Award className="h-4 w-4 text-campus-purple" />
-                        </div>
-                        <span className="text-xs">4 Projects</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-4 flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">48 students</span>
-                  </div>
-                  <Button size="sm">Continue Learning</Button>
-                </CardFooter>
-              </Card>
-              
-              {/* Database Management Systems */}
-              <Card className="card-hover">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between">
-                    <Badge className="bg-campus-purple">In Progress</Badge>
-                    <Badge variant="outline">CS355</Badge>
-                  </div>
-                  <CardTitle className="mt-2">Database Management Systems</CardTitle>
-                  <CardDescription>Design and implement efficient database solutions for complex applications</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">8 weeks</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">5 hrs/week</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Progress</span>
-                        <span>92%</span>
-                      </div>
-                      <Progress value={92} className="h-2" />
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-campus-purple/10 mb-1">
-                          <Video className="h-4 w-4 text-campus-purple" />
-                        </div>
-                        <span className="text-xs">16 Lectures</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-campus-purple/10 mb-1">
-                          <FileText className="h-4 w-4 text-campus-purple" />
-                        </div>
-                        <span className="text-xs">5 Assignments</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-campus-purple/10 mb-1">
-                          <Award className="h-4 w-4 text-campus-purple" />
-                        </div>
-                        <span className="text-xs">3 Projects</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-4 flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">55 students</span>
-                  </div>
-                  <Button size="sm">Continue Learning</Button>
-                </CardFooter>
-              </Card>
-
-              {/* Machine Learning Fundamentals */}
-              <Card className="card-hover">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between">
-                    <Badge className="bg-campus-purple">In Progress</Badge>
-                    <Badge variant="outline">CS460</Badge>
-                  </div>
-                  <CardTitle className="mt-2">Machine Learning Fundamentals</CardTitle>
-                  <CardDescription>Learn core ML algorithms and how to apply them to real-world problems</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">14 weeks</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">8 hrs/week</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Progress</span>
-                        <span>32%</span>
-                      </div>
-                      <Progress value={32} className="h-2" />
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-campus-purple/10 mb-1">
-                          <Video className="h-4 w-4 text-campus-purple" />
-                        </div>
-                        <span className="text-xs">28 Lectures</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-campus-purple/10 mb-1">
-                          <FileText className="h-4 w-4 text-campus-purple" />
-                        </div>
-                        <span className="text-xs">10 Assignments</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-campus-purple/10 mb-1">
-                          <Award className="h-4 w-4 text-campus-purple" />
-                        </div>
-                        <span className="text-xs">6 Projects</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-4 flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">72 students</span>
-                  </div>
-                  <Button size="sm">Continue Learning</Button>
-                </CardFooter>
-              </Card>
+              {enrolledCourses.map((course, index) => (
+                <div key={index} className="flex flex-col h-full">
+                  <CourseCard
+                    title={course.title}
+                    instructor={course.instructor}
+                    progress={course.progress}
+                    nextClass={course.nextClass}
+                    students={course.students}
+                    category={course.category}
+                    id={course.id}
+                    description={course.description}
+                    isEnrolled={true}
+                  />
+                  <Button 
+                    className="mt-2 bg-campus-purple hover:bg-campus-purple/90"
+                    onClick={() => {
+                      const dialog = document.querySelector(`[data-continue-learning-dialog="${course.id}"]`);
+                      if (dialog) {
+                        (dialog as HTMLDialogElement).showModal();
+                      } else {
+                        toast.success(`Continue learning ${course.title}`);
+                      }
+                    }}
+                  >
+                    Continue Learning
+                  </Button>
+                </div>
+              ))}
             </div>
           </TabsContent>
 
           <TabsContent value="completed">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between">
-                    <Badge variant="outline" className="bg-green-100 text-green-800">Completed</Badge>
-                    <Badge variant="outline">CS201</Badge>
-                  </div>
-                  <CardTitle className="mt-2">Introduction to Programming</CardTitle>
-                  <CardDescription>Fundamentals of programming using Python</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+              {completedCourses.map((course, index) => (
+                <Card key={index}>
+                  <CardHeader>
                     <div className="flex justify-between">
-                      <span className="text-sm font-medium">Final Grade</span>
-                      <span className="text-sm font-bold">A (95%)</span>
+                      <Badge variant="outline" className="bg-green-100 text-green-800">Completed</Badge>
+                      <Badge variant="outline">CS{201 + index}</Badge>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Award className="h-5 w-5 text-yellow-500" />
-                      <span className="text-sm">Certificate Earned</span>
+                    <CardTitle className="mt-2">{course.title}</CardTitle>
+                    <CardDescription>{course.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between">
+                        <span className="text-sm font-medium">Final Grade</span>
+                        <span className="text-sm font-bold">{course.grade}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Award className="h-5 w-5 text-yellow-500" />
+                        <span className="text-sm">Certificate Earned</span>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-4">
-                  <Button variant="outline" className="w-full">View Certificate</Button>
-                </CardFooter>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between">
-                    <Badge variant="outline" className="bg-green-100 text-green-800">Completed</Badge>
-                    <Badge variant="outline">CS215</Badge>
-                  </div>
-                  <CardTitle className="mt-2">Object-Oriented Programming</CardTitle>
-                  <CardDescription>OOP principles and patterns using Java</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span className="text-sm font-medium">Final Grade</span>
-                      <span className="text-sm font-bold">A- (92%)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Award className="h-5 w-5 text-yellow-500" />
-                      <span className="text-sm">Certificate Earned</span>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-4">
-                  <Button variant="outline" className="w-full">View Certificate</Button>
-                </CardFooter>
-              </Card>
+                  </CardContent>
+                  <CardFooter className="border-t pt-4">
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => handleViewCertificate(course)}
+                    >
+                      View Certificate
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
             </div>
           </TabsContent>
 
           <TabsContent value="available">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="card-hover">
-                <CardHeader>
-                  <CardTitle>Cloud Computing</CardTitle>
-                  <CardDescription>Learn to design, deploy, and manage cloud infrastructure</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">10 weeks</span>
+              {availableCourses.map((course, index) => (
+                <Card className="card-hover" key={index}>
+                  <CardHeader>
+                    <CardTitle>{course.title}</CardTitle>
+                    <CardDescription>{course.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">{course.duration}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">{course.hoursPerWeek}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">6 hrs/week</span>
-                      </div>
+                      <Badge variant="outline">CS{450 + index}</Badge>
                     </div>
-                    <Badge variant="outline">CS450</Badge>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-4">
-                  <Button className="w-full">Enroll Now</Button>
-                </CardFooter>
-              </Card>
-              
-              <Card className="card-hover">
-                <CardHeader>
-                  <CardTitle>Mobile App Development</CardTitle>
-                  <CardDescription>Build cross-platform mobile applications</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">12 weeks</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">8 hrs/week</span>
-                      </div>
-                    </div>
-                    <Badge variant="outline">CS425</Badge>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-4">
-                  <Button className="w-full">Enroll Now</Button>
-                </CardFooter>
-              </Card>
-              
-              <Card className="card-hover">
-                <CardHeader>
-                  <CardTitle>Cybersecurity Fundamentals</CardTitle>
-                  <CardDescription>Protect systems and networks from digital attacks</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">14 weeks</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">7 hrs/week</span>
-                      </div>
-                    </div>
-                    <Badge variant="outline">CS380</Badge>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-4">
-                  <Button className="w-full">Enroll Now</Button>
-                </CardFooter>
-              </Card>
+                  </CardContent>
+                  <CardFooter className="border-t pt-4">
+                    <Button 
+                      className="w-full"
+                      onClick={() => {
+                        const courseCard = new CourseCard({
+                          title: course.title,
+                          instructor: course.instructor,
+                          progress: 0,
+                          nextClass: "Not yet scheduled",
+                          students: course.students,
+                          category: course.category,
+                          id: course.id,
+                          description: course.description,
+                          isEnrolled: false,
+                        });
+                        
+                        // Simulate enrollment process
+                        toast.success(`Showing enrollment form for ${course.title}`);
+                      }}
+                    >
+                      Enroll Now
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
             </div>
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Certificate Dialog */}
+      <Dialog open={showCertificateDialog} onOpenChange={setShowCertificateDialog}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>Certificate of Completion</DialogTitle>
+          </DialogHeader>
+          
+          {selectedCourse && (
+            <div className="border-8 border-gray-200 p-8 bg-white">
+              <div className="text-center space-y-6">
+                <div className="border-b-2 border-t-2 border-gray-300 py-4">
+                  <h1 className="text-3xl font-serif mb-2">Certificate of Completion</h1>
+                  <p className="text-lg">This certifies that</p>
+                  <p className="text-2xl font-semibold my-4">John Doe</p>
+                  <p className="text-lg">has successfully completed the course</p>
+                  <p className="text-2xl font-semibold my-4">{selectedCourse.title}</p>
+                  <p className="text-lg">with a grade of {selectedCourse.grade}</p>
+                </div>
+                
+                <div className="flex justify-between items-center mt-8">
+                  <div className="text-center">
+                    <div className="border-b border-gray-300 mb-2 pb-2">April 12, 2025</div>
+                    <p className="text-sm">Date</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="border-b border-gray-300 mb-2 pb-2 font-script text-xl">{selectedCourse.instructor}</div>
+                    <p className="text-sm">Instructor Signature</p>
+                  </div>
+                </div>
+                
+                <div className="mt-8 bg-gray-50 p-4 rounded-lg inline-block mx-auto">
+                  <p className="text-sm">Certificate ID: CERT-{selectedCourse.id}-{Math.floor(Math.random() * 1000000)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button onClick={() => {
+              toast.success("Certificate downloaded");
+              setShowCertificateDialog(false);
+            }}>
+              Download Certificate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageLayout>
   );
 };

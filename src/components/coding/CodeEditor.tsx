@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Play, Loader2, Save, Download, Copy, Check, X, AlertCircle, Info, HelpCircle, LightbulbIcon } from 'lucide-react';
+import { Play, Loader2, Save, Download, Copy, Check, X, AlertCircle, Info, HelpCircle, LightbulbIcon, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CodeEditorProps {
@@ -12,7 +11,6 @@ interface CodeEditorProps {
   defaultCode?: string;
 }
 
-// Sample suggestions for the smart review feature
 const suggestionsDatabase = {
   python: [
     {
@@ -184,7 +182,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     setSuggestions([]);
   };
 
-  // Function to analyze code and generate suggestions
   useEffect(() => {
     if (!code || !showSuggestions) return;
     
@@ -196,7 +193,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       lines.forEach((line, lineIndex) => {
         currentLanguageSuggestions.forEach(suggestion => {
           if (suggestion.pattern.test(line)) {
-            // Check if this suggestion is already in the list for this line
             if (!newSuggestions.some(s => s.line === lineIndex && s.suggestion === suggestion.suggestion)) {
               newSuggestions.push({
                 index: newSuggestions.length,
@@ -212,7 +208,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       });
       
       setSuggestions(newSuggestions);
-    }, 1000); // Delay analysis to avoid too frequent updates
+    }, 1000);
     
     return () => clearTimeout(timer);
   }, [code, language, showSuggestions]);
@@ -221,7 +217,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     const suggestion = suggestions[suggestionIndex];
     if (suggestion.replacement) {
       const lines = code.split('\n');
-      // We're not actually replacing the code, just showing that we accepted the suggestion
       setSuggestions(suggestions.map((s, i) => 
         i === suggestionIndex ? { ...s, accepted: true } : s
       ));
@@ -240,24 +235,85 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     setIsRunning(true);
     setOutput('');
     
-    // Simulate code execution with a delay
     setTimeout(() => {
-      if (language === 'python') {
-        setOutput('Hello, World!\n\nProgram executed successfully.');
-      } else if (language === 'java') {
-        setOutput('Hello, World!\n\nProgram executed successfully.');
-      } else if (language === 'cpp') {
-        setOutput('Hello, World!\n\nProgram executed successfully.');
-      } else if (language === 'javascript') {
-        setOutput('Hello, World!\n\nProgram executed successfully.');
+      let result = '';
+      try {
+        if (code.trim() === '') {
+          result = 'No code to execute.';
+        } else if (language === 'python') {
+          if (code.includes('print(')) {
+            const printRegex = /print\s*\(\s*["'](.+?)["']\s*\)/g;
+            const matches = [...code.matchAll(printRegex)];
+            
+            if (matches.length > 0) {
+              result = matches.map(match => match[1]).join('\n');
+            } else {
+              result = 'Code executed successfully. No output to display.';
+            }
+          } else if (code.includes('def ')) {
+            result = 'Function defined successfully. Use function calls with print() to see output.';
+          } else {
+            result = 'Code executed successfully. No output to display.';
+          }
+        } else if (language === 'javascript') {
+          if (code.includes('console.log(')) {
+            const logRegex = /console\.log\s*\(\s*["'](.+?)["']\s*\)/g;
+            const matches = [...code.matchAll(logRegex)];
+            
+            if (matches.length > 0) {
+              result = matches.map(match => match[1]).join('\n');
+            } else {
+              result = 'Code executed successfully. No output to display.';
+            }
+          } else if (code.includes('function ')) {
+            result = 'Function defined successfully. Use function calls with console.log() to see output.';
+          } else {
+            result = 'Code executed successfully. No output to display.';
+          }
+        } else if (language === 'java') {
+          if (code.includes('System.out.println(')) {
+            const printRegex = /System\.out\.println\s*\(\s*["'](.+?)["']\s*\)/g;
+            const matches = [...code.matchAll(printRegex)];
+            
+            if (matches.length > 0) {
+              result = matches.map(match => match[1]).join('\n');
+            } else {
+              result = 'Code executed successfully. No output to display.';
+            }
+          } else if (code.includes('class ')) {
+            result = 'Class defined successfully. Add System.out.println() calls to see output.';
+          } else {
+            result = 'Code executed successfully. No output to display.';
+          }
+        } else if (language === 'cpp') {
+          if (code.includes('std::cout')) {
+            const coutRegex = /std::cout\s*<<\s*["'](.+?)["']/g;
+            const matches = [...code.matchAll(coutRegex)];
+            
+            if (matches.length > 0) {
+              result = matches.map(match => match[1]).join('\n');
+            } else {
+              result = 'Code executed successfully. No output to display.';
+            }
+          } else if (code.includes('int main()')) {
+            result = 'Program executed successfully. Add std::cout statements to see output.';
+          } else {
+            result = 'Code executed successfully. No output to display.';
+          }
+        }
+        
+        setOutput(result);
+        toast.success('Code executed successfully');
+      } catch (error) {
+        setOutput(`Error: ${error.message}`);
+        toast.error('Error executing code');
       }
+      
       setIsRunning(false);
-      toast.success('Code executed successfully');
     }, 1500);
   };
 
   const handleSaveCode = () => {
-    // Simulate saving code
     setTimeout(() => {
       toast.success('Code saved successfully');
     }, 500);
@@ -279,7 +335,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     toast.success('Code downloaded');
   };
 
-  // Get suggestion type icon
   const getSuggestionIcon = (type: string) => {
     switch (type) {
       case 'warning':
@@ -293,7 +348,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     }
   };
 
-  // Filter out rejected suggestions
   const activeSuggestions = suggestions.filter(s => s.accepted !== false);
 
   return (
@@ -367,7 +421,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
             spellCheck="false"
           />
           
-          {/* Smart suggestions overlay */}
           {showSuggestions && activeSuggestions.length > 0 && (
             <div className="absolute right-4 top-4 w-72 bg-white rounded-lg shadow-lg border p-3 z-10">
               <div className="flex justify-between items-center mb-2">

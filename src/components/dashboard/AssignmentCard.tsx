@@ -4,8 +4,11 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface AssignmentCardProps {
+  id?: string;
   title: string;
   course: string;
   dueDate: string;
@@ -14,12 +17,15 @@ interface AssignmentCardProps {
 }
 
 const AssignmentCard: React.FC<AssignmentCardProps> = ({
+  id = "1", // Default ID if not provided
   title,
   course,
   dueDate,
   status,
   submissionType,
 }) => {
+  const navigate = useNavigate();
+  
   const statusColors = {
     Pending: "bg-yellow-100 text-yellow-800",
     Submitted: "bg-blue-100 text-blue-800",
@@ -28,6 +34,29 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
 
   const isLate = new Date(dueDate) < new Date();
   const isPending = status === "Pending";
+
+  const handleButtonClick = () => {
+    if (status === "Pending") {
+      // For pending assignments, show file upload
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.pdf,.docx,.doc,.txt';
+      
+      input.onchange = (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        if (target.files && target.files.length > 0) {
+          const file = target.files[0];
+          console.log('File selected:', file.name);
+          toast.success(`Assignment "${file.name}" submitted successfully!`);
+        }
+      };
+      
+      input.click();
+    } else {
+      // For other statuses, navigate to details
+      navigate(`/assignments/details/${id}`);
+    }
+  };
 
   return (
     <Card className={`card-hover ${isLate && isPending ? "border-red-300" : ""}`}>
@@ -62,6 +91,7 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
           className="w-full" 
           size="sm" 
           variant={status === "Pending" ? "default" : "outline"}
+          onClick={handleButtonClick}
         >
           {status === "Pending" ? "Submit Assignment" : "View Details"}
         </Button>

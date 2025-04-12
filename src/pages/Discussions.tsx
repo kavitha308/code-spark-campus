@@ -1,16 +1,31 @@
-
 import React, { useState } from "react";
 import PageLayout from "@/components/layout/PageLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MessageSquare, Plus, ThumbsUp, MessageCircle, Clock, Filter, Bookmark, BookOpen, Send, Heart, Flag, AlertTriangle } from "lucide-react";
-import { format } from "date-fns";
+import { Separator } from "@/components/ui/separator";
+import { 
+  BookOpen, 
+  Clock, 
+  ThumbsUp, 
+  MessageCircle, 
+  Plus, 
+  Search, 
+  Send, 
+  Tag,
+  User,
+  Users,
+  Heart,
+  Reply,
+  Flag,
+  AlertTriangle,
+  BookmarkPlus
+} from "lucide-react";
+import { toast } from "sonner";
 
 const discussionForums = [
   {
@@ -187,14 +202,13 @@ const comments = [
   },
 ];
 
-const Discussions = () => {
+const DiscussionsPage = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDiscussion, setSelectedDiscussion] = useState<any>(null);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [newComment, setNewComment] = useState("");
   
-  // Filter discussions based on search query and active tab
   const filteredDiscussions = discussionForums.filter(forum => {
     const matchesSearch = forum.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           forum.course.toLowerCase().includes(searchQuery.toLowerCase());
@@ -204,7 +218,6 @@ const Discussions = () => {
     return matchesSearch && forum.course.toLowerCase().includes(activeTab.toLowerCase());
   });
   
-  // Filter posts based on search query and selected discussion
   const filteredPosts = discussionPosts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -214,13 +227,11 @@ const Discussions = () => {
     return matchesSearch && post.course === selectedDiscussion.course;
   });
   
-  // Get comments for selected post
   const postComments = selectedPost ? comments.filter(comment => comment.postId === selectedPost.id) : [];
   
   const handleSubmitComment = () => {
     if (!newComment.trim()) return;
-    // In a real app, this would add the comment to the database
-    alert(`Comment submitted: ${newComment}`);
+    toast.success(`Comment submitted: ${newComment}`);
     setNewComment("");
   };
 
@@ -269,7 +280,7 @@ const Discussions = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm">
-                      <Bookmark className="h-4 w-4 mr-1" /> Save
+                      <BookmarkPlus className="h-4 w-4 mr-1" /> Save
                     </Button>
                     <Button variant="outline" size="sm">
                       <Flag className="h-4 w-4 mr-1" /> Report
@@ -611,4 +622,4 @@ const Discussions = () => {
   );
 };
 
-export default Discussions;
+export default DiscussionsPage;
