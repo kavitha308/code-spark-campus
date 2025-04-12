@@ -19,6 +19,7 @@ import {
   Users,
   MessageSquare,
   Briefcase,
+  Home,
 } from "lucide-react";
 import {
   Sheet,
@@ -31,7 +32,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Accordion,
   AccordionContent,
@@ -43,6 +44,7 @@ const MobileNav = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, profile, signOut } = useAuth();
   const isActive = (path: string) => location.pathname === path;
 
   const handleNavigation = (path: string) => {
@@ -50,15 +52,13 @@ const MobileNav = () => {
     setOpen(false);
   };
   
-  const handleLogout = () => {
-    // In a real app, you would handle the logout process here
-    toast({
-      title: "Logged out successfully",
-      description: "You have been logged out from your account.",
-    });
-    
-    navigate("/auth");
-    setOpen(false);
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      setOpen(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
@@ -85,22 +85,33 @@ const MobileNav = () => {
             <div className="px-6 py-4 border-b">
               <div className="flex items-center gap-3">
                 <Avatar>
-                  <AvatarImage src="" alt="User" />
+                  <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || "User"} />
                   <AvatarFallback className="bg-gradient-purple text-white">
-                    JD
+                    {profile?.full_name ? profile.full_name.split(' ').map(n => n[0]).join('') : "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-medium">John Doe</div>
-                  <div className="text-xs text-muted-foreground">john.doe@university.edu</div>
+                  <div className="font-medium">{profile?.full_name || user?.email?.split('@')[0] || 'User'}</div>
+                  <div className="text-xs text-muted-foreground">{user?.email}</div>
                 </div>
               </div>
             </div>
             
             <div className="flex-1 overflow-auto px-2 py-4">
+              <nav className="space-y-1">
+                <Button 
+                  variant="ghost" 
+                  className={`w-full justify-start ${isActive("/") ? "bg-purple-100 text-campus-purple" : ""}`}
+                  onClick={() => handleNavigation("/")}
+                >
+                  <Home className="h-5 w-5 mr-2" />
+                  Home
+                </Button>
+              </nav>
+              
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="dashboard">
-                  <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/") ? "bg-purple-100 text-campus-purple" : ""}`}>
+                  <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/dashboard") ? "bg-purple-100 text-campus-purple" : ""}`}>
                     <div className="flex items-center gap-2">
                       <LayoutDashboard className="h-5 w-5" />
                       <span>Dashboard</span>
@@ -111,7 +122,7 @@ const MobileNav = () => {
                       <Button 
                         variant="ghost" 
                         className="w-full justify-start"
-                        onClick={() => handleNavigation("/")}
+                        onClick={() => handleNavigation("/dashboard")}
                       >
                         Overview
                       </Button>

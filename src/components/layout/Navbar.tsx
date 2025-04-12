@@ -17,26 +17,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import NavigationMenuDemo from "./NavigationMenu";
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, profile, signOut } = useAuth();
 
-  const handleLogout = () => {
-    // In a real app, you would handle the logout process here
-    toast({
-      title: "Logged out successfully",
-      description: "You have been logged out from your account.",
-    });
-    
-    navigate("/auth");
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const handleNotificationClick = () => {
-    toast({
-      title: "New notifications",
+    toast("New notifications", {
       description: "You have 3 unread notifications.",
     });
   };
@@ -68,49 +67,55 @@ const Navbar = () => {
             </Badge>
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="relative h-10 w-10 rounded-full animate-hover"
-              >
-                <Avatar>
-                  <AvatarImage src="" alt="User" />
-                  <AvatarFallback className="bg-gradient-purple text-white">
-                    JD
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="flex items-center justify-start gap-2 p-2">
-                <Avatar>
-                  <AvatarImage src="" alt="User" />
-                  <AvatarFallback className="bg-gradient-purple text-white">
-                    JD
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="font-medium">John Doe</span>
-                  <span className="text-xs text-muted-foreground">john.doe@university.edu</span>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="relative h-10 w-10 rounded-full animate-hover"
+                >
+                  <Avatar>
+                    <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || "User"} />
+                    <AvatarFallback className="bg-gradient-purple text-white">
+                      {profile?.full_name ? profile.full_name.split(' ').map(n => n[0]).join('') : user.email?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <Avatar>
+                    <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || "User"} />
+                    <AvatarFallback className="bg-gradient-purple text-white">
+                      {profile?.full_name ? profile.full_name.split(' ').map(n => n[0]).join('') : user.email?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{profile?.full_name || user.email?.split('@')[0]}</span>
+                    <span className="text-xs text-muted-foreground">{user.email}</span>
+                  </div>
                 </div>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/profile")}>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Logout</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/profile")}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button onClick={() => navigate('/auth')}>
+              Sign In
+            </Button>
+          )}
         </div>
       </div>
     </header>

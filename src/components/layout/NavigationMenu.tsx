@@ -23,6 +23,7 @@ import {
   FileCheck,
   MessageSquare,
   Briefcase,
+  Home,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,8 +35,17 @@ const NavigationMenuDemo = () => {
     <NavigationMenu className="hidden md:flex">
       <NavigationMenuList>
         <NavigationMenuItem>
+          <Link to="/" className={cn(
+            navigationMenuTriggerStyle(),
+            isActive("/") ? "bg-purple-100 text-campus-purple" : ""
+          )}>
+            <Home className="w-4 h-4 mr-1" /> Home
+          </Link>
+        </NavigationMenuItem>
+        
+        <NavigationMenuItem>
           <NavigationMenuTrigger
-            className={isActive("/") ? "bg-purple-100 text-campus-purple" : ""}
+            className={isActive("/dashboard") ? "bg-purple-100 text-campus-purple" : ""}
           >
             <LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard
           </NavigationMenuTrigger>
@@ -44,7 +54,7 @@ const NavigationMenuDemo = () => {
               <li>
                 <NavigationMenuLink asChild>
                   <Link
-                    to="/"
+                    to="/dashboard"
                     className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-blue/20 to-campus-purple/20 p-6 no-underline outline-none focus:shadow-md"
                   >
                     <LayoutDashboard className="h-6 w-6 text-campus-purple" />

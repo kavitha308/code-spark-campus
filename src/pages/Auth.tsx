@@ -6,53 +6,61 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/components/ui/use-toast";
 import { Code, LucideGraduationCap, UserPlus, LogIn, UserCog } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("login");
+  const { signIn, signUp, isLoading } = useAuth();
   
-  const [loginData, setLoginData] = useState({
-    email: "",
-    password: "",
-    userType: "student", // student, teacher, admin
-  });
-  
-  const [registerData, setRegisterData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    userType: "student", // student, teacher, admin
+  const loginForm = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+      userType: "student", // student, teacher, admin
+    }
   });
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // In a real app, you would validate and authenticate
-    // For demo purposes, we'll just navigate to dashboard with a toast message
-    toast({
-      title: `Logged in as ${loginData.userType}`,
-      description: `Welcome back to Campus Bridge! You are now logged in as a ${loginData.userType}.`,
-      variant: "default",
-    });
-    
-    navigate("/");
+  const registerForm = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      userType: "student", // student, teacher, admin
+    }
+  });
+
+  const handleLogin = async (data: any) => {
+    try {
+      await signIn(data.email, data.password);
+      // Navigation is handled in the auth context
+    } catch (error) {
+      console.error("Login error:", error);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // In a real app, you would validate and register the user
-    // For demo purposes, we'll just show a success message
-    toast({
-      title: "Registration successful",
-      description: `Your account has been created as a ${registerData.userType}. You can now log in.`,
-      variant: "default",
-    });
-    
-    setActiveTab("login");
+  const handleRegister = async (data: any) => {
+    try {
+      if (data.password !== data.confirmPassword) {
+        registerForm.setError("confirmPassword", {
+          type: "manual",
+          message: "Passwords do not match",
+        });
+        return;
+      }
+      
+      await signUp(data.email, data.password, {
+        full_name: data.name,
+        role: data.userType,
+      });
+      
+      setActiveTab("login");
+    } catch (error) {
+      console.error("Registration error:", error);
+    }
   };
 
   return (
@@ -86,7 +94,7 @@ const Auth = () => {
             </TabsList>
             
             <TabsContent value="login">
-              <form onSubmit={handleLogin}>
+              <form onSubmit={loginForm.handleSubmit(handleLogin)}>
                 <CardHeader>
                   <CardTitle>Welcome back</CardTitle>
                   <CardDescription>
@@ -100,8 +108,7 @@ const Auth = () => {
                       id="email" 
                       type="email" 
                       placeholder="your.email@university.edu"
-                      value={loginData.email}
-                      onChange={(e) => setLoginData({...loginData, email: e.target.value})}
+                      {...loginForm.register("email")}
                       required
                       className="bg-white"
                     />
@@ -116,8 +123,7 @@ const Auth = () => {
                     <Input 
                       id="password" 
                       type="password"
-                      value={loginData.password}
-                      onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                      {...loginForm.register("password")}
                       required
                       className="bg-white"
                     />
@@ -127,27 +133,27 @@ const Auth = () => {
                     <div className="grid grid-cols-3 gap-2">
                       <Button
                         type="button"
-                        variant={loginData.userType === "student" ? "default" : "outline"}
-                        className={`${loginData.userType === "student" ? "gradient-purple" : ""}`}
-                        onClick={() => setLoginData({...loginData, userType: "student"})}
+                        variant={loginForm.watch("userType") === "student" ? "default" : "outline"}
+                        className={`${loginForm.watch("userType") === "student" ? "gradient-purple" : ""}`}
+                        onClick={() => loginForm.setValue("userType", "student")}
                       >
                         <LucideGraduationCap className="h-4 w-4 mr-1" />
                         Student
                       </Button>
                       <Button
                         type="button"
-                        variant={loginData.userType === "teacher" ? "default" : "outline"}
-                        className={`${loginData.userType === "teacher" ? "gradient-blue" : ""}`}
-                        onClick={() => setLoginData({...loginData, userType: "teacher"})}
+                        variant={loginForm.watch("userType") === "teacher" ? "default" : "outline"}
+                        className={`${loginForm.watch("userType") === "teacher" ? "gradient-blue" : ""}`}
+                        onClick={() => loginForm.setValue("userType", "teacher")}
                       >
                         <Code className="h-4 w-4 mr-1" />
                         Teacher
                       </Button>
                       <Button
                         type="button"
-                        variant={loginData.userType === "admin" ? "default" : "outline"}
-                        className={`${loginData.userType === "admin" ? "gradient-green" : ""}`}
-                        onClick={() => setLoginData({...loginData, userType: "admin"})}
+                        variant={loginForm.watch("userType") === "admin" ? "default" : "outline"}
+                        className={`${loginForm.watch("userType") === "admin" ? "gradient-green" : ""}`}
+                        onClick={() => loginForm.setValue("userType", "admin")}
                       >
                         <UserCog className="h-4 w-4 mr-1" />
                         Admin
@@ -159,18 +165,19 @@ const Auth = () => {
                   <Button 
                     type="submit" 
                     className={`w-full ${
-                      loginData.userType === "student" ? "gradient-purple" :
-                      loginData.userType === "teacher" ? "gradient-blue" : "gradient-green"
+                      loginForm.watch("userType") === "student" ? "gradient-purple" :
+                      loginForm.watch("userType") === "teacher" ? "gradient-blue" : "gradient-green"
                     } animate-hover`}
+                    disabled={isLoading}
                   >
-                    Log In
+                    {isLoading ? "Logging in..." : "Log In"}
                   </Button>
                 </CardFooter>
               </form>
             </TabsContent>
             
             <TabsContent value="register">
-              <form onSubmit={handleRegister}>
+              <form onSubmit={registerForm.handleSubmit(handleRegister)}>
                 <CardHeader>
                   <CardTitle>Create an account</CardTitle>
                   <CardDescription>
@@ -183,8 +190,7 @@ const Auth = () => {
                     <Input 
                       id="name" 
                       placeholder="John Doe"
-                      value={registerData.name}
-                      onChange={(e) => setRegisterData({...registerData, name: e.target.value})}
+                      {...registerForm.register("name")}
                       required
                       className="bg-white"
                     />
@@ -195,8 +201,7 @@ const Auth = () => {
                       id="reg-email" 
                       type="email" 
                       placeholder="your.email@university.edu"
-                      value={registerData.email}
-                      onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
+                      {...registerForm.register("email")}
                       required
                       className="bg-white"
                     />
@@ -207,8 +212,7 @@ const Auth = () => {
                       <Input 
                         id="reg-password" 
                         type="password"
-                        value={registerData.password}
-                        onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
+                        {...registerForm.register("password")}
                         required
                         className="bg-white"
                       />
@@ -218,11 +222,15 @@ const Auth = () => {
                       <Input 
                         id="confirm-password" 
                         type="password"
-                        value={registerData.confirmPassword}
-                        onChange={(e) => setRegisterData({...registerData, confirmPassword: e.target.value})}
+                        {...registerForm.register("confirmPassword")}
                         required
                         className="bg-white"
                       />
+                      {registerForm.formState.errors.confirmPassword && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {registerForm.formState.errors.confirmPassword.message?.toString()}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -230,27 +238,27 @@ const Auth = () => {
                     <div className="grid grid-cols-3 gap-2">
                       <Button
                         type="button"
-                        variant={registerData.userType === "student" ? "default" : "outline"}
-                        className={`${registerData.userType === "student" ? "gradient-purple" : ""}`}
-                        onClick={() => setRegisterData({...registerData, userType: "student"})}
+                        variant={registerForm.watch("userType") === "student" ? "default" : "outline"}
+                        className={`${registerForm.watch("userType") === "student" ? "gradient-purple" : ""}`}
+                        onClick={() => registerForm.setValue("userType", "student")}
                       >
                         <LucideGraduationCap className="h-4 w-4 mr-1" />
                         Student
                       </Button>
                       <Button
                         type="button"
-                        variant={registerData.userType === "teacher" ? "default" : "outline"}
-                        className={`${registerData.userType === "teacher" ? "gradient-blue" : ""}`}
-                        onClick={() => setRegisterData({...registerData, userType: "teacher"})}
+                        variant={registerForm.watch("userType") === "teacher" ? "default" : "outline"}
+                        className={`${registerForm.watch("userType") === "teacher" ? "gradient-blue" : ""}`}
+                        onClick={() => registerForm.setValue("userType", "teacher")}
                       >
                         <Code className="h-4 w-4 mr-1" />
                         Teacher
                       </Button>
                       <Button
                         type="button"
-                        variant={registerData.userType === "admin" ? "default" : "outline"}
-                        className={`${registerData.userType === "admin" ? "gradient-green" : ""}`}
-                        onClick={() => setRegisterData({...registerData, userType: "admin"})}
+                        variant={registerForm.watch("userType") === "admin" ? "default" : "outline"}
+                        className={`${registerForm.watch("userType") === "admin" ? "gradient-green" : ""}`}
+                        onClick={() => registerForm.setValue("userType", "admin")}
                       >
                         <UserCog className="h-4 w-4 mr-1" />
                         Admin
@@ -262,11 +270,12 @@ const Auth = () => {
                   <Button 
                     type="submit" 
                     className={`w-full ${
-                      registerData.userType === "student" ? "gradient-purple" :
-                      registerData.userType === "teacher" ? "gradient-blue" : "gradient-green"
+                      registerForm.watch("userType") === "student" ? "gradient-purple" :
+                      registerForm.watch("userType") === "teacher" ? "gradient-blue" : "gradient-green"
                     } animate-hover`}
+                    disabled={isLoading}
                   >
-                    Create Account
+                    {isLoading ? "Creating Account..." : "Create Account"}
                   </Button>
                 </CardFooter>
               </form>
