@@ -11,6 +11,7 @@ import PageLayout from "@/components/layout/PageLayout";
 import { Briefcase, Clock, Code, DollarSign, MapPin, Star, Upload, CheckCircle, Building } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { submitJobApplication, getUserApplications } from "@/services/JobService";
 
 // Sample job data - in a real app, this would be fetched from your API
 const jobMatchesData = [
@@ -122,7 +123,7 @@ const JobApplicationForm = ({ job, onApply }: { job: any, onApply: () => void })
     }
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.fullName || !formData.email || !formData.resume) {
@@ -132,12 +133,29 @@ const JobApplicationForm = ({ job, onApply }: { job: any, onApply: () => void })
     
     setIsSubmitting(true);
     
-    // Simulate API call to submit application
-    setTimeout(() => {
+    try {
+      // In a real application, upload the resume to storage and then submit application
+      // For demo purposes, we're simulating this flow
+      const resumeUrl = URL.createObjectURL(formData.resume);
+      
+      await submitJobApplication(
+        job.id.toString(),
+        job.title,
+        job.company,
+        formData.fullName,
+        formData.email,
+        resumeUrl,
+        formData.coverLetter
+      );
+      
       setIsSubmitting(false);
       onApply();
       toast.success(`Application submitted for ${job.title}!`);
-    }, 1500);
+    } catch (error) {
+      console.error("Error submitting application:", error);
+      toast.error("Failed to submit application");
+      setIsSubmitting(false);
+    }
   };
   
   return (

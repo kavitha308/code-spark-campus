@@ -1,510 +1,235 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PageLayout from "@/components/layout/PageLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, Users, BookOpen, GraduationCap, FileText, BarChart3, Code } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useAuth } from "@/contexts/AuthContext";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { format } from "date-fns";
-import { 
-  Video, 
-  FileText, 
-  Upload, 
-  Check, 
-  X, 
-  Clock, 
-  Calendar as CalendarIcon, 
-  FileUp, 
-  Code, 
-  BookOpen, 
-  PlusCircle,
-  Users,
-  BarChart3,
-  MessageSquare
-} from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
+import { getAllStudents, getStudentProgress } from "@/services/UserService";
+import { getFacultyCourses, createCourse } from "@/services/CourseService";
+import { getAssignments, createAssignment } from "@/services/AssignmentService";
+import { getAllSubmissionsForAssignment } from "@/services/AssignmentService";
+import { getCourseAttendance, markAttendance } from "@/services/AttendanceService";
+import { createEvent } from "@/services/EventService";
 
-// Mock data for faculty dashboard
-const coursesMock = [
-  {
-    id: "1",
-    title: "Data Structures & Algorithms",
-    code: "CS202",
-    studentsEnrolled: 46,
-    completionRate: 78,
-    lastUpdated: "2023-04-10"
-  },
-  {
-    id: "2",
-    title: "Advanced Web Development",
-    code: "CS301",
-    studentsEnrolled: 38,
-    completionRate: 65,
-    lastUpdated: "2023-04-08"
-  },
-  {
-    id: "3",
-    title: "Database Management Systems",
-    code: "CS305",
-    studentsEnrolled: 52,
-    completionRate: 81,
-    lastUpdated: "2023-04-11"
-  }
-];
-
-const assignmentsMock = [
-  {
-    id: "a1",
-    title: "Binary Tree Implementation",
-    course: "CS202: Data Structures & Algorithms",
-    dueDate: "2023-04-25",
-    submissionsReceived: 32,
-    totalStudents: 46,
-    status: "Active"
-  },
-  {
-    id: "a2",
-    title: "React Component Architecture",
-    course: "CS301: Advanced Web Development",
-    dueDate: "2023-04-20",
-    submissionsReceived: 27,
-    totalStudents: 38,
-    status: "Active"
-  },
-  {
-    id: "a3",
-    title: "SQL Query Optimization",
-    course: "CS305: Database Management Systems",
-    dueDate: "2023-04-18",
-    submissionsReceived: 48,
-    totalStudents: 52,
-    status: "Active"
-  },
-  {
-    id: "a4",
-    title: "Big O Notation Analysis",
-    course: "CS202: Data Structures & Algorithms",
-    dueDate: "2023-04-05",
-    submissionsReceived: 43,
-    totalStudents: 46,
-    status: "Completed"
-  }
-];
-
-const studentPerformanceData = [
-  { name: "A (90-100%)", value: 15, color: "#4CAF50" },
-  { name: "B (80-89%)", value: 23, color: "#8BC34A" },
-  { name: "C (70-79%)", value: 18, color: "#FFC107" },
-  { name: "D (60-69%)", value: 8, color: "#FF9800" },
-  { name: "F (Below 60%)", value: 4, color: "#F44336" },
-];
-
-const moduleCompletionData = [
-  { name: "Week 1", completion: 98 },
-  { name: "Week 2", completion: 94 },
-  { name: "Week 3", completion: 89 },
-  { name: "Week 4", completion: 82 },
-  { name: "Week 5", completion: 76 },
-  { name: "Week 6", completion: 68 },
-  { name: "Week 7", completion: 54 },
-  { name: "Week 8", completion: 42 },
-];
-
-const upcomingSessionsMock = [
-  {
-    id: "s1",
-    title: "Advanced Tree Traversal",
-    course: "CS202: Data Structures & Algorithms",
-    date: new Date(2023, 3, 20, 10, 0),
-    duration: "90 minutes",
-    type: "Lecture"
-  },
-  {
-    id: "s2",
-    title: "React Hooks Workshop",
-    course: "CS301: Advanced Web Development",
-    date: new Date(2023, 3, 21, 14, 30),
-    duration: "120 minutes",
-    type: "Lab"
-  },
-  {
-    id: "s3",
-    title: "Database Normalization Principles",
-    course: "CS305: Database Management Systems",
-    date: new Date(2023, 3, 22, 9, 0),
-    duration: "90 minutes",
-    type: "Lecture"
-  }
-];
-
-// Content Upload Modal Component
-const ContentUploadModal = ({ onUpload }: { onUpload: (data: any) => void }) => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [contentType, setContentType] = useState("video");
-  const [course, setCourse] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [isVisible, setIsVisible] = useState(true);
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-    }
-  };
-  
-  const handleSubmit = () => {
-    if (!title || !course || !selectedFile) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-    
-    // In a real app, we'd upload the file to storage
-    // Here we'll just simulate the upload
-    
-    const newContent = {
-      id: `c${Date.now()}`,
-      title,
-      description,
-      type: contentType,
-      course,
-      uploadDate: new Date(),
-      fileName: selectedFile.name,
-      fileSize: selectedFile.size,
-      visibility: isVisible ? "Visible" : "Hidden",
-      scheduledDate: date
-    };
-    
-    onUpload(newContent);
-    toast.success("Content uploaded successfully!");
-  };
-  
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="title">Title <span className="text-red-500">*</span></Label>
-        <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter content title"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Enter content description"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="content-type">Content Type <span className="text-red-500">*</span></Label>
-        <Select value={contentType} onValueChange={setContentType}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select content type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="video">Video Lecture</SelectItem>
-            <SelectItem value="document">Document/PDF</SelectItem>
-            <SelectItem value="quiz">Quiz</SelectItem>
-            <SelectItem value="assignment">Assignment</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="course">Course <span className="text-red-500">*</span></Label>
-        <Select value={course} onValueChange={setCourse}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select course" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="CS202">CS202: Data Structures & Algorithms</SelectItem>
-            <SelectItem value="CS301">CS301: Advanced Web Development</SelectItem>
-            <SelectItem value="CS305">CS305: Database Management Systems</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="file">Upload File <span className="text-red-500">*</span></Label>
-        <div className="border-2 border-dashed rounded-md p-4 text-center">
-          {selectedFile ? (
-            <div className="space-y-2">
-              <Check className="h-8 w-8 mx-auto text-green-500" />
-              <p className="text-sm font-medium">{selectedFile.name}</p>
-              <p className="text-xs text-muted-foreground">
-                {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-              </p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setSelectedFile(null)}
-              >
-                Change File
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-              <p className="text-sm">Drag and drop a file or click to browse</p>
-              <Input
-                id="file"
-                type="file"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => document.getElementById("file")?.click()}
-              >
-                Browse Files
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                Supported formats: PDF, DOCX, MP4, PPT, etc.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label>Schedule Settings</Label>
-        <div className="grid grid-cols-2 gap-4">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className="justify-start text-left font-normal w-full"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? format(date, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-          
-          <Select defaultValue="visible">
-            <SelectTrigger>
-              <SelectValue placeholder="Visibility" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="visible" onClick={() => setIsVisible(true)}>Visible to Students</SelectItem>
-              <SelectItem value="hidden" onClick={() => setIsVisible(false)}>Hidden</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <DialogFooter className="mt-6">
-        <Button variant="outline">Cancel</Button>
-        <Button onClick={handleSubmit}>Upload Content</Button>
-      </DialogFooter>
-    </div>
-  );
-};
-
-// Assignment Creator Modal Component
-const AssignmentCreatorModal = ({ onCreate }: { onCreate: (data: any) => void }) => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [course, setCourse] = useState("");
-  const [dueDate, setDueDate] = useState<Date | undefined>(new Date());
-  const [points, setPoints] = useState("100");
-  const [difficultyLevel, setDifficultyLevel] = useState("medium");
-  const [submissionType, setSubmissionType] = useState("code");
-  
-  const handleSubmit = () => {
-    if (!title || !course || !dueDate) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-    
-    const newAssignment = {
-      id: `a${Date.now()}`,
-      title,
-      description,
-      course,
-      dueDate: dueDate,
-      points: Number(points),
-      difficultyLevel,
-      submissionType,
-      status: "Active",
-      submissionsReceived: 0,
-      totalStudents: course === "CS202" ? 46 : course === "CS301" ? 38 : 52
-    };
-    
-    onCreate(newAssignment);
-    toast.success("Assignment created successfully!");
-  };
-  
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="title">Assignment Title <span className="text-red-500">*</span></Label>
-        <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter assignment title"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="description">Description/Instructions <span className="text-red-500">*</span></Label>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Enter detailed instructions for the assignment"
-          className="min-h-[100px]"
-        />
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="course">Course <span className="text-red-500">*</span></Label>
-          <Select value={course} onValueChange={setCourse}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select course" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="CS202">CS202: Data Structures & Algorithms</SelectItem>
-              <SelectItem value="CS301">CS301: Advanced Web Development</SelectItem>
-              <SelectItem value="CS305">CS305: Database Management Systems</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="points">Total Points</Label>
-          <Input
-            id="points"
-            type="number"
-            value={points}
-            onChange={(e) => setPoints(e.target.value)}
-            min={0}
-            max={500}
-          />
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Due Date <span className="text-red-500">*</span></Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className="justify-start text-left font-normal w-full"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dueDate ? format(dueDate, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={dueDate}
-                onSelect={setDueDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="difficulty">Difficulty Level</Label>
-          <Select value={difficultyLevel} onValueChange={setDifficultyLevel}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select difficulty" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="easy">Easy</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="hard">Hard</SelectItem>
-              <SelectItem value="advanced">Advanced</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="submission-type">Submission Type</Label>
-        <Select value={submissionType} onValueChange={setSubmissionType}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select submission type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="code">Code Submission</SelectItem>
-            <SelectItem value="document">Document Upload</SelectItem>
-            <SelectItem value="quiz">Online Quiz</SelectItem>
-            <SelectItem value="project">Project Submission</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      {submissionType === "code" && (
-        <div className="space-y-2 p-3 border rounded-md bg-muted/30">
-          <Label htmlFor="test-cases">Test Cases (Optional)</Label>
-          <Textarea
-            id="test-cases"
-            placeholder="Enter test cases for automated grading"
-            className="min-h-[80px]"
-          />
-          <p className="text-xs text-muted-foreground">
-            Enter input/output pairs separated by newlines for automated testing
-          </p>
-        </div>
-      )}
-      
-      <DialogFooter className="mt-6">
-        <Button variant="outline">Cancel</Button>
-        <Button onClick={handleSubmit}>Create Assignment</Button>
-      </DialogFooter>
-    </div>
-  );
-};
-
-// Faculty Dashboard Component
 const FacultyDashboard = () => {
-  const { profile } = useAuth();
-  const [uploadedContent, setUploadedContent] = useState<any[]>([]);
-  const [assignments, setAssignments] = useState(assignmentsMock);
-  const [courses, setCourses] = useState(coursesMock);
-  const [contentUploadOpen, setContentUploadOpen] = useState(false);
-  const [assignmentCreatorOpen, setAssignmentCreatorOpen] = useState(false);
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [students, setStudents] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [submissions, setSubmissions] = useState([]);
+  const [attendance, setAttendance] = useState([]);
+  const [loading, setLoading] = useState(true);
   
-  const handleContentUpload = (newContent: any) => {
-    setUploadedContent([newContent, ...uploadedContent]);
-    setContentUploadOpen(false);
+  // Form states
+  const [newCourse, setNewCourse] = useState({
+    title: "",
+    description: "",
+    category: "",
+    duration: "",
+    status: "available"
+  });
+  
+  const [newAssignment, setNewAssignment] = useState({
+    title: "",
+    description: "",
+    due_date: new Date(),
+    total_marks: 100,
+    course_id: "",
+    submission_type: "file",
+    page_limit: null
+  });
+  
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    description: "",
+    event_date: new Date(),
+    event_type: "lecture",
+    course_id: ""
+  });
+  
+  // Modal states
+  const [courseModalOpen, setCourseModalOpen] = useState(false);
+  const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
+  const [eventModalOpen, setEventModalOpen] = useState(false);
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const studentsData = await getAllStudents();
+        const coursesData = await getFacultyCourses();
+        const assignmentsData = await getAssignments();
+        
+        setStudents(studentsData);
+        setCourses(coursesData);
+        setAssignments(assignmentsData);
+        
+        if (coursesData.length > 0) {
+          setSelectedCourse(coursesData[0].id);
+          
+          // Get attendance for the first course
+          const attendanceData = await getCourseAttendance(coursesData[0].id);
+          setAttendance(attendanceData);
+        }
+        
+        if (assignmentsData.length > 0) {
+          setSelectedAssignment(assignmentsData[0].id);
+          
+          // Get submissions for the first assignment
+          const submissionsData = await getAllSubmissionsForAssignment(assignmentsData[0].id);
+          setSubmissions(submissionsData);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+  
+  const handleCourseChange = async (courseId) => {
+    setSelectedCourse(courseId);
+    try {
+      const attendanceData = await getCourseAttendance(courseId);
+      setAttendance(attendanceData);
+    } catch (error) {
+      console.error("Error fetching attendance:", error);
+      toast.error("Failed to load attendance data");
+    }
   };
   
-  const handleAssignmentCreate = (newAssignment: any) => {
-    setAssignments([newAssignment, ...assignments]);
-    setAssignmentCreatorOpen(false);
+  const handleAssignmentChange = async (assignmentId) => {
+    setSelectedAssignment(assignmentId);
+    try {
+      const submissionsData = await getAllSubmissionsForAssignment(assignmentId);
+      setSubmissions(submissionsData);
+    } catch (error) {
+      console.error("Error fetching submissions:", error);
+      toast.error("Failed to load submission data");
+    }
+  };
+  
+  const handleMarkAttendance = async (studentId, status) => {
+    if (!selectedCourse) return;
+    
+    try {
+      await markAttendance(
+        studentId,
+        selectedCourse,
+        format(new Date(), "yyyy-MM-dd"),
+        status
+      );
+      
+      toast.success("Attendance marked successfully");
+      
+      // Refresh attendance data
+      const attendanceData = await getCourseAttendance(selectedCourse);
+      setAttendance(attendanceData);
+    } catch (error) {
+      console.error("Error marking attendance:", error);
+      toast.error("Failed to mark attendance");
+    }
+  };
+  
+  const handleCreateCourse = async () => {
+    try {
+      await createCourse(newCourse);
+      toast.success("Course created successfully");
+      setCourseModalOpen(false);
+      
+      // Refresh courses data
+      const coursesData = await getFacultyCourses();
+      setCourses(coursesData);
+      
+      // Reset form
+      setNewCourse({
+        title: "",
+        description: "",
+        category: "",
+        duration: "",
+        status: "available"
+      });
+    } catch (error) {
+      console.error("Error creating course:", error);
+      toast.error("Failed to create course");
+    }
+  };
+  
+  const handleCreateAssignment = async () => {
+    try {
+      await createAssignment({
+        ...newAssignment,
+        due_date: format(newAssignment.due_date, "yyyy-MM-dd'T'HH:mm:ssXXX")
+      });
+      
+      toast.success("Assignment created successfully");
+      setAssignmentModalOpen(false);
+      
+      // Refresh assignments data
+      const assignmentsData = await getAssignments();
+      setAssignments(assignmentsData);
+      
+      // Reset form
+      setNewAssignment({
+        title: "",
+        description: "",
+        due_date: new Date(),
+        total_marks: 100,
+        course_id: "",
+        submission_type: "file",
+        page_limit: null
+      });
+    } catch (error) {
+      console.error("Error creating assignment:", error);
+      toast.error("Failed to create assignment");
+    }
+  };
+  
+  const handleCreateEvent = async () => {
+    try {
+      await createEvent(
+        newEvent.title,
+        newEvent.description,
+        format(newEvent.event_date, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+        newEvent.event_type,
+        newEvent.course_id || null
+      );
+      
+      toast.success("Event created successfully");
+      setEventModalOpen(false);
+      
+      // Reset form
+      setNewEvent({
+        title: "",
+        description: "",
+        event_date: new Date(),
+        event_type: "lecture",
+        course_id: ""
+      });
+    } catch (error) {
+      console.error("Error creating event:", error);
+      toast.error("Failed to create event");
+    }
   };
 
   return (
@@ -512,1111 +237,858 @@ const FacultyDashboard = () => {
       <div className="container py-6">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold">Faculty Dashboard</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Faculty Dashboard</h1>
             <p className="text-muted-foreground">
-              Welcome back, {profile?.full_name || "Professor"}
+              Manage your courses, assignments, and monitor student progress
             </p>
           </div>
-          
           <div className="flex gap-2">
-            <Dialog open={contentUploadOpen} onOpenChange={setContentUploadOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <FileUp className="h-4 w-4" /> Upload Content
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px]">
-                <DialogHeader>
-                  <DialogTitle>Upload Course Content</DialogTitle>
-                  <DialogDescription>
-                    Upload videos, documents, quizzes or assignments for your courses
-                  </DialogDescription>
-                </DialogHeader>
-                <ContentUploadModal onUpload={handleContentUpload} />
-              </DialogContent>
-            </Dialog>
-            
-            <Dialog open={assignmentCreatorOpen} onOpenChange={setAssignmentCreatorOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2" variant="outline">
-                  <Code className="h-4 w-4" /> Create Assignment
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px]">
-                <DialogHeader>
-                  <DialogTitle>Create New Assignment</DialogTitle>
-                  <DialogDescription>
-                    Create a new assignment or coding challenge for your students
-                  </DialogDescription>
-                </DialogHeader>
-                <AssignmentCreatorModal onCreate={handleAssignmentCreate} />
-              </DialogContent>
-            </Dialog>
+            <DialogTrigger asChild onClick={() => setCourseModalOpen(true)}>
+              <Button>
+                <BookOpen className="mr-2 h-4 w-4" /> Create Course
+              </Button>
+            </DialogTrigger>
+            <DialogTrigger asChild onClick={() => setAssignmentModalOpen(true)}>
+              <Button variant="outline">
+                <FileText className="mr-2 h-4 w-4" /> Create Assignment
+              </Button>
+            </DialogTrigger>
+            <DialogTrigger asChild onClick={() => setEventModalOpen(true)}>
+              <Button variant="outline">
+                <Calendar className="mr-2 h-4 w-4" /> Schedule Event
+              </Button>
+            </DialogTrigger>
           </div>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <Users className="h-5 w-5 mr-2 text-campus-purple" /> 
-                Students
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">136</div>
-              <p className="text-muted-foreground text-sm">Total enrolled students</p>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <p className="font-medium">Active Today</p>
-                  <p className="text-muted-foreground">89</p>
-                </div>
-                <div>
-                  <p className="font-medium">Assignment Submissions</p>
-                  <p className="text-muted-foreground">43 (last 7 days)</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <BookOpen className="h-5 w-5 mr-2 text-campus-blue" /> 
-                Courses
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">3</div>
-              <p className="text-muted-foreground text-sm">Active courses</p>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <p className="font-medium">Total Content</p>
-                  <p className="text-muted-foreground">42 modules</p>
-                </div>
-                <div>
-                  <p className="font-medium">Avg. Completion</p>
-                  <p className="text-muted-foreground">74%</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <FileText className="h-5 w-5 mr-2 text-campus-green" /> 
-                Assignments
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">4</div>
-              <p className="text-muted-foreground text-sm">Active assignments</p>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <p className="font-medium">Pending Grading</p>
-                  <p className="text-muted-foreground">18 submissions</p>
-                </div>
-                <div>
-                  <p className="font-medium">Avg. Score</p>
-                  <p className="text-muted-foreground">82%</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="bg-campus-purple/10 text-campus-purple">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-white">Overview</TabsTrigger>
-            <TabsTrigger value="content" className="data-[state=active]:bg-white">Course Content</TabsTrigger>
-            <TabsTrigger value="assignments" className="data-[state=active]:bg-white">Assignments</TabsTrigger>
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-white">Student Analytics</TabsTrigger>
+
+        <Tabs
+          defaultValue="overview"
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-4"
+        >
+          <TabsList className="bg-muted">
+            <TabsTrigger value="overview">
+              <BarChart3 className="h-4 w-4 mr-2" /> Overview
+            </TabsTrigger>
+            <TabsTrigger value="students">
+              <Users className="h-4 w-4 mr-2" /> Students
+            </TabsTrigger>
+            <TabsTrigger value="courses">
+              <BookOpen className="h-4 w-4 mr-2" /> Courses
+            </TabsTrigger>
+            <TabsTrigger value="assignments">
+              <FileText className="h-4 w-4 mr-2" /> Assignments
+            </TabsTrigger>
+            <TabsTrigger value="attendance">
+              <GraduationCap className="h-4 w-4 mr-2" /> Attendance
+            </TabsTrigger>
+            <TabsTrigger value="coding">
+              <Code className="h-4 w-4 mr-2" /> Coding Progress
+            </TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="overview">
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              <Card className="xl:col-span-2">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center">
-                    <BarChart3 className="h-5 w-5 mr-2 text-campus-purple" /> 
-                    Module Completion Rates
-                  </CardTitle>
-                  <CardDescription>
-                    Weekly module completion rates across all courses
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={moduleCompletionData}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis 
-                          label={{ 
-                            value: 'Completion %', 
-                            angle: -90, 
-                            position: 'insideLeft' 
-                          }} 
-                        />
-                        <Tooltip />
-                        <Bar 
-                          dataKey="completion" 
-                          fill="#8884d8" 
-                          name="Completion Rate (%)"
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Student Grade Distribution</CardTitle>
-                  <CardDescription>
-                    Overall grade distribution across all courses
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={studentPerformanceData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          paddingAngle={2}
-                          dataKey="value"
-                          label={({ name, value }) => `${name}: ${value}`}
-                        >
-                          {studentPerformanceData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    {studentPerformanceData.map((entry, index) => (
-                      <div key={index} className="flex items-center text-sm">
-                        <div
-                          className="h-3 w-3 mr-1 rounded-sm"
-                          style={{ backgroundColor: entry.color }}
-                        />
-                        <span>{entry.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-6">
-              <Card className="md:col-span-7">
-                <CardHeader>
-                  <CardTitle className="text-lg">Upcoming Sessions</CardTitle>
-                  <CardDescription>
-                    Your scheduled classes and lectures
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {upcomingSessionsMock.map((session) => (
-                      <Card key={session.id} className="shadow-none border">
-                        <CardHeader className="p-3">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <CardTitle className="text-base">{session.title}</CardTitle>
-                              <CardDescription>{session.course}</CardDescription>
-                            </div>
-                            <Badge>{session.type}</Badge>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="p-3 pt-0">
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div className="flex items-center">
-                              <CalendarIcon className="h-4 w-4 mr-1 text-muted-foreground" />
-                              <span>
-                                {format(session.date, "MMM d, yyyy 'at' h:mm a")}
-                              </span>
-                            </div>
-                            <div className="flex items-center">
-                              <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
-                              <span>{session.duration}</span>
-                            </div>
-                          </div>
-                        </CardContent>
-                        <CardFooter className="p-3 pt-0">
-                          <Button variant="outline" size="sm" className="mr-2">
-                            Reschedule
-                          </Button>
-                          <Button size="sm">Start Session</Button>
-                        </CardFooter>
-                      </Card>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="md:col-span-5">
-                <CardHeader>
-                  <CardTitle className="text-lg">Recent Activity</CardTitle>
-                  <CardDescription>
-                    Student interactions in the last 24 hours
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="bg-green-100 p-2 rounded-full">
-                        <FileText className="h-4 w-4 text-green-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Assignment Submission</p>
-                        <p className="text-xs text-muted-foreground">
-                          Alex Johnson submitted "Binary Tree Implementation"
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          15 minutes ago
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <MessageSquare className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Discussion Comment</p>
-                        <p className="text-xs text-muted-foreground">
-                          Maria Garcia commented on "Help with React Hooks"
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          34 minutes ago
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="bg-purple-100 p-2 rounded-full">
-                        <Video className="h-4 w-4 text-purple-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Content Viewed</p>
-                        <p className="text-xs text-muted-foreground">
-                          12 students watched "Introduction to Binary Trees"
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          1 hour ago
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="bg-yellow-100 p-2 rounded-full">
-                        <Check className="h-4 w-4 text-yellow-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Quiz Completed</p>
-                        <p className="text-xs text-muted-foreground">
-                          8 students completed "JavaScript Fundamentals Quiz"
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          2 hours ago
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="content">
-            <div className="mb-4 flex justify-between items-center">
-              <div>
-                <h2 className="text-xl font-bold">Course Content Management</h2>
-                <p className="text-muted-foreground">
-                  Upload, manage and schedule content for your courses
-                </p>
-              </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button>
-                    <PlusCircle className="h-4 w-4 mr-1" /> Upload New Content
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px]">
-                  <DialogHeader>
-                    <DialogTitle>Upload Course Content</DialogTitle>
-                    <DialogDescription>
-                      Upload videos, documents, quizzes or assignments for your courses
-                    </DialogDescription>
-                  </DialogHeader>
-                  <ContentUploadModal onUpload={handleContentUpload} />
-                </DialogContent>
-              </Dialog>
-            </div>
-            
-            <div className="space-y-4">
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Your Courses</CardTitle>
-                  <CardDescription>
-                    Select a course to view and manage its content
-                  </CardDescription>
+                  <CardTitle className="text-sm font-medium">
+                    Total Students
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {courses.map((course) => (
-                      <Card key={course.id} className="bg-muted/30">
-                        <CardHeader className="p-4">
-                          <CardTitle className="text-base">{course.title}</CardTitle>
-                          <CardDescription>{course.code}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0 pb-2">
-                          <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>
-                              <p className="font-medium">Students</p>
-                              <p className="text-muted-foreground">{course.studentsEnrolled}</p>
-                            </div>
-                            <div>
-                              <p className="font-medium">Completion</p>
-                              <p className="text-muted-foreground">{course.completionRate}%</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                        <CardFooter className="p-4 pt-0">
-                          <Button className="w-full" variant="outline">
-                            Manage Content
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                    ))}
+                  <div className="text-2xl font-bold">{students.length}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Courses
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{courses.length}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Active Assignments
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {assignments.filter(a => new Date(a.due_date) > new Date()).length}
                   </div>
                 </CardContent>
               </Card>
-              
-              {/* Recently Uploaded Content */}
-              <Card>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="col-span-1">
                 <CardHeader>
-                  <CardTitle className="text-lg">Recently Uploaded Content</CardTitle>
+                  <CardTitle>Recent Assignments</CardTitle>
                   <CardDescription>
-                    Content you've recently added to your courses
+                    Latest assignments and their status
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {uploadedContent.length > 0 ? (
+                  <ScrollArea className="h-[300px]">
                     <div className="space-y-4">
-                      {uploadedContent.map((content) => (
-                        <Card key={content.id} className="shadow-none border">
-                          <CardHeader className="p-3 pb-0">
-                            <div className="flex justify-between items-start">
-                              <div className="flex items-center gap-2">
-                                {content.type === "video" && (
-                                  <div className="bg-red-100 p-2 rounded-md">
-                                    <Video className="h-4 w-4 text-red-600" />
-                                  </div>
-                                )}
-                                {content.type === "document" && (
-                                  <div className="bg-blue-100 p-2 rounded-md">
-                                    <FileText className="h-4 w-4 text-blue-600" />
-                                  </div>
-                                )}
-                                {content.type === "quiz" && (
-                                  <div className="bg-green-100 p-2 rounded-md">
-                                    <Check className="h-4 w-4 text-green-600" />
-                                  </div>
-                                )}
-                                {content.type === "assignment" && (
-                                  <div className="bg-purple-100 p-2 rounded-md">
-                                    <Code className="h-4 w-4 text-purple-600" />
-                                  </div>
-                                )}
-                                <div>
-                                  <CardTitle className="text-base">{content.title}</CardTitle>
-                                  <CardDescription>
-                                    {content.course === "CS202" ? "CS202: Data Structures & Algorithms" :
-                                    content.course === "CS301" ? "CS301: Advanced Web Development" :
-                                    "CS305: Database Management Systems"}
-                                  </CardDescription>
-                                </div>
-                              </div>
-                              <Badge variant="outline">{content.visibility}</Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="p-3">
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                              <div>
-                                <p className="font-medium">File Name</p>
-                                <p className="text-muted-foreground truncate">
-                                  {content.fileName}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="font-medium">Uploaded On</p>
-                                <p className="text-muted-foreground">
-                                  {format(content.uploadDate, "MMM d, yyyy")}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="font-medium">Scheduled For</p>
-                                <p className="text-muted-foreground">
-                                  {format(content.scheduledDate, "MMM d, yyyy")}
-                                </p>
-                              </div>
-                            </div>
-                            {content.description && (
-                              <p className="text-sm mt-2 line-clamp-2">
-                                {content.description}
-                              </p>
-                            )}
-                          </CardContent>
-                          <CardFooter className="p-3 pt-0">
-                            <div className="flex gap-2">
-                              <Button variant="outline" size="sm">
-                                Edit
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                Reschedule
-                              </Button>
-                              <Button size="sm" className="ml-auto">
-                                View
-                              </Button>
-                            </div>
-                          </CardFooter>
-                        </Card>
+                      {assignments.slice(0, 5).map((assignment) => (
+                        <div key={assignment.id} className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium">{assignment.title}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Due: {format(new Date(assignment.due_date), "MMM dd, yyyy")}
+                            </p>
+                          </div>
+                          <Badge variant={
+                            new Date(assignment.due_date) > new Date() 
+                              ? "default" 
+                              : "secondary"
+                          }>
+                            {new Date(assignment.due_date) > new Date() 
+                              ? "Active" 
+                              : "Past due"}
+                          </Badge>
+                        </div>
                       ))}
+                      {assignments.length === 0 && (
+                        <p className="text-center text-muted-foreground py-4">
+                          No assignments found
+                        </p>
+                      )}
                     </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <FileUp className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                      <h3 className="text-lg font-medium">No content uploaded yet</h3>
-                      <p className="text-muted-foreground">
-                        Upload course content to get started
-                      </p>
-                      <Button variant="outline" className="mt-4" onClick={() => setContentUploadOpen(true)}>
-                        Upload Content
-                      </Button>
-                    </div>
-                  )}
+                  </ScrollArea>
                 </CardContent>
-              </Card>
-              
-              {/* Content Library */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Content Library</CardTitle>
-                  <CardDescription>
-                    Browse all your course content
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex flex-col md:flex-row justify-between gap-4">
-                      <div className="flex gap-2">
-                        <Select defaultValue="all-courses">
-                          <SelectTrigger className="w-[200px]">
-                            <SelectValue placeholder="Filter by course" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all-courses">All Courses</SelectItem>
-                            <SelectItem value="CS202">CS202: Data Structures & Algorithms</SelectItem>
-                            <SelectItem value="CS301">CS301: Advanced Web Development</SelectItem>
-                            <SelectItem value="CS305">CS305: Database Management Systems</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        
-                        <Select defaultValue="all-types">
-                          <SelectTrigger className="w-[200px]">
-                            <SelectValue placeholder="Filter by type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all-types">All Types</SelectItem>
-                            <SelectItem value="video">Videos</SelectItem>
-                            <SelectItem value="document">Documents</SelectItem>
-                            <SelectItem value="quiz">Quizzes</SelectItem>
-                            <SelectItem value="assignment">Assignments</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="flex gap-2 md:ml-auto">
-                        <Button variant="outline">
-                          <Upload className="h-4 w-4 mr-1" /> Bulk Upload
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="border rounded-lg overflow-hidden">
-                      <table className="min-w-full">
-                        <thead className="bg-muted/50">
-                          <tr>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Title</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Type</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Course</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Status</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Date</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                          <tr>
-                            <td className="px-4 py-3 text-sm">Binary Tree Traversal</td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                                <Video className="h-3 w-3 mr-1" /> Video
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">CS202</td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge className="bg-green-500">Published</Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">Apr 10, 2023</td>
-                            <td className="px-4 py-3 text-sm">
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="ghost">Edit</Button>
-                                <Button size="sm" variant="ghost">View</Button>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-3 text-sm">React Hooks Overview</td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                <FileText className="h-3 w-3 mr-1" /> Document
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">CS301</td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge className="bg-green-500">Published</Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">Apr 8, 2023</td>
-                            <td className="px-4 py-3 text-sm">
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="ghost">Edit</Button>
-                                <Button size="sm" variant="ghost">View</Button>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-3 text-sm">Database Normalization Quiz</td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                <Check className="h-3 w-3 mr-1" /> Quiz
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">CS305</td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline">Scheduled</Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">Apr 15, 2023</td>
-                            <td className="px-4 py-3 text-sm">
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="ghost">Edit</Button>
-                                <Button size="sm" variant="ghost">View</Button>
-                              </div>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="assignments">
-            <div className="mb-4 flex justify-between items-center">
-              <div>
-                <h2 className="text-xl font-bold">Assignments & Grading</h2>
-                <p className="text-muted-foreground">
-                  Create, manage and grade student assignments
-                </p>
-              </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button>
-                    <PlusCircle className="h-4 w-4 mr-1" /> Create Assignment
+                <CardFooter>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => setActiveTab("assignments")}
+                  >
+                    View All Assignments
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px]">
-                  <DialogHeader>
-                    <DialogTitle>Create New Assignment</DialogTitle>
-                    <DialogDescription>
-                      Create a new assignment or coding challenge for your students
-                    </DialogDescription>
-                  </DialogHeader>
-                  <AssignmentCreatorModal onCreate={handleAssignmentCreate} />
-                </DialogContent>
-              </Dialog>
-            </div>
-            
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Active Assignments</CardTitle>
-                  <CardDescription>
-                    Currently active assignments and their status
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {assignments
-                      .filter(assignment => assignment.status === "Active")
-                      .map((assignment) => (
-                        <Card key={assignment.id} className="shadow-none border">
-                          <CardHeader className="p-3 pb-0">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <CardTitle className="text-base">{assignment.title}</CardTitle>
-                                <CardDescription>{assignment.course}</CardDescription>
-                              </div>
-                              <Badge>Active</Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="p-3">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                              <div>
-                                <p className="font-medium">Due Date</p>
-                                <p className="text-muted-foreground">
-                                  {assignment.dueDate}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="font-medium">Submissions</p>
-                                <p className="text-muted-foreground">
-                                  {assignment.submissionsReceived} / {assignment.totalStudents}
-                                </p>
-                              </div>
-                              <div className="col-span-2">
-                                <p className="font-medium">Submission Progress</p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Progress 
-                                    value={(assignment.submissionsReceived / assignment.totalStudents) * 100} 
-                                    className="h-2" 
-                                  />
-                                  <span className="text-xs w-10 text-right">
-                                    {Math.round((assignment.submissionsReceived / assignment.totalStudents) * 100)}%
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                          <CardFooter className="p-3 pt-0">
-                            <div className="flex flex-wrap gap-2">
-                              <Button variant="outline" size="sm">
-                                Edit
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                View Submissions
-                              </Button>
-                              <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600">
-                                <X className="h-4 w-4 mr-1" /> Close
-                              </Button>
-                              <Button size="sm" className="ml-auto">
-                                Grade
-                              </Button>
-                            </div>
-                          </CardFooter>
-                        </Card>
-                    ))}
-                  </div>
-                </CardContent>
+                </CardFooter>
               </Card>
-              
-              <Card>
+
+              <Card className="col-span-1">
                 <CardHeader>
-                  <CardTitle className="text-lg">Past Assignments</CardTitle>
+                  <CardTitle>Student Performance</CardTitle>
                   <CardDescription>
-                    Completed assignments and their results
+                    Top performing students based on assignment submissions
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {assignments
-                      .filter(assignment => assignment.status === "Completed")
-                      .map((assignment) => (
-                        <Card key={assignment.id} className="shadow-none border">
-                          <CardHeader className="p-3 pb-0">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <CardTitle className="text-base">{assignment.title}</CardTitle>
-                                <CardDescription>{assignment.course}</CardDescription>
-                              </div>
-                              <Badge variant="outline">Completed</Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="p-3">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                              <div>
-                                <p className="font-medium">Due Date</p>
-                                <p className="text-muted-foreground">
-                                  {assignment.dueDate}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="font-medium">Submissions</p>
-                                <p className="text-muted-foreground">
-                                  {assignment.submissionsReceived} / {assignment.totalStudents}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="font-medium">Avg. Grade</p>
-                                <p className="text-muted-foreground">
-                                  85%
-                                </p>
-                              </div>
-                              <div>
-                                <p className="font-medium">Status</p>
-                                <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
-                                  Graded
-                                </Badge>
-                              </div>
-                            </div>
-                          </CardContent>
-                          <CardFooter className="p-3 pt-0">
-                            <div className="flex flex-wrap gap-2">
-                              <Button variant="outline" size="sm">
-                                View Results
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                Export Grades
-                              </Button>
-                              <Button size="sm" className="ml-auto">
-                                Reopen
-                              </Button>
-                            </div>
-                          </CardFooter>
-                        </Card>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Assignment Analytics</CardTitle>
-                  <CardDescription>
-                    Performance metrics across assignments
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">Submission Rates by Course</h3>
-                      <div className="space-y-2">
-                        <div>
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>CS202: Data Structures & Algorithms</span>
-                            <span>93%</span>
+                  <ScrollArea className="h-[300px]">
+                    <div className="space-y-4">
+                      {students.slice(0, 5).map((student) => (
+                        <div key={student.id} className="space-y-2">
+                          <div className="flex justify-between">
+                            <div className="font-medium">{student.full_name}</div>
+                            <div className="text-sm text-muted-foreground">85%</div>
                           </div>
-                          <Progress value={93} className="h-2" />
+                          <Progress value={85} className="h-2" />
                         </div>
-                        <div>
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>CS301: Advanced Web Development</span>
-                            <span>87%</span>
-                          </div>
-                          <Progress value={87} className="h-2" />
-                        </div>
-                        <div>
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>CS305: Database Management Systems</span>
-                            <span>92%</span>
-                          </div>
-                          <Progress value={92} className="h-2" />
-                        </div>
-                      </div>
+                      ))}
+                      {students.length === 0 && (
+                        <p className="text-center text-muted-foreground py-4">
+                          No students found
+                        </p>
+                      )}
                     </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">Average Grades by Assignment Type</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <Card>
-                          <CardContent className="p-4">
-                            <div className="text-center">
-                              <p className="text-xs text-muted-foreground">Coding Assignments</p>
-                              <p className="text-2xl font-bold mt-1">82%</p>
-                              <Badge variant="outline" className="mt-2">34 Assignments</Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
-                        <Card>
-                          <CardContent className="p-4">
-                            <div className="text-center">
-                              <p className="text-xs text-muted-foreground">Written Assignments</p>
-                              <p className="text-2xl font-bold mt-1">88%</p>
-                              <Badge variant="outline" className="mt-2">27 Assignments</Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
-                        <Card>
-                          <CardContent className="p-4">
-                            <div className="text-center">
-                              <p className="text-xs text-muted-foreground">Quizzes</p>
-                              <p className="text-2xl font-bold mt-1">74%</p>
-                              <Badge variant="outline" className="mt-2">42 Quizzes</Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
-                        <Card>
-                          <CardContent className="p-4">
-                            <div className="text-center">
-                              <p className="text-xs text-muted-foreground">Projects</p>
-                              <p className="text-2xl font-bold mt-1">91%</p>
-                              <Badge variant="outline" className="mt-2">8 Projects</Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    </div>
-                  </div>
+                  </ScrollArea>
                 </CardContent>
+                <CardFooter>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => setActiveTab("students")}
+                  >
+                    View All Students
+                  </Button>
+                </CardFooter>
               </Card>
             </div>
           </TabsContent>
-          
-          <TabsContent value="analytics">
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <Users className="h-8 w-8 mx-auto text-campus-purple mb-2" />
-                      <h3 className="text-2xl font-bold">136</h3>
-                      <p className="text-sm text-muted-foreground">Total Students</p>
+
+          {/* Students Tab */}
+          <TabsContent value="students" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Student Progress</CardTitle>
+                <CardDescription>
+                  Monitor academic and coding progress of all students
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="p-3 text-left font-medium">Name</th>
+                        <th className="p-3 text-left font-medium">Student ID</th>
+                        <th className="p-3 text-left font-medium">Academic Progress</th>
+                        <th className="p-3 text-left font-medium">Coding Progress</th>
+                        <th className="p-3 text-left font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students.map((student) => (
+                        <tr key={student.id} className="border-b">
+                          <td className="p-3">{student.full_name}</td>
+                          <td className="p-3">{student.username || "N/A"}</td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              <Progress value={75} className="h-2 flex-1" />
+                              <span className="text-sm">75%</span>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              <Progress value={60} className="h-2 flex-1" />
+                              <span className="text-sm">60%</span>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <Button variant="ghost" size="sm">
+                              View Details
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                      {students.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="p-3 text-center text-muted-foreground">
+                            No students found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Courses Tab */}
+          <TabsContent value="courses" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {courses.map((course) => (
+                <Card key={course.id} className="overflow-hidden">
+                  <div className="h-2 bg-primary" />
+                  <CardHeader>
+                    <CardTitle>{course.title}</CardTitle>
+                    <CardDescription>
+                      {course.category} • {course.duration || "Self-paced"}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                      {course.description || "No description available"}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <Badge variant={course.status === "available" ? "default" : "outline"}>
+                        {course.status === "available" ? "Available" : "Draft"}
+                      </Badge>
                     </div>
                   </CardContent>
+                  <CardFooter className="flex justify-between">
+                    <Button variant="outline" size="sm">View Details</Button>
+                    <Button variant="default" size="sm">Edit Course</Button>
+                  </CardFooter>
                 </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <Clock className="h-8 w-8 mx-auto text-campus-blue mb-2" />
-                      <h3 className="text-2xl font-bold">83%</h3>
-                      <p className="text-sm text-muted-foreground">Avg. Attendance</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <Code className="h-8 w-8 mx-auto text-campus-green mb-2" />
-                      <h3 className="text-2xl font-bold">74%</h3>
-                      <p className="text-sm text-muted-foreground">Avg. Assignment Completion</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <BarChart3 className="h-8 w-8 mx-auto text-campus-pink mb-2" />
-                      <h3 className="text-2xl font-bold">B+</h3>
-                      <p className="text-sm text-muted-foreground">Avg. Grade</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              
+              ))}
+
+              {courses.length === 0 && (
+                <div className="col-span-3 text-center p-12">
+                  <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <h3 className="mt-4 text-lg font-semibold">No courses yet</h3>
+                  <p className="text-muted-foreground">
+                    Get started by creating your first course
+                  </p>
+                  <Button 
+                    className="mt-4" 
+                    onClick={() => setCourseModalOpen(true)}
+                  >
+                    Create Course
+                  </Button>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Assignments Tab */}
+          <TabsContent value="assignments" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Assignments</CardTitle>
+                <CardDescription>
+                  View and manage your assignments
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="p-3 text-left font-medium">Title</th>
+                        <th className="p-3 text-left font-medium">Due Date</th>
+                        <th className="p-3 text-left font-medium">Total Marks</th>
+                        <th className="p-3 text-left font-medium">Status</th>
+                        <th className="p-3 text-left font-medium">Submissions</th>
+                        <th className="p-3 text-left font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {assignments.map((assignment) => (
+                        <tr key={assignment.id} className="border-b">
+                          <td className="p-3">{assignment.title}</td>
+                          <td className="p-3">
+                            {format(new Date(assignment.due_date), "MMM dd, yyyy")}
+                          </td>
+                          <td className="p-3">{assignment.total_marks}</td>
+                          <td className="p-3">
+                            <Badge variant={
+                              new Date(assignment.due_date) > new Date() 
+                                ? "default" 
+                                : "secondary"
+                            }>
+                              {new Date(assignment.due_date) > new Date() 
+                                ? "Active" 
+                                : "Past due"}
+                            </Badge>
+                          </td>
+                          <td className="p-3">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleAssignmentChange(assignment.id)}
+                            >
+                              View Submissions
+                            </Button>
+                          </td>
+                          <td className="p-3">
+                            <Button variant="ghost" size="sm">Edit</Button>
+                          </td>
+                        </tr>
+                      ))}
+                      {assignments.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="p-3 text-center text-muted-foreground">
+                            No assignments found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {selectedAssignment && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Student Performance Overview</CardTitle>
+                  <CardTitle>Submissions</CardTitle>
                   <CardDescription>
-                    Detailed analytics of student performance across courses
+                    Student submissions for the selected assignment
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base">CS202: Data Structures & Algorithms</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          <div>
-                            <h4 className="text-sm font-medium mb-2">Grade Distribution</h4>
-                            <div className="h-[200px]">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                  <Pie
-                                    data={[
-                                      { name: "A", value: 18, color: "#4CAF50" },
-                                      { name: "B", value: 15, color: "#8BC34A" },
-                                      { name: "C", value: 8, color: "#FFC107" },
-                                      { name: "D", value: 3, color: "#FF9800" },
-                                      { name: "F", value: 2, color: "#F44336" },
-                                    ]}
-                                    cx="50%"
-                                    cy="50%"
-                                    outerRadius={60}
-                                    fill="#8884d8"
-                                    label={({ name, value }) => `${name}: ${value}`}
-                                    dataKey="value"
-                                  >
-                                    {
-                                      [
-                                        { name: "A", value: 18, color: "#4CAF50" },
-                                        { name: "B", value: 15, color: "#8BC34A" },
-                                        { name: "C", value: 8, color: "#FFC107" },
-                                        { name: "D", value: 3, color: "#FF9800" },
-                                        { name: "F", value: 2, color: "#F44336" },
-                                      ].map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                      ))
-                                    }
-                                  </Pie>
-                                  <Tooltip />
-                                </PieChart>
-                              </ResponsiveContainer>
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <h4 className="text-sm font-medium mb-2">Assignment Completion</h4>
-                            <div className="space-y-2">
-                              <div>
-                                <div className="flex justify-between text-sm mb-1">
-                                  <span>Assignment 1</span>
-                                  <span>98%</span>
-                                </div>
-                                <Progress value={98} className="h-2" />
-                              </div>
-                              <div>
-                                <div className="flex justify-between text-sm mb-1">
-                                  <span>Assignment 2</span>
-                                  <span>94%</span>
-                                </div>
-                                <Progress value={94} className="h-2" />
-                              </div>
-                              <div>
-                                <div className="flex justify-between text-sm mb-1">
-                                  <span>Assignment 3</span>
-                                  <span>89%</span>
-                                </div>
-                                <Progress value={89} className="h-2" />
-                              </div>
-                              <div>
-                                <div className="flex justify-between text-sm mb-1">
-                                  <span>Assignment 4</span>
-                                  <span>93%</span>
-                                </div>
-                                <Progress value={93} className="h-2" />
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <h4 className="text-sm font-medium mb-2">Key Metrics</h4>
-                            <div className="space-y-3">
-                              <div className="flex justify-between items-center border-b pb-2">
-                                <span className="text-sm">Course Average</span>
-                                <Badge>86%</Badge>
-                              </div>
-                              <div className="flex justify-between items-center border-b pb-2">
-                                <span className="text-sm">Attendance Rate</span>
-                                <Badge>92%</Badge>
-                              </div>
-                              <div className="flex justify-between items-center border-b pb-2">
-                                <span className="text-sm">Pass Rate</span>
-                                <Badge>96%</Badge>
-                              </div>
-                              <div className="flex justify-between items-center border-b pb-2">
-                                <span className="text-sm">At-Risk Students</span>
-                                <Badge variant="outline" className="bg-red-100 text-red-700 border-red-200">5</Badge>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base">Individual Student Progress</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="border rounded-lg overflow-hidden">
-                          <table className="min-w-full">
-                            <thead className="bg-muted/50">
-                              <tr>
-                                <th className="px-4 py-2 text-left text-sm font-medium">Student</th>
-                                <th className="px-4 py-2 text-left text-sm font-medium">Overall Grade</th>
-                                <th className="px-4 py-2 text-left text-sm font-medium">Assignments</th>
-                                <th className="px-4 py-2 text-left text-sm font-medium">Attendance</th>
-                                <th className="px-4 py-2 text-left text-sm font-medium">Participation</th>
-                                <th className="px-4 py-2 text-left text-sm font-medium">Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                              <tr>
-                                <td className="px-4 py-3 text-sm">Alex Johnson</td>
-                                <td className="px-4 py-3 text-sm">
-                                  <Badge className="bg-green-500">A (92%)</Badge>
-                                </td>
-                                <td className="px-4 py-3 text-sm">9/10 completed</td>
-                                <td className="px-4 py-3 text-sm">94%</td>
-                                <td className="px-4 py-3 text-sm">High</td>
-                                <td className="px-4 py-3 text-sm">
-                                  <Button size="sm" variant="ghost">View Details</Button>
-                                </td>
-                              </tr>
-                              <tr>
-                                <td className="px-4 py-3 text-sm">Sarah Williams</td>
-                                <td className="px-4 py-3 text-sm">
-                                  <Badge className="bg-green-500">B+ (88%)</Badge>
-                                </td>
-                                <td className="px-4 py-3 text-sm">8/10 completed</td>
-                                <td className="px-4 py-3 text-sm">90%</td>
-                                <td className="px-4 py-3 text-sm">Medium</td>
-                                <td className="px-4 py-3 text-sm">
-                                  <Button size="sm" variant="ghost">View Details</Button>
-                                </td>
-                              </tr>
-                              <tr>
-                                <td className="px-4 py-3 text-sm">Michael Brown</td>
-                                <td className="px-4 py-3 text-sm">
-                                  <Badge className="bg-yellow-500">C (76%)</Badge>
-                                </td>
-                                <td className="px-4 py-3 text-sm">7/10 completed</td>
-                                <td className="px-4 py-3 text-sm">82%</td>
-                                <td className="px-4 py-3 text-sm">Low</td>
-                                <td className="px-4 py-3 text-sm">
-                                  <Button size="sm" variant="ghost">View Details</Button>
-                                </td>
-                              </tr>
-                              <tr>
-                                <td className="px-4 py-3 text-sm">Emily Davis</td>
-                                <td className="px-4 py-3 text-sm">
-                                  <Badge className="bg-red-500">D (64%)</Badge>
-                                </td>
-                                <td className="px-4 py-3 text-sm">5/10 completed</td>
-                                <td className="px-4 py-3 text-sm">70%</td>
-                                <td className="px-4 py-3 text-sm">Low</td>
-                                <td className="px-4 py-3 text-sm">
-                                  <Button size="sm" variant="ghost">View Details</Button>
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                        <div className="mt-4 flex justify-end">
-                          <Button>View All Students</Button>
-                        </div>
-                      </CardContent>
-                    </Card>
+                  <div className="rounded-md border">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b bg-muted/50">
+                          <th className="p-3 text-left font-medium">Student</th>
+                          <th className="p-3 text-left font-medium">Submission Date</th>
+                          <th className="p-3 text-left font-medium">File</th>
+                          <th className="p-3 text-left font-medium">Status</th>
+                          <th className="p-3 text-left font-medium">Marks</th>
+                          <th className="p-3 text-left font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {submissions.map((submission) => (
+                          <tr key={submission.id} className="border-b">
+                            <td className="p-3">{submission.profiles?.full_name || "Unknown Student"}</td>
+                            <td className="p-3">
+                              {format(new Date(submission.submission_date), "MMM dd, yyyy")}
+                            </td>
+                            <td className="p-3">
+                              <a 
+                                href={submission.file_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline"
+                              >
+                                {submission.file_name}
+                              </a>
+                            </td>
+                            <td className="p-3">
+                              <Badge variant={
+                                submission.status === "graded" 
+                                  ? "outline" 
+                                  : "default"
+                              }>
+                                {submission.status}
+                              </Badge>
+                            </td>
+                            <td className="p-3">
+                              {submission.marks_awarded !== null 
+                                ? submission.marks_awarded 
+                                : "Not graded"}
+                            </td>
+                            <td className="p-3">
+                              <Button variant="ghost" size="sm">Grade</Button>
+                            </td>
+                          </tr>
+                        ))}
+                        {submissions.length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="p-3 text-center text-muted-foreground">
+                              No submissions found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </CardContent>
               </Card>
-            </div>
+            )}
+          </TabsContent>
+
+          {/* Attendance Tab */}
+          <TabsContent value="attendance" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Attendance</CardTitle>
+                <CardDescription>
+                  Manage student attendance for your courses
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4">
+                  <Label>Select Course</Label>
+                  <Select 
+                    value={selectedCourse} 
+                    onValueChange={handleCourseChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a course" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {courses.map((course) => (
+                        <SelectItem key={course.id} value={course.id}>
+                          {course.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="rounded-md border">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="p-3 text-left font-medium">Student</th>
+                        <th className="p-3 text-left font-medium">Date</th>
+                        <th className="p-3 text-left font-medium">Status</th>
+                        <th className="p-3 text-left font-medium">Mark Attendance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students.map((student) => {
+                        const studentAttendance = attendance.find(
+                          a => a.user_id === student.id && 
+                          format(new Date(a.date), "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd")
+                        );
+                        
+                        return (
+                          <tr key={student.id} className="border-b">
+                            <td className="p-3">{student.full_name}</td>
+                            <td className="p-3">{format(new Date(), "MMM dd, yyyy")}</td>
+                            <td className="p-3">
+                              {studentAttendance ? (
+                                <Badge variant={
+                                  studentAttendance.status === "present" 
+                                    ? "default" 
+                                    : studentAttendance.status === "absent"
+                                    ? "destructive"
+                                    : "outline"
+                                }>
+                                  {studentAttendance.status}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline">Not marked</Badge>
+                              )}
+                            </td>
+                            <td className="p-3">
+                              <div className="flex gap-2">
+                                <Button 
+                                  variant={studentAttendance?.status === "present" ? "default" : "outline"} 
+                                  size="sm"
+                                  onClick={() => handleMarkAttendance(student.id, "present")}
+                                >
+                                  Present
+                                </Button>
+                                <Button 
+                                  variant={studentAttendance?.status === "absent" ? "destructive" : "outline"} 
+                                  size="sm"
+                                  onClick={() => handleMarkAttendance(student.id, "absent")}
+                                >
+                                  Absent
+                                </Button>
+                                <Button 
+                                  variant={studentAttendance?.status === "late" ? "secondary" : "outline"} 
+                                  size="sm"
+                                  onClick={() => handleMarkAttendance(student.id, "late")}
+                                >
+                                  Late
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {students.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="p-3 text-center text-muted-foreground">
+                            No students found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Coding Progress Tab */}
+          <TabsContent value="coding" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Student Coding Progress</CardTitle>
+                <CardDescription>
+                  Monitor coding progress and performance of students
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="p-3 text-left font-medium">Student</th>
+                        <th className="p-3 text-left font-medium">Challenges Completed</th>
+                        <th className="p-3 text-left font-medium">Success Rate</th>
+                        <th className="p-3 text-left font-medium">Languages</th>
+                        <th className="p-3 text-left font-medium">Last Activity</th>
+                        <th className="p-3 text-left font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students.map((student, index) => (
+                        <tr key={student.id} className="border-b">
+                          <td className="p-3">{student.full_name}</td>
+                          <td className="p-3">{15 - index}</td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              <Progress value={85 - (index * 5)} className="h-2 w-24" />
+                              <span className="text-sm">{85 - (index * 5)}%</span>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex gap-1">
+                              <Badge variant="outline">JavaScript</Badge>
+                              <Badge variant="outline">Python</Badge>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            {format(new Date(new Date().setDate(new Date().getDate() - index)), "MMM dd, yyyy")}
+                          </td>
+                          <td className="p-3">
+                            <Button variant="ghost" size="sm">View Details</Button>
+                          </td>
+                        </tr>
+                      ))}
+                      {students.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="p-3 text-center text-muted-foreground">
+                            No students found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Create Course Modal */}
+      <Dialog open={courseModalOpen} onOpenChange={setCourseModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Create New Course</DialogTitle>
+            <DialogDescription>
+              Add a new course to your teaching portfolio
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Course Title</Label>
+              <Input
+                id="title"
+                value={newCourse.title}
+                onChange={(e) => setNewCourse({...newCourse, title: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={newCourse.description}
+                onChange={(e) => setNewCourse({...newCourse, description: e.target.value})}
+                rows={4}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Input
+                  id="category"
+                  value={newCourse.category}
+                  onChange={(e) => setNewCourse({...newCourse, category: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duration</Label>
+                <Input
+                  id="duration"
+                  value={newCourse.duration}
+                  onChange={(e) => setNewCourse({...newCourse, duration: e.target.value})}
+                  placeholder="e.g. 8 weeks"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={newCourse.status}
+                onValueChange={(value) => setNewCourse({...newCourse, status: value})}
+              >
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select course status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="available">Available</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCourseModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateCourse}>Create Course</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Assignment Modal */}
+      <Dialog open={assignmentModalOpen} onOpenChange={setAssignmentModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Create New Assignment</DialogTitle>
+            <DialogDescription>
+              Create a new assignment for your students
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="assignment-title">Assignment Title</Label>
+              <Input
+                id="assignment-title"
+                value={newAssignment.title}
+                onChange={(e) => setNewAssignment({...newAssignment, title: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="assignment-description">Description</Label>
+              <Textarea
+                id="assignment-description"
+                value={newAssignment.description}
+                onChange={(e) => setNewAssignment({...newAssignment, description: e.target.value})}
+                rows={4}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="assignment-course">Course</Label>
+                <Select
+                  value={newAssignment.course_id}
+                  onValueChange={(value) => setNewAssignment({...newAssignment, course_id: value})}
+                >
+                  <SelectTrigger id="assignment-course">
+                    <SelectValue placeholder="Select a course" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses.map((course) => (
+                      <SelectItem key={course.id} value={course.id}>
+                        {course.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="assignment-due-date">Due Date</Label>
+                <DatePicker
+                  selected={newAssignment.due_date}
+                  onSelect={(date) => setNewAssignment({...newAssignment, due_date: date})}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="assignment-total-marks">Total Marks</Label>
+                <Input
+                  id="assignment-total-marks"
+                  type="number"
+                  value={newAssignment.total_marks}
+                  onChange={(e) => setNewAssignment({...newAssignment, total_marks: parseInt(e.target.value)})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="assignment-submission-type">Submission Type</Label>
+                <Select
+                  value={newAssignment.submission_type}
+                  onValueChange={(value) => setNewAssignment({...newAssignment, submission_type: value})}
+                >
+                  <SelectTrigger id="assignment-submission-type">
+                    <SelectValue placeholder="Select submission type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="file">File Upload</SelectItem>
+                    <SelectItem value="text">Text Submission</SelectItem>
+                    <SelectItem value="link">Link Submission</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {newAssignment.submission_type === "file" && (
+              <div className="space-y-2">
+                <Label htmlFor="assignment-page-limit">Page Limit (Optional)</Label>
+                <Input
+                  id="assignment-page-limit"
+                  type="number"
+                  value={newAssignment.page_limit || ""}
+                  onChange={(e) => setNewAssignment({
+                    ...newAssignment, 
+                    page_limit: e.target.value ? parseInt(e.target.value) : null
+                  })}
+                  placeholder="Leave empty for no limit"
+                />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignmentModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateAssignment}>Create Assignment</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Event Modal */}
+      <Dialog open={eventModalOpen} onOpenChange={setEventModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Schedule Event</DialogTitle>
+            <DialogDescription>
+              Create a new event or class on the calendar
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="event-title">Event Title</Label>
+              <Input
+                id="event-title"
+                value={newEvent.title}
+                onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="event-description">Description</Label>
+              <Textarea
+                id="event-description"
+                value={newEvent.description}
+                onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="event-date">Event Date</Label>
+                <DatePicker
+                  selected={newEvent.event_date}
+                  onSelect={(date) => setNewEvent({...newEvent, event_date: date})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="event-type">Event Type</Label>
+                <Select
+                  value={newEvent.event_type}
+                  onValueChange={(value) => setNewEvent({...newEvent, event_type: value})}
+                >
+                  <SelectTrigger id="event-type">
+                    <SelectValue placeholder="Select event type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lecture">Lecture</SelectItem>
+                    <SelectItem value="lab">Lab Session</SelectItem>
+                    <SelectItem value="exam">Exam</SelectItem>
+                    <SelectItem value="deadline">Deadline</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="event-course">Related Course (Optional)</Label>
+              <Select
+                value={newEvent.course_id}
+                onValueChange={(value) => setNewEvent({...newEvent, course_id: value})}
+              >
+                <SelectTrigger id="event-course">
+                  <SelectValue placeholder="Select a course" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {courses.map((course) => (
+                    <SelectItem key={course.id} value={course.id}>
+                      {course.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEventModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateEvent}>Schedule Event</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageLayout>
   );
 };

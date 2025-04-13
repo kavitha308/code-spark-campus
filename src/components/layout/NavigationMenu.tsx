@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -24,12 +24,17 @@ import {
   MessageSquare,
   Briefcase,
   Home,
+  GraduationCap,
+  UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const NavigationMenuDemo = () => {
   const location = useLocation();
+  const { user, profile } = useAuth();
   const isActive = (path: string) => location.pathname === path;
+  const userRole = profile?.role || "student";
 
   return (
     <NavigationMenu className="hidden md:flex">
@@ -43,73 +48,100 @@ const NavigationMenuDemo = () => {
           </Link>
         </NavigationMenuItem>
         
-        <NavigationMenuItem>
-          <NavigationMenuTrigger
-            className={isActive("/dashboard") ? "bg-purple-100 text-campus-purple" : ""}
-          >
-            <LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard
-          </NavigationMenuTrigger>
-          <NavigationMenuContent className="bg-white">
-            <ul className="grid gap-3 p-4 w-[400px] md:w-[500px] lg:w-[600px] grid-cols-2">
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link
-                    to="/dashboard"
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-blue/20 to-campus-purple/20 p-6 no-underline outline-none focus:shadow-md"
-                  >
-                    <LayoutDashboard className="h-6 w-6 text-campus-purple" />
-                    <div className="mb-2 mt-4 text-lg font-medium">Overview</div>
-                    <p className="text-sm text-muted-foreground">
-                      View your academic and coding progress at a glance
-                    </p>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link
-                    to="/performance"
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-green/20 to-campus-blue/20 p-6 no-underline outline-none focus:shadow-md"
-                  >
-                    <BarChart3 className="h-6 w-6 text-campus-blue" />
-                    <div className="mb-2 mt-4 text-lg font-medium">Performance Analytics</div>
-                    <p className="text-sm text-muted-foreground">
-                      Detailed insights into your academic and coding metrics
-                    </p>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link
-                    to="/calendar"
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-yellow/20 to-campus-orange/20 p-6 no-underline outline-none focus:shadow-md"
-                  >
-                    <Calendar className="h-6 w-6 text-campus-orange" />
-                    <div className="mb-2 mt-4 text-lg font-medium">Calendar</div>
-                    <p className="text-sm text-muted-foreground">
-                      View upcoming classes, deadlines and events
-                    </p>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link
-                    to="/attendance"
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-pink/20 to-campus-purple/20 p-6 no-underline outline-none focus:shadow-md"
-                  >
-                    <FileCheck className="h-6 w-6 text-campus-pink" />
-                    <div className="mb-2 mt-4 text-lg font-medium">Attendance</div>
-                    <p className="text-sm text-muted-foreground">
-                      Monitor your attendance records and history
-                    </p>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-            </ul>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
+        {/* Student Dashboard */}
+        {userRole === "student" && (
+          <NavigationMenuItem>
+            <NavigationMenuTrigger
+              className={isActive("/dashboard") ? "bg-purple-100 text-campus-purple" : ""}
+            >
+              <LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard
+            </NavigationMenuTrigger>
+            <NavigationMenuContent className="bg-white">
+              <ul className="grid gap-3 p-4 w-[400px] md:w-[500px] lg:w-[600px] grid-cols-2">
+                <li>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      to="/dashboard"
+                      className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-blue/20 to-campus-purple/20 p-6 no-underline outline-none focus:shadow-md"
+                    >
+                      <LayoutDashboard className="h-6 w-6 text-campus-purple" />
+                      <div className="mb-2 mt-4 text-lg font-medium">Overview</div>
+                      <p className="text-sm text-muted-foreground">
+                        View your academic and coding progress at a glance
+                      </p>
+                    </Link>
+                  </NavigationMenuLink>
+                </li>
+                <li>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      to="/performance"
+                      className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-green/20 to-campus-blue/20 p-6 no-underline outline-none focus:shadow-md"
+                    >
+                      <BarChart3 className="h-6 w-6 text-campus-blue" />
+                      <div className="mb-2 mt-4 text-lg font-medium">Performance Analytics</div>
+                      <p className="text-sm text-muted-foreground">
+                        Detailed insights into your academic and coding metrics
+                      </p>
+                    </Link>
+                  </NavigationMenuLink>
+                </li>
+                <li>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      to="/calendar"
+                      className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-yellow/20 to-campus-orange/20 p-6 no-underline outline-none focus:shadow-md"
+                    >
+                      <Calendar className="h-6 w-6 text-campus-orange" />
+                      <div className="mb-2 mt-4 text-lg font-medium">Calendar</div>
+                      <p className="text-sm text-muted-foreground">
+                        View upcoming classes, deadlines and events
+                      </p>
+                    </Link>
+                  </NavigationMenuLink>
+                </li>
+                <li>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      to="/attendance"
+                      className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-pink/20 to-campus-purple/20 p-6 no-underline outline-none focus:shadow-md"
+                    >
+                      <FileCheck className="h-6 w-6 text-campus-pink" />
+                      <div className="mb-2 mt-4 text-lg font-medium">Attendance</div>
+                      <p className="text-sm text-muted-foreground">
+                        Monitor your attendance records and history
+                      </p>
+                    </Link>
+                  </NavigationMenuLink>
+                </li>
+              </ul>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        )}
+        
+        {/* Faculty Dashboard */}
+        {userRole === "teacher" && (
+          <NavigationMenuItem>
+            <Link to="/faculty-dashboard" className={cn(
+              navigationMenuTriggerStyle(),
+              isActive("/faculty-dashboard") ? "bg-purple-100 text-campus-purple" : ""
+            )}>
+              <GraduationCap className="w-4 h-4 mr-1" /> Faculty Dashboard
+            </Link>
+          </NavigationMenuItem>
+        )}
+        
+        {/* Admin Dashboard */}
+        {userRole === "admin" && (
+          <NavigationMenuItem>
+            <Link to="/admin-dashboard" className={cn(
+              navigationMenuTriggerStyle(),
+              isActive("/admin-dashboard") ? "bg-purple-100 text-campus-purple" : ""
+            )}>
+              <UserCog className="w-4 h-4 mr-1" /> Admin Dashboard
+            </Link>
+          </NavigationMenuItem>
+        )}
 
         <NavigationMenuItem>
           <NavigationMenuTrigger
@@ -167,61 +199,63 @@ const NavigationMenuDemo = () => {
           </NavigationMenuContent>
         </NavigationMenuItem>
 
-        <NavigationMenuItem>
-          <NavigationMenuTrigger
-            className={isActive("/coding") ? "bg-purple-100 text-campus-purple" : ""}
-          >
-            <Code className="w-4 h-4 mr-1" /> Coding
-          </NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link to="/coding" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
-                    <Code className="h-5 w-5 text-campus-blue" />
-                    <div>
-                      <div className="font-medium">Code Editor</div>
-                      <p className="text-sm text-muted-foreground">Practice coding with our online editor</p>
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link to="/coding-challenges" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
-                    <PenTool className="h-5 w-5 text-campus-green" />
-                    <div>
-                      <div className="font-medium">Challenges</div>
-                      <p className="text-sm text-muted-foreground">Solve coding challenges and problems</p>
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link to="/leaderboard" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
-                    <Trophy className="h-5 w-5 text-campus-orange" />
-                    <div>
-                      <div className="font-medium">Leaderboard</div>
-                      <p className="text-sm text-muted-foreground">See how you rank among peers</p>
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link to="/job-matches" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
-                    <Briefcase className="h-5 w-5 text-campus-pink" />
-                    <div>
-                      <div className="font-medium">Job Matches</div>
-                      <p className="text-sm text-muted-foreground">Find job opportunities that match your skills</p>
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-            </ul>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
+        {userRole === "student" && (
+          <NavigationMenuItem>
+            <NavigationMenuTrigger
+              className={isActive("/coding") ? "bg-purple-100 text-campus-purple" : ""}
+            >
+              <Code className="w-4 h-4 mr-1" /> Coding
+            </NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                <li>
+                  <NavigationMenuLink asChild>
+                    <Link to="/coding" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
+                      <Code className="h-5 w-5 text-campus-blue" />
+                      <div>
+                        <div className="font-medium">Code Editor</div>
+                        <p className="text-sm text-muted-foreground">Practice coding with our online editor</p>
+                      </div>
+                    </Link>
+                  </NavigationMenuLink>
+                </li>
+                <li>
+                  <NavigationMenuLink asChild>
+                    <Link to="/coding-challenges" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
+                      <PenTool className="h-5 w-5 text-campus-green" />
+                      <div>
+                        <div className="font-medium">Challenges</div>
+                        <p className="text-sm text-muted-foreground">Solve coding challenges and problems</p>
+                      </div>
+                    </Link>
+                  </NavigationMenuLink>
+                </li>
+                <li>
+                  <NavigationMenuLink asChild>
+                    <Link to="/leaderboard" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
+                      <Trophy className="h-5 w-5 text-campus-orange" />
+                      <div>
+                        <div className="font-medium">Leaderboard</div>
+                        <p className="text-sm text-muted-foreground">See how you rank among peers</p>
+                      </div>
+                    </Link>
+                  </NavigationMenuLink>
+                </li>
+                <li>
+                  <NavigationMenuLink asChild>
+                    <Link to="/job-matches" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
+                      <Briefcase className="h-5 w-5 text-campus-pink" />
+                      <div>
+                        <div className="font-medium">Job Matches</div>
+                        <p className="text-sm text-muted-foreground">Find job opportunities that match your skills</p>
+                      </div>
+                    </Link>
+                  </NavigationMenuLink>
+                </li>
+              </ul>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        )}
 
         <NavigationMenuItem>
           <Link to="/leaderboard" className={cn(

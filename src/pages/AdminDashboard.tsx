@@ -1,498 +1,98 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PageLayout from "@/components/layout/PageLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, Users, BookOpen, GraduationCap, FileText, BarChart3, Code, Trophy, FileUp, Download, Database } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { useAuth } from "@/contexts/AuthContext";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, LineChart, Line, Legend, AreaChart, Area, PieChart, Pie, Cell } from "recharts";
-import { 
-  Users, 
-  UserPlus, 
-  UserCog, 
-  Layers, 
-  Settings, 
-  BarChart as BarChartIcon, 
-  LayoutDashboard, 
-  Search,
-  FileText,
-  Trash2,
-  Edit,
-  BookOpen,
-  GraduationCap,
-  Bell,
-  Code,
-  PlusCircle,
-  Check,
-  X,
-  Info,
-  Download
-} from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
+import { getAllStudents, getAllFaculty } from "@/services/UserService";
+import { getAllCourses } from "@/services/CourseService";
+import { getAssignments } from "@/services/AssignmentService";
+import { createEvent } from "@/services/EventService";
 
-// Mock data for user management
-const usersMock = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    role: "student",
-    status: "active",
-    registeredDate: "2023-03-15",
-    lastLogin: "2023-04-10 08:45",
-    courses: 4,
-    avatar: ""
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    role: "student",
-    status: "active",
-    registeredDate: "2023-02-28",
-    lastLogin: "2023-04-11 10:22",
-    courses: 3,
-    avatar: ""
-  },
-  {
-    id: "3",
-    name: "Dr. Robert Johnson",
-    email: "robert.johnson@example.com",
-    role: "teacher",
-    status: "active",
-    registeredDate: "2023-01-10",
-    lastLogin: "2023-04-11 09:15",
-    courses: 2,
-    avatar: ""
-  },
-  {
-    id: "4",
-    name: "Emily Wilson",
-    email: "emily.wilson@example.com",
-    role: "student",
-    status: "inactive",
-    registeredDate: "2023-03-05",
-    lastLogin: "2023-04-02 14:30",
-    courses: 2,
-    avatar: ""
-  },
-  {
-    id: "5",
-    name: "Prof. Michael Brown",
-    email: "michael.brown@example.com",
-    role: "teacher",
-    status: "active",
-    registeredDate: "2022-12-15",
-    lastLogin: "2023-04-10 16:45",
-    courses: 3,
-    avatar: ""
-  }
-];
-
-// Mock data for analytics
-const userRegistrationsData = [
-  { month: 'Jan', count: 65 },
-  { month: 'Feb', count: 78 },
-  { month: 'Mar', count: 94 },
-  { month: 'Apr', count: 87 },
-  { month: 'May', count: 105 },
-  { month: 'Jun', count: 120 },
-  { month: 'Jul', count: 98 },
-  { month: 'Aug', count: 87 },
-  { month: 'Sep', count: 92 },
-  { month: 'Oct', count: 110 },
-  { month: 'Nov', count: 130 },
-  { month: 'Dec', count: 145 },
-];
-
-const courseEngagementData = [
-  { name: 'Data Structures', students: 46, completionRate: 78, avgScore: 84 },
-  { name: 'Web Development', students: 38, completionRate: 65, avgScore: 79 },
-  { name: 'Database Systems', students: 52, completionRate: 81, avgScore: 86 },
-  { name: 'Machine Learning', students: 35, completionRate: 72, avgScore: 82 },
-  { name: 'Network Security', students: 28, completionRate: 68, avgScore: 77 },
-];
-
-const studentsByRoleData = [
-  { name: 'Students', value: 450, color: '#8884d8' },
-  { name: 'Teachers', value: 45, color: '#82ca9d' },
-  { name: 'Admins', value: 8, color: '#ffc658' },
-];
-
-const coursesMock = [
-  {
-    id: "1",
-    name: "Data Structures & Algorithms",
-    code: "CS202",
-    teacher: "Dr. Robert Johnson",
-    enrollments: 46,
-    content: 24,
-    status: "active",
-    lastUpdated: "2023-04-10"
-  },
-  {
-    id: "2",
-    name: "Advanced Web Development",
-    code: "CS301",
-    teacher: "Prof. Michael Brown",
-    enrollments: 38,
-    content: 32,
-    status: "active",
-    lastUpdated: "2023-04-08"
-  },
-  {
-    id: "3",
-    name: "Database Management Systems",
-    code: "CS305",
-    teacher: "Dr. Sarah Williams",
-    enrollments: 52,
-    content: 28,
-    status: "active",
-    lastUpdated: "2023-04-11"
-  },
-  {
-    id: "4",
-    name: "Introduction to Machine Learning",
-    code: "CS405",
-    teacher: "Prof. Emily Chen",
-    enrollments: 35,
-    content: 22,
-    status: "draft",
-    lastUpdated: "2023-04-12"
-  }
-];
-
-// User Creator Modal Component
-const UserCreatorModal = ({ onAdd }: { onAdd: (data: any) => void }) => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState("student");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [sendEmail, setSendEmail] = useState(true);
-  
-  const handleSubmit = () => {
-    if (!name || !email || !password) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-    
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-    
-    const newUser = {
-      id: `u${Date.now()}`,
-      name,
-      email,
-      role,
-      status: "active",
-      registeredDate: new Date().toISOString().split('T')[0],
-      lastLogin: "-",
-      courses: 0,
-      avatar: ""
-    };
-    
-    onAdd(newUser);
-    
-    if (sendEmail) {
-      toast.success(`Welcome email sent to ${email}`);
-    }
-    
-    toast.success("User added successfully!");
-  };
-  
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Full Name <span className="text-red-500">*</span></Label>
-        <Input
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter user's full name"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="email">Email Address <span className="text-red-500">*</span></Label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter email address"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="role">User Role <span className="text-red-500">*</span></Label>
-        <Select value={role} onValueChange={setRole}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select user role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="student">Student</SelectItem>
-            <SelectItem value="teacher">Teacher/Faculty</SelectItem>
-            <SelectItem value="admin">Administrator</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="password">Password <span className="text-red-500">*</span></Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="confirm-password">Confirm Password <span className="text-red-500">*</span></Label>
-          <Input
-            id="confirm-password"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-        </div>
-      </div>
-      
-      <div className="flex items-center space-x-2 pt-2">
-        <Switch 
-          id="send-email" 
-          checked={sendEmail}
-          onCheckedChange={setSendEmail}
-        />
-        <Label htmlFor="send-email">Send welcome email with login instructions</Label>
-      </div>
-      
-      <DialogFooter className="mt-6">
-        <Button variant="outline">Cancel</Button>
-        <Button onClick={handleSubmit}>Create User</Button>
-      </DialogFooter>
-    </div>
-  );
-};
-
-// Course Creator Modal Component
-const CourseCreatorModal = ({ onAdd }: { onAdd: (data: any) => void }) => {
-  const [name, setName] = useState("");
-  const [code, setCode] = useState("");
-  const [description, setDescription] = useState("");
-  const [teacher, setTeacher] = useState("");
-  
-  const handleSubmit = () => {
-    if (!name || !code || !teacher) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-    
-    const newCourse = {
-      id: `c${Date.now()}`,
-      name,
-      code,
-      description,
-      teacher,
-      enrollments: 0,
-      content: 0,
-      status: "draft",
-      lastUpdated: new Date().toISOString().split('T')[0]
-    };
-    
-    onAdd(newCourse);
-    toast.success("Course created successfully!");
-  };
-  
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="course-name">Course Name <span className="text-red-500">*</span></Label>
-        <Input
-          id="course-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter course name"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="course-code">Course Code <span className="text-red-500">*</span></Label>
-        <Input
-          id="course-code"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          placeholder="e.g. CS101"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="course-description">Course Description</Label>
-        <Textarea
-          id="course-description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Enter course description"
-          className="min-h-[100px]"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="teacher">Assign Teacher <span className="text-red-500">*</span></Label>
-        <Select value={teacher} onValueChange={setTeacher}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select teacher" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Dr. Robert Johnson">Dr. Robert Johnson</SelectItem>
-            <SelectItem value="Prof. Michael Brown">Prof. Michael Brown</SelectItem>
-            <SelectItem value="Dr. Sarah Williams">Dr. Sarah Williams</SelectItem>
-            <SelectItem value="Prof. Emily Chen">Prof. Emily Chen</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="space-y-2">
-        <Label>Course Settings</Label>
-        <div className="space-y-3 border rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Switch id="enrollment" defaultChecked />
-              <Label htmlFor="enrollment">Open for enrollment</Label>
-            </div>
-            <Badge variant="outline">Default: Off</Badge>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Switch id="visibility" defaultChecked />
-              <Label htmlFor="visibility">Visible in catalog</Label>
-            </div>
-            <Badge variant="outline">Default: Off</Badge>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Switch id="certificate" />
-              <Label htmlFor="certificate">Enable certificates</Label>
-            </div>
-            <Badge variant="outline">Default: Off</Badge>
-          </div>
-        </div>
-      </div>
-      
-      <DialogFooter className="mt-6">
-        <Button variant="outline">Cancel</Button>
-        <Button onClick={handleSubmit}>Create Course</Button>
-      </DialogFooter>
-    </div>
-  );
-};
-
-// Admin Dashboard Component
 const AdminDashboard = () => {
-  const { profile } = useAuth();
-  const [users, setUsers] = useState(usersMock);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [courses, setCourses] = useState(coursesMock);
-  const [courseSearchTerm, setCourseSearchTerm] = useState("");
-  const [courseStatusFilter, setCourseStatusFilter] = useState("all");
-  const [userCreatorOpen, setUserCreatorOpen] = useState(false);
-  const [courseCreatorOpen, setCourseCreatorOpen] = useState(false);
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [students, setStudents] = useState([]);
+  const [faculty, setFaculty] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
   
-  const handleAddUser = (newUser: any) => {
-    setUsers([newUser, ...users]);
-    setUserCreatorOpen(false);
-  };
-  
-  const handleAddCourse = (newCourse: any) => {
-    setCourses([newCourse, ...courses]);
-    setCourseCreatorOpen(false);
-  };
-  
-  const filteredUsers = users.filter(user => {
-    // Apply search filter
-    const matchesSearch = searchTerm === "" || 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Apply role filter
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    
-    // Apply status filter
-    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
-    
-    return matchesSearch && matchesRole && matchesStatus;
+  // Form states
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    description: "",
+    event_date: new Date(),
+    event_type: "exam",
+    course_id: ""
   });
   
-  const filteredCourses = courses.filter(course => {
-    // Apply search filter
-    const matchesSearch = courseSearchTerm === "" || 
-      course.name.toLowerCase().includes(courseSearchTerm.toLowerCase()) ||
-      course.code.toLowerCase().includes(courseSearchTerm.toLowerCase()) ||
-      course.teacher.toLowerCase().includes(courseSearchTerm.toLowerCase());
-    
-    // Apply status filter
-    const matchesStatus = courseStatusFilter === "all" || course.status === courseStatusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  // Modal state
+  const [eventModalOpen, setEventModalOpen] = useState(false);
   
-  const handleDeleteUser = (userId: string) => {
-    toast.error("This action is not available in the demo");
-  };
-  
-  const handleDeleteCourse = (courseId: string) => {
-    toast.error("This action is not available in the demo");
-  };
-  
-  const toggleUserStatus = (userId: string) => {
-    const updatedUsers = users.map(user => {
-      if (user.id === userId) {
-        return {
-          ...user,
-          status: user.status === "active" ? "inactive" : "active"
-        };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const studentsData = await getAllStudents();
+        const facultyData = await getAllFaculty();
+        const coursesData = await getAllCourses();
+        const assignmentsData = await getAssignments();
+        
+        setStudents(studentsData);
+        setFaculty(facultyData);
+        setCourses(coursesData);
+        setAssignments(assignmentsData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load data");
+      } finally {
+        setLoading(false);
       }
-      return user;
-    });
+    };
     
-    setUsers(updatedUsers);
-    
-    const user = users.find(u => u.id === userId);
-    toast.success(`User ${user?.name} has been ${user?.status === "active" ? "deactivated" : "activated"}`);
-  };
+    fetchData();
+  }, []);
   
-  const toggleCourseStatus = (courseId: string) => {
-    const updatedCourses = courses.map(course => {
-      if (course.id === courseId) {
-        return {
-          ...course,
-          status: course.status === "active" ? "draft" : "active"
-        };
-      }
-      return course;
-    });
-    
-    setCourses(updatedCourses);
-    
-    const course = courses.find(c => c.id === courseId);
-    toast.success(`Course ${course?.name} has been ${course?.status === "active" ? "set to draft" : "activated"}`);
+  const handleCreateEvent = async () => {
+    try {
+      await createEvent(
+        newEvent.title,
+        newEvent.description,
+        format(newEvent.event_date, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+        newEvent.event_type,
+        newEvent.course_id || null
+      );
+      
+      toast.success("Event created successfully");
+      setEventModalOpen(false);
+      
+      // Reset form
+      setNewEvent({
+        title: "",
+        description: "",
+        event_date: new Date(),
+        event_type: "exam",
+        course_id: ""
+      });
+    } catch (error) {
+      console.error("Error creating event:", error);
+      toast.error("Failed to create event");
+    }
   };
 
   return (
@@ -500,1293 +100,1099 @@ const AdminDashboard = () => {
       <div className="container py-6">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
             <p className="text-muted-foreground">
-              Welcome back, {profile?.full_name || "Administrator"}
+              Monitor institution-wide metrics and manage academic affairs
             </p>
           </div>
-          
           <div className="flex gap-2">
-            <Dialog open={userCreatorOpen} onOpenChange={setUserCreatorOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" /> Add User
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[550px]">
-                <DialogHeader>
-                  <DialogTitle>Add New User</DialogTitle>
-                  <DialogDescription>
-                    Create a new user account (student, teacher, or admin)
-                  </DialogDescription>
-                </DialogHeader>
-                <UserCreatorModal onAdd={handleAddUser} />
-              </DialogContent>
-            </Dialog>
-            
-            <Dialog open={courseCreatorOpen} onOpenChange={setCourseCreatorOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2" variant="outline">
-                  <BookOpen className="h-4 w-4" /> Create Course
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[550px]">
-                <DialogHeader>
-                  <DialogTitle>Create New Course</DialogTitle>
-                  <DialogDescription>
-                    Set up a new course in the system
-                  </DialogDescription>
-                </DialogHeader>
-                <CourseCreatorModal onAdd={handleAddCourse} />
-              </DialogContent>
-            </Dialog>
+            <DialogTrigger asChild onClick={() => setEventModalOpen(true)}>
+              <Button>
+                <Calendar className="mr-2 h-4 w-4" /> Schedule Event
+              </Button>
+            </DialogTrigger>
+            <Button variant="outline">
+              <Download className="mr-2 h-4 w-4" /> Export Reports
+            </Button>
           </div>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <Users className="h-5 w-5 mr-2 text-campus-purple" /> 
-                Total Users
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">503</div>
-              <p className="text-muted-foreground text-sm">Active platform users</p>
-              <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
-                <div>
-                  <p className="font-medium">Students</p>
-                  <p className="text-muted-foreground">450</p>
-                </div>
-                <div>
-                  <p className="font-medium">Teachers</p>
-                  <p className="text-muted-foreground">45</p>
-                </div>
-                <div>
-                  <p className="font-medium">Admins</p>
-                  <p className="text-muted-foreground">8</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <BookOpen className="h-5 w-5 mr-2 text-campus-blue" /> 
-                Total Courses
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">24</div>
-              <p className="text-muted-foreground text-sm">Active courses</p>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <p className="font-medium">Content Count</p>
-                  <p className="text-muted-foreground">328 modules</p>
-                </div>
-                <div>
-                  <p className="font-medium">Avg. Enrollment</p>
-                  <p className="text-muted-foreground">38 students</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <BarChartIcon className="h-5 w-5 mr-2 text-campus-green" /> 
-                System Health
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">99.8%</div>
-              <p className="text-muted-foreground text-sm">Uptime last 30 days</p>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <p className="font-medium">Storage Usage</p>
-                  <p className="text-muted-foreground">36.4 GB (42%)</p>
-                </div>
-                <div>
-                  <p className="font-medium">API Responses</p>
-                  <p className="text-muted-foreground">218ms avg.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <Tabs defaultValue="dashboard" className="space-y-4">
-          <TabsList className="bg-campus-purple/10 text-campus-purple">
-            <TabsTrigger value="dashboard" className="data-[state=active]:bg-white">Dashboard</TabsTrigger>
-            <TabsTrigger value="users" className="data-[state=active]:bg-white">User Management</TabsTrigger>
-            <TabsTrigger value="courses" className="data-[state=active]:bg-white">Course Management</TabsTrigger>
-            <TabsTrigger value="content" className="data-[state=active]:bg-white">Content Review</TabsTrigger>
-            <TabsTrigger value="settings" className="data-[state=active]:bg-white">System Settings</TabsTrigger>
+
+        <Tabs
+          defaultValue="overview"
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-4"
+        >
+          <TabsList className="bg-muted">
+            <TabsTrigger value="overview">
+              <BarChart3 className="h-4 w-4 mr-2" /> Overview
+            </TabsTrigger>
+            <TabsTrigger value="academics">
+              <BookOpen className="h-4 w-4 mr-2" /> Academic Progress
+            </TabsTrigger>
+            <TabsTrigger value="coding">
+              <Code className="h-4 w-4 mr-2" /> Coding Metrics
+            </TabsTrigger>
+            <TabsTrigger value="faculty">
+              <GraduationCap className="h-4 w-4 mr-2" /> Faculty
+            </TabsTrigger>
+            <TabsTrigger value="leaderboard">
+              <Trophy className="h-4 w-4 mr-2" /> Leaderboard
+            </TabsTrigger>
+            <TabsTrigger value="events">
+              <Calendar className="h-4 w-4 mr-2" /> Events
+            </TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="dashboard">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="text-lg">User Registrations Trend</CardTitle>
-                  <CardDescription>
-                    Monthly user registration statistics for the past year
-                  </CardDescription>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Students
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart
-                        data={userRegistrationsData}
-                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                      >
-                        <defs>
-                          <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                            <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip />
-                        <Area
-                          type="monotone"
-                          dataKey="count"
-                          stroke="#8884d8"
-                          fillOpacity={1}
-                          fill="url(#colorUv)"
-                          name="Users"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <div className="text-2xl font-bold">{students.length}</div>
                 </CardContent>
               </Card>
-              
               <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Faculty Members
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{faculty.length}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Active Courses
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{courses.length}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Upcoming Events
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">4</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="col-span-1">
                 <CardHeader>
-                  <CardTitle className="text-lg">User Distribution</CardTitle>
+                  <CardTitle>Academic Overview</CardTitle>
                   <CardDescription>
-                    Breakdown of users by role
+                    Course enrollments and completion rates
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={studentsByRoleData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          paddingAngle={2}
-                          dataKey="value"
-                          label={({ name, value }) => `${name}: ${value}`}
-                        >
-                          {studentsByRoleData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 mt-2">
-                    {studentsByRoleData.map((entry, index) => (
-                      <div key={index} className="flex items-center text-sm">
-                        <div
-                          className="h-3 w-3 mr-1 rounded-sm"
-                          style={{ backgroundColor: entry.color }}
-                        />
-                        <span>{entry.name}</span>
+                  <div className="space-y-4">
+                    {courses.slice(0, 5).map((course) => (
+                      <div key={course.id} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <div className="font-medium">{course.title}</div>
+                          <div className="text-sm text-muted-foreground">{Math.floor(Math.random() * 50) + 50}%</div>
+                        </div>
+                        <Progress value={Math.floor(Math.random() * 50) + 50} className="h-2" />
                       </div>
                     ))}
                   </div>
                 </CardContent>
-              </Card>
-            </div>
-            
-            <div className="grid grid-cols-1 gap-6 mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Course Engagement Metrics</CardTitle>
-                  <CardDescription>
-                    Performance metrics for top courses
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[400px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={courseEngagementData}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar
-                          dataKey="students"
-                          name="Enrolled Students"
-                          fill="#8884d8"
-                        />
-                        <Bar
-                          dataKey="completionRate"
-                          name="Completion Rate (%)"
-                          fill="#82ca9d"
-                        />
-                        <Bar
-                          dataKey="avgScore"
-                          name="Average Score"
-                          fill="#ffc658"
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Recent Activity</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex gap-3">
-                        <div className="bg-blue-100 p-2 h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0">
-                          <UserPlus className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">New user registered</p>
-                          <p className="text-xs text-muted-foreground">Emma Thompson joined as Student</p>
-                          <p className="text-xs text-muted-foreground">15 minutes ago</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <div className="bg-green-100 p-2 h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0">
-                          <BookOpen className="h-4 w-4 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">New course published</p>
-                          <p className="text-xs text-muted-foreground">AI Fundamentals is now live</p>
-                          <p className="text-xs text-muted-foreground">2 hours ago</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <div className="bg-yellow-100 p-2 h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Bell className="h-4 w-4 text-yellow-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">System alert</p>
-                          <p className="text-xs text-muted-foreground">Storage usage reached 80%</p>
-                          <p className="text-xs text-muted-foreground">5 hours ago</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">System Notifications</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div className="flex items-start gap-2">
-                          <Info className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-medium">Scheduled Maintenance</p>
-                            <p className="text-xs text-muted-foreground">System maintenance scheduled for April 15, 2023 at 2:00 AM UTC</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div className="flex items-start gap-2">
-                          <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-medium">New Feature Available</p>
-                            <p className="text-xs text-muted-foreground">Advanced analytics dashboard is now available for all admin users</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Quick Actions</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button size="sm" className="h-auto py-2">
-                        <Download className="h-4 w-4 mr-1" />
-                        Export Reports
-                      </Button>
-                      <Button size="sm" className="h-auto py-2" variant="outline">
-                        <Bell className="h-4 w-4 mr-1" />
-                        Send Notifications
-                      </Button>
-                      <Button size="sm" className="h-auto py-2" variant="outline">
-                        <Settings className="h-4 w-4 mr-1" />
-                        System Settings
-                      </Button>
-                      <Button size="sm" className="h-auto py-2" variant="outline">
-                        <Users className="h-4 w-4 mr-1" />
-                        View All Users
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="users">
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle className="text-lg">User Management</CardTitle>
-                      <CardDescription>
-                        Add, edit, or remove users from the platform
-                      </CardDescription>
-                    </div>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button>
-                          <UserPlus className="h-4 w-4 mr-2" /> Add New User
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[550px]">
-                        <DialogHeader>
-                          <DialogTitle>Add New User</DialogTitle>
-                          <DialogDescription>
-                            Create a new user account (student, teacher, or admin)
-                          </DialogDescription>
-                        </DialogHeader>
-                        <UserCreatorModal onAdd={handleAddUser} />
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex flex-col md:flex-row justify-between gap-4">
-                      <div className="flex gap-2 flex-grow">
-                        <div className="relative flex-grow">
-                          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            type="search"
-                            placeholder="Search users..."
-                            className="pl-8"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                          />
-                        </div>
-                        <Select value={roleFilter} onValueChange={setRoleFilter}>
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Roles</SelectItem>
-                            <SelectItem value="student">Students</SelectItem>
-                            <SelectItem value="teacher">Teachers</SelectItem>
-                            <SelectItem value="admin">Administrators</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Statuses</SelectItem>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="inactive">Inactive</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <Button variant="outline">
-                          <Download className="h-4 w-4 mr-1" /> Export
-                        </Button>
-                        <Button variant="outline">
-                          <UserPlus className="h-4 w-4 mr-1" /> Bulk Import
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="border rounded-lg overflow-x-auto">
-                      <table className="min-w-full">
-                        <thead className="bg-muted/50">
-                          <tr>
-                            <th className="px-4 py-2 text-left text-sm font-medium">User</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Email</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Role</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Status</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Registered</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Last Login</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                          {filteredUsers.map((user) => (
-                            <tr key={user.id}>
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarImage src={user.avatar} />
-                                    <AvatarFallback className="bg-campus-purple text-white">
-                                      {user.name.split(' ').map(n => n[0]).join('')}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span className="font-medium text-sm">{user.name}</span>
-                                </div>
-                              </td>
-                              <td className="px-4 py-3 text-sm">{user.email}</td>
-                              <td className="px-4 py-3 text-sm">
-                                {user.role === "student" && (
-                                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                    <GraduationCap className="h-3 w-3 mr-1" /> Student
-                                  </Badge>
-                                )}
-                                {user.role === "teacher" && (
-                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                    <BookOpen className="h-3 w-3 mr-1" /> Teacher
-                                  </Badge>
-                                )}
-                                {user.role === "admin" && (
-                                  <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                                    <UserCog className="h-3 w-3 mr-1" /> Admin
-                                  </Badge>
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-sm">
-                                {user.status === "active" ? (
-                                  <Badge className="bg-green-500">Active</Badge>
-                                ) : (
-                                  <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Inactive</Badge>
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-sm">{user.registeredDate}</td>
-                              <td className="px-4 py-3 text-sm">{user.lastLogin}</td>
-                              <td className="px-4 py-3 text-sm">
-                                <div className="flex gap-2">
-                                  <Button size="sm" variant="ghost">
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost" 
-                                    onClick={() => toggleUserStatus(user.id)}
-                                  >
-                                    {user.status === "active" ? (
-                                      <X className="h-4 w-4 text-red-500" />
-                                    ) : (
-                                      <Check className="h-4 w-4 text-green-500" />
-                                    )}
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost"
-                                    onClick={() => handleDeleteUser(user.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                  </Button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    
-                    {filteredUsers.length === 0 && (
-                      <div className="text-center py-8">
-                        <Users className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                        <h3 className="text-lg font-medium">No users found</h3>
-                        <p className="text-muted-foreground">
-                          Try adjusting your search or filters
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Bulk User Operations</CardTitle>
-                  <CardDescription>
-                    Perform actions on multiple users at once
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Card>
-                        <CardHeader className="p-4 pb-2">
-                          <CardTitle className="text-base">Import Users</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Bulk import users from a CSV or Excel file
-                          </p>
-                          <Button className="w-full mt-2">
-                            <Upload className="h-4 w-4 mr-1" /> Upload File
-                          </Button>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="p-4 pb-2">
-                          <CardTitle className="text-base">Mass Enrollment</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Enroll multiple users in courses at once
-                          </p>
-                          <Button variant="outline" className="w-full mt-2">
-                            Manage Enrollments
-                          </Button>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="p-4 pb-2">
-                          <CardTitle className="text-base">Bulk Notifications</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Send notifications to multiple users
-                          </p>
-                          <Button variant="outline" className="w-full mt-2">
-                            <Bell className="h-4 w-4 mr-1" /> Send Notifications
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="courses">
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle className="text-lg">Course Management</CardTitle>
-                      <CardDescription>
-                        Manage all courses on the platform
-                      </CardDescription>
-                    </div>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button>
-                          <PlusCircle className="h-4 w-4 mr-2" /> Create New Course
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[550px]">
-                        <DialogHeader>
-                          <DialogTitle>Create New Course</DialogTitle>
-                          <DialogDescription>
-                            Set up a new course in the system
-                          </DialogDescription>
-                        </DialogHeader>
-                        <CourseCreatorModal onAdd={handleAddCourse} />
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex flex-col md:flex-row justify-between gap-4">
-                      <div className="flex gap-2 flex-grow">
-                        <div className="relative flex-grow">
-                          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            type="search"
-                            placeholder="Search courses..."
-                            className="pl-8"
-                            value={courseSearchTerm}
-                            onChange={(e) => setCourseSearchTerm(e.target.value)}
-                          />
-                        </div>
-                        <Select value={courseStatusFilter} onValueChange={setCourseStatusFilter}>
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Statuses</SelectItem>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="draft">Draft</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <Button variant="outline">
-                          <Download className="h-4 w-4 mr-1" /> Export
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="border rounded-lg overflow-x-auto">
-                      <table className="min-w-full">
-                        <thead className="bg-muted/50">
-                          <tr>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Course</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Code</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Teacher</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Enrollments</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Content</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Status</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Last Updated</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                          {filteredCourses.map((course) => (
-                            <tr key={course.id}>
-                              <td className="px-4 py-3">
-                                <div className="font-medium text-sm">{course.name}</div>
-                              </td>
-                              <td className="px-4 py-3 text-sm">{course.code}</td>
-                              <td className="px-4 py-3 text-sm">{course.teacher}</td>
-                              <td className="px-4 py-3 text-sm">{course.enrollments}</td>
-                              <td className="px-4 py-3 text-sm">{course.content} modules</td>
-                              <td className="px-4 py-3 text-sm">
-                                {course.status === "active" ? (
-                                  <Badge className="bg-green-500">Active</Badge>
-                                ) : (
-                                  <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Draft</Badge>
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-sm">{course.lastUpdated}</td>
-                              <td className="px-4 py-3 text-sm">
-                                <div className="flex gap-2">
-                                  <Button size="sm" variant="ghost">
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost" 
-                                    onClick={() => toggleCourseStatus(course.id)}
-                                  >
-                                    {course.status === "active" ? (
-                                      <X className="h-4 w-4 text-red-500" />
-                                    ) : (
-                                      <Check className="h-4 w-4 text-green-500" />
-                                    )}
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost"
-                                    onClick={() => handleDeleteCourse(course.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                  </Button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    
-                    {filteredCourses.length === 0 && (
-                      <div className="text-center py-8">
-                        <BookOpen className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                        <h3 className="text-lg font-medium">No courses found</h3>
-                        <p className="text-muted-foreground">
-                          Try adjusting your search or filters
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Course Categories</CardTitle>
-                  <CardDescription>
-                    Organize courses by categories
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-4">
-                    <Card className="w-full md:w-[calc(33.33%-1rem)]">
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base">Computer Science</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <p className="text-sm text-muted-foreground">
-                          8 active courses
-                        </p>
-                        <div className="flex justify-between mt-2">
-                          <Badge variant="outline">126 students</Badge>
-                          <Badge className="bg-green-500">Active</Badge>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="p-4 pt-0">
-                        <Button variant="outline" size="sm" className="w-full">
-                          Manage Courses
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                    
-                    <Card className="w-full md:w-[calc(33.33%-1rem)]">
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base">Data Science</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <p className="text-sm text-muted-foreground">
-                          6 active courses
-                        </p>
-                        <div className="flex justify-between mt-2">
-                          <Badge variant="outline">94 students</Badge>
-                          <Badge className="bg-green-500">Active</Badge>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="p-4 pt-0">
-                        <Button variant="outline" size="sm" className="w-full">
-                          Manage Courses
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                    
-                    <Card className="w-full md:w-[calc(33.33%-1rem)]">
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base">Web Development</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <p className="text-sm text-muted-foreground">
-                          7 active courses
-                        </p>
-                        <div className="flex justify-between mt-2">
-                          <Badge variant="outline">112 students</Badge>
-                          <Badge className="bg-green-500">Active</Badge>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="p-4 pt-0">
-                        <Button variant="outline" size="sm" className="w-full">
-                          Manage Courses
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                    
-                    <Card className="w-full md:w-[calc(33.33%-1rem)] border-dashed">
-                      <CardContent className="p-4 flex flex-col items-center justify-center min-h-[168px]">
-                        <PlusCircle className="h-8 w-8 text-muted-foreground mb-2" />
-                        <p className="text-muted-foreground text-sm">Add New Category</p>
-                        <Button variant="outline" size="sm" className="mt-2">
-                          Create Category
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="content">
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Content Review Queue</CardTitle>
-                  <CardDescription>
-                    Review and approve content submitted by faculty
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex flex-col md:flex-row justify-between gap-4">
-                      <div className="flex gap-2 flex-grow">
-                        <div className="relative flex-grow">
-                          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            type="search"
-                            placeholder="Search content..."
-                            className="pl-8"
-                          />
-                        </div>
-                        <Select defaultValue="all">
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Types</SelectItem>
-                            <SelectItem value="video">Videos</SelectItem>
-                            <SelectItem value="document">Documents</SelectItem>
-                            <SelectItem value="assignment">Assignments</SelectItem>
-                            <SelectItem value="quiz">Quizzes</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Select defaultValue="pending">
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending Review</SelectItem>
-                            <SelectItem value="approved">Approved</SelectItem>
-                            <SelectItem value="rejected">Rejected</SelectItem>
-                            <SelectItem value="all">All Statuses</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    
-                    <div className="border rounded-lg overflow-x-auto">
-                      <table className="min-w-full">
-                        <thead className="bg-muted/50">
-                          <tr>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Content</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Type</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Course</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Submitted By</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Date</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Status</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                          <tr>
-                            <td className="px-4 py-3">
-                              <div className="font-medium text-sm">Introduction to Binary Trees</div>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                                <Video className="h-3 w-3 mr-1" /> Video
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">CS202: Data Structures</td>
-                            <td className="px-4 py-3 text-sm">Dr. Robert Johnson</td>
-                            <td className="px-4 py-3 text-sm">Apr 10, 2023</td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                                Pending
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="ghost">
-                                  Review
-                                </Button>
-                                <Button size="sm" variant="ghost" className="text-green-500">
-                                  <Check className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" variant="ghost" className="text-red-500">
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-3">
-                              <div className="font-medium text-sm">Web Development Final Project</div>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                                <Code className="h-3 w-3 mr-1" /> Assignment
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">CS301: Web Development</td>
-                            <td className="px-4 py-3 text-sm">Prof. Michael Brown</td>
-                            <td className="px-4 py-3 text-sm">Apr 11, 2023</td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                                Pending
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="ghost">
-                                  Review
-                                </Button>
-                                <Button size="sm" variant="ghost" className="text-green-500">
-                                  <Check className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" variant="ghost" className="text-red-500">
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-3">
-                              <div className="font-medium text-sm">Database Normalization</div>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                <FileText className="h-3 w-3 mr-1" /> Document
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">CS305: Database Systems</td>
-                            <td className="px-4 py-3 text-sm">Dr. Sarah Williams</td>
-                            <td className="px-4 py-3 text-sm">Apr 12, 2023</td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                                Pending
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="ghost">
-                                  Review
-                                </Button>
-                                <Button size="sm" variant="ghost" className="text-green-500">
-                                  <Check className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" variant="ghost" className="text-red-500">
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Content Stats</CardTitle>
-                  <CardDescription>
-                    Overview of content on the platform
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="text-center space-y-1">
-                          <Video className="h-6 w-6 mx-auto mb-1 text-campus-purple" />
-                          <p className="text-2xl font-bold">156</p>
-                          <p className="text-xs text-muted-foreground">Videos</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="text-center space-y-1">
-                          <FileText className="h-6 w-6 mx-auto mb-1 text-campus-blue" />
-                          <p className="text-2xl font-bold">243</p>
-                          <p className="text-xs text-muted-foreground">Documents</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="text-center space-y-1">
-                          <Code className="h-6 w-6 mx-auto mb-1 text-campus-green" />
-                          <p className="text-2xl font-bold">87</p>
-                          <p className="text-xs text-muted-foreground">Assignments</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="text-center space-y-1">
-                          <Check className="h-6 w-6 mx-auto mb-1 text-campus-orange" />
-                          <p className="text-2xl font-bold">112</p>
-                          <p className="text-xs text-muted-foreground">Quizzes</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                  
-                  <div className="mt-6">
-                    <h3 className="text-sm font-medium mb-2">Recently Approved Content</h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center p-3 border rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <Video className="h-4 w-4 text-campus-purple" />
-                          <span className="text-sm font-medium">SQL Joins and Their Types</span>
-                        </div>
-                        <Badge className="bg-green-500">Approved</Badge>
-                      </div>
-                      <div className="flex justify-between items-center p-3 border rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-campus-blue" />
-                          <span className="text-sm font-medium">React State Management</span>
-                        </div>
-                        <Badge className="bg-green-500">Approved</Badge>
-                      </div>
-                      <div className="flex justify-between items-center p-3 border rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <Code className="h-4 w-4 text-campus-green" />
-                          <span className="text-sm font-medium">Graph Implementation Assignment</span>
-                        </div>
-                        <Badge className="bg-green-500">Approved</Badge>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="settings">
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">System Settings</CardTitle>
-                  <CardDescription>
-                    Configure platform-wide settings
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-base font-medium mb-4">General Settings</h3>
-                      <div className="space-y-4 border rounded-lg p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="site-name">Platform Name</Label>
-                            <Input 
-                              id="site-name" 
-                              defaultValue="Campus Bridge" 
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="timezone">Default Timezone</Label>
-                            <Select defaultValue="UTC">
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select timezone" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="UTC">UTC</SelectItem>
-                                <SelectItem value="EST">Eastern Time (EST)</SelectItem>
-                                <SelectItem value="CST">Central Time (CST)</SelectItem>
-                                <SelectItem value="PST">Pacific Time (PST)</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="site-description">Platform Description</Label>
-                          <Textarea 
-                            id="site-description" 
-                            defaultValue="Campus Bridge - Your integrated academic and coding platform for students and faculty."
-                          />
-                        </div>
-                        
-                        <Separator className="my-4" />
-                        
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="maintenance-mode" />
-                              <Label htmlFor="maintenance-mode">Maintenance Mode</Label>
-                            </div>
-                            <Badge variant="outline">Currently: Off</Badge>
-                          </div>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="user-registration" defaultChecked />
-                              <Label htmlFor="user-registration">Allow New User Registration</Label>
-                            </div>
-                            <Badge variant="outline">Currently: On</Badge>
-                          </div>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="email-verification" defaultChecked />
-                              <Label htmlFor="email-verification">Require Email Verification</Label>
-                            </div>
-                            <Badge variant="outline">Currently: On</Badge>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-base font-medium mb-4">Email Settings</h3>
-                      <div className="space-y-4 border rounded-lg p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="from-email">From Email Address</Label>
-                            <Input 
-                              id="from-email" 
-                              defaultValue="noreply@campusbridge.edu" 
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="admin-email">Admin Email Address</Label>
-                            <Input 
-                              id="admin-email" 
-                              defaultValue="admin@campusbridge.edu" 
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="welcome-email" defaultChecked />
-                              <Label htmlFor="welcome-email">Send Welcome Email</Label>
-                            </div>
-                            <Badge variant="outline">Currently: On</Badge>
-                          </div>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="course-notifications" defaultChecked />
-                              <Label htmlFor="course-notifications">Course Update Notifications</Label>
-                            </div>
-                            <Badge variant="outline">Currently: On</Badge>
-                          </div>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="assignment-notifications" defaultChecked />
-                              <Label htmlFor="assignment-notifications">Assignment Notifications</Label>
-                            </div>
-                            <Badge variant="outline">Currently: On</Badge>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-base font-medium mb-4">Security Settings</h3>
-                      <div className="space-y-4 border rounded-lg p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="session-timeout">Session Timeout (minutes)</Label>
-                            <Input 
-                              id="session-timeout" 
-                              type="number"
-                              defaultValue="60" 
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="max-login-attempts">Max Login Attempts</Label>
-                            <Input 
-                              id="max-login-attempts" 
-                              type="number"
-                              defaultValue="5" 
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="two-factor" />
-                              <Label htmlFor="two-factor">Require Two-Factor Authentication</Label>
-                            </div>
-                            <Badge variant="outline">Currently: Off</Badge>
-                          </div>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="password-policy" defaultChecked />
-                              <Label htmlFor="password-policy">Enforce Strong Password Policy</Label>
-                            </div>
-                            <Badge variant="outline">Currently: On</Badge>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex justify-end gap-2">
-                  <Button variant="outline">
-                    Reset to Defaults
-                  </Button>
-                  <Button>
-                    Save Settings
+                <CardFooter>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => setActiveTab("academics")}
+                  >
+                    View Academic Details
                   </Button>
                 </CardFooter>
               </Card>
-              
-              <Card>
+
+              <Card className="col-span-1">
                 <CardHeader>
-                  <CardTitle className="text-lg">System Maintenance</CardTitle>
+                  <CardTitle>Coding Performance</CardTitle>
                   <CardDescription>
-                    Perform system maintenance tasks
+                    Student coding metrics and challenge completion
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card>
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base flex items-center">
-                          <Download className="h-4 w-4 mr-2 text-campus-blue" />
-                          Backup System
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Create a full backup of the platform data
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <div className="font-medium">Data Structures</div>
+                        <div className="text-sm text-muted-foreground">78%</div>
+                      </div>
+                      <Progress value={78} className="h-2" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <div className="font-medium">Algorithms</div>
+                        <div className="text-sm text-muted-foreground">65%</div>
+                      </div>
+                      <Progress value={65} className="h-2" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <div className="font-medium">Web Development</div>
+                        <div className="text-sm text-muted-foreground">82%</div>
+                      </div>
+                      <Progress value={82} className="h-2" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <div className="font-medium">Database Design</div>
+                        <div className="text-sm text-muted-foreground">71%</div>
+                      </div>
+                      <Progress value={71} className="h-2" />
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => setActiveTab("coding")}
+                  >
+                    View Coding Metrics
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>
+                  Latest academic and coding activities
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[300px]">
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-4">
+                      <div className="rounded-full bg-blue-100 p-2">
+                        <FileUp className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">New assignment uploaded</p>
+                        <p className="text-sm text-muted-foreground">
+                          Data Structures Assignment 3 was uploaded by Prof. James Wilson
                         </p>
-                        <Button variant="outline" className="w-full">
-                          Create Backup
-                        </Button>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base flex items-center">
-                          <Layers className="h-4 w-4 mr-2 text-campus-green" />
-                          Clear Cache
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Clear system cache to improve performance
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {format(new Date(), "MMM dd, yyyy")}
                         </p>
-                        <Button variant="outline" className="w-full">
-                          Clear Cache
-                        </Button>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base flex items-center">
-                          <Settings className="h-4 w-4 mr-2 text-campus-purple" />
-                          System Logs
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <p className="text-sm text-muted-foreground mb-4">
-                          View and download system logs
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="flex items-start gap-4">
+                      <div className="rounded-full bg-green-100 p-2">
+                        <BookOpen className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">New course created</p>
+                        <p className="text-sm text-muted-foreground">
+                          Introduction to Machine Learning was created
                         </p>
-                        <Button variant="outline" className="w-full">
-                          View Logs
-                        </Button>
-                      </CardContent>
-                    </Card>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {format(new Date(new Date().setDate(new Date().getDate() - 1)), "MMM dd, yyyy")}
+                        </p>
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="flex items-start gap-4">
+                      <div className="rounded-full bg-purple-100 p-2">
+                        <Trophy className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Coding challenge completed</p>
+                        <p className="text-sm text-muted-foreground">
+                          10 students completed the Advanced Algorithms challenge
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {format(new Date(new Date().setDate(new Date().getDate() - 2)), "MMM dd, yyyy")}
+                        </p>
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="flex items-start gap-4">
+                      <div className="rounded-full bg-orange-100 p-2">
+                        <Calendar className="h-4 w-4 text-orange-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">New event scheduled</p>
+                        <p className="text-sm text-muted-foreground">
+                          Mid-term examination scheduled for Database Systems
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {format(new Date(new Date().setDate(new Date().getDate() - 3)), "MMM dd, yyyy")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Academic Progress Tab */}
+          <TabsContent value="academics" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Student Academic Progress</CardTitle>
+                <CardDescription>
+                  Overall academic performance and eligibility status
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="p-3 text-left font-medium">Student Name</th>
+                        <th className="p-3 text-left font-medium">ID</th>
+                        <th className="p-3 text-left font-medium">Courses Enrolled</th>
+                        <th className="p-3 text-left font-medium">Academic Progress</th>
+                        <th className="p-3 text-left font-medium">Attendance</th>
+                        <th className="p-3 text-left font-medium">Exam Eligibility</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students.slice(0, 10).map((student, index) => (
+                        <tr key={student.id} className="border-b">
+                          <td className="p-3">{student.full_name}</td>
+                          <td className="p-3">{student.username || `STU${1000 + index}`}</td>
+                          <td className="p-3">{Math.floor(Math.random() * 3) + 2}</td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              <Progress 
+                                value={Math.floor(Math.random() * 30) + 70} 
+                                className="h-2 w-24" 
+                              />
+                              <span className="text-sm">{Math.floor(Math.random() * 30) + 70}%</span>
+                            </div>
+                          </td>
+                          <td className="p-3">{Math.floor(Math.random() * 20) + 80}%</td>
+                          <td className="p-3">
+                            <Badge variant={
+                              Math.random() > 0.2 ? "default" : "destructive"
+                            }>
+                              {Math.random() > 0.2 ? "Eligible" : "Not Eligible"}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                      {students.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="p-3 text-center text-muted-foreground">
+                            No students found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Course Performance Overview</CardTitle>
+                <CardDescription>
+                  Performance metrics across all courses
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="p-3 text-left font-medium">Course</th>
+                        <th className="p-3 text-left font-medium">Faculty</th>
+                        <th className="p-3 text-left font-medium">Enrolled Students</th>
+                        <th className="p-3 text-left font-medium">Avg. Performance</th>
+                        <th className="p-3 text-left font-medium">Avg. Attendance</th>
+                        <th className="p-3 text-left font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {courses.map((course, index) => (
+                        <tr key={course.id} className="border-b">
+                          <td className="p-3">{course.title}</td>
+                          <td className="p-3">{
+                            faculty.length > 0 
+                              ? faculty[index % faculty.length]?.full_name 
+                              : "Unassigned"
+                          }</td>
+                          <td className="p-3">{Math.floor(Math.random() * 20) + 10}</td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              <Progress 
+                                value={Math.floor(Math.random() * 30) + 65} 
+                                className="h-2 w-24" 
+                              />
+                              <span className="text-sm">{Math.floor(Math.random() * 30) + 65}%</span>
+                            </div>
+                          </td>
+                          <td className="p-3">{Math.floor(Math.random() * 25) + 75}%</td>
+                          <td className="p-3">
+                            <Badge variant={
+                              course.status === "available" ? "default" : "secondary"
+                            }>
+                              {course.status === "available" ? "Active" : "Draft"}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                      {courses.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="p-3 text-center text-muted-foreground">
+                            No courses found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Coding Metrics Tab */}
+          <TabsContent value="coding" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Student Coding Performance</CardTitle>
+                <CardDescription>
+                  Detailed coding metrics and progress
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="p-3 text-left font-medium">Student Name</th>
+                        <th className="p-3 text-left font-medium">ID</th>
+                        <th className="p-3 text-left font-medium">Challenges Completed</th>
+                        <th className="p-3 text-left font-medium">Success Rate</th>
+                        <th className="p-3 text-left font-medium">Preferred Language</th>
+                        <th className="p-3 text-left font-medium">Skill Level</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students.slice(0, 10).map((student, index) => (
+                        <tr key={student.id} className="border-b">
+                          <td className="p-3">{student.full_name}</td>
+                          <td className="p-3">{student.username || `STU${1000 + index}`}</td>
+                          <td className="p-3">{Math.floor(Math.random() * 15) + 5}</td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              <Progress 
+                                value={Math.floor(Math.random() * 30) + 65} 
+                                className="h-2 w-24" 
+                              />
+                              <span className="text-sm">{Math.floor(Math.random() * 30) + 65}%</span>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            {["JavaScript", "Python", "Java"][Math.floor(Math.random() * 3)]}
+                          </td>
+                          <td className="p-3">
+                            <Badge variant={
+                              index % 3 === 0 ? "default" : 
+                              index % 3 === 1 ? "secondary" : "outline"
+                            }>
+                              {index % 3 === 0 ? "Advanced" : 
+                                index % 3 === 1 ? "Intermediate" : "Beginner"}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                      {students.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="p-3 text-center text-muted-foreground">
+                            No students found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Language Distribution</CardTitle>
+                  <CardDescription>
+                    Preferred coding languages among students
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <div className="text-sm font-medium">JavaScript</div>
+                        <div className="text-sm text-muted-foreground">42%</div>
+                      </div>
+                      <Progress value={42} className="h-2" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <div className="text-sm font-medium">Python</div>
+                        <div className="text-sm text-muted-foreground">35%</div>
+                      </div>
+                      <Progress value={35} className="h-2" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <div className="text-sm font-medium">Java</div>
+                        <div className="text-sm text-muted-foreground">15%</div>
+                      </div>
+                      <Progress value={15} className="h-2" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <div className="text-sm font-medium">C++</div>
+                        <div className="text-sm text-muted-foreground">8%</div>
+                      </div>
+                      <Progress value={8} className="h-2" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Challenge Categories</CardTitle>
+                  <CardDescription>
+                    Distribution of challenge completions
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <div className="text-sm font-medium">Data Structures</div>
+                        <div className="text-sm text-muted-foreground">38%</div>
+                      </div>
+                      <Progress value={38} className="h-2" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <div className="text-sm font-medium">Algorithms</div>
+                        <div className="text-sm text-muted-foreground">32%</div>
+                      </div>
+                      <Progress value={32} className="h-2" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <div className="text-sm font-medium">Web Development</div>
+                        <div className="text-sm text-muted-foreground">20%</div>
+                      </div>
+                      <Progress value={20} className="h-2" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <div className="text-sm font-medium">Database</div>
+                        <div className="text-sm text-muted-foreground">10%</div>
+                      </div>
+                      <Progress value={10} className="h-2" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Skill Level Breakdown</CardTitle>
+                  <CardDescription>
+                    Student skill distribution
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <div className="text-sm font-medium">Beginner</div>
+                        <div className="text-sm text-muted-foreground">25%</div>
+                      </div>
+                      <Progress value={25} className="h-2" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <div className="text-sm font-medium">Intermediate</div>
+                        <div className="text-sm text-muted-foreground">45%</div>
+                      </div>
+                      <Progress value={45} className="h-2" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <div className="text-sm font-medium">Advanced</div>
+                        <div className="text-sm text-muted-foreground">30%</div>
+                      </div>
+                      <Progress value={30} className="h-2" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
+
+          {/* Faculty Tab */}
+          <TabsContent value="faculty" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Faculty Directory</CardTitle>
+                <CardDescription>
+                  All faculty members and their courses
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="p-3 text-left font-medium">Name</th>
+                        <th className="p-3 text-left font-medium">ID</th>
+                        <th className="p-3 text-left font-medium">Courses</th>
+                        <th className="p-3 text-left font-medium">Students</th>
+                        <th className="p-3 text-left font-medium">Assignments</th>
+                        <th className="p-3 text-left font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {faculty.map((teacher, index) => (
+                        <tr key={teacher.id} className="border-b">
+                          <td className="p-3">{teacher.full_name}</td>
+                          <td className="p-3">{teacher.username || `FAC${1000 + index}`}</td>
+                          <td className="p-3">
+                            <div className="flex flex-wrap gap-1">
+                              {courses
+                                .filter((_, i) => i % faculty.length === index % faculty.length)
+                                .slice(0, 2)
+                                .map(course => (
+                                  <Badge key={course.id} variant="outline">
+                                    {course.title}
+                                  </Badge>
+                                ))}
+                            </div>
+                          </td>
+                          <td className="p-3">{Math.floor(Math.random() * 40) + 20}</td>
+                          <td className="p-3">{Math.floor(Math.random() * 10) + 5}</td>
+                          <td className="p-3">
+                            <Badge variant="default">Active</Badge>
+                          </td>
+                        </tr>
+                      ))}
+                      {faculty.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="p-3 text-center text-muted-foreground">
+                            No faculty members found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Faculty Performance</CardTitle>
+                  <CardDescription>
+                    Teaching performance metrics
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {faculty.slice(0, 5).map((teacher, index) => (
+                      <div key={teacher.id} className="space-y-2">
+                        <div className="flex justify-between">
+                          <div className="font-medium">{teacher.full_name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {Math.floor(Math.random() * 15) + 85}%
+                          </div>
+                        </div>
+                        <Progress value={Math.floor(Math.random() * 15) + 85} className="h-2" />
+                      </div>
+                    ))}
+                    {faculty.length === 0 && (
+                      <p className="text-center text-muted-foreground py-4">
+                        No faculty members found
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Course Allocation</CardTitle>
+                  <CardDescription>
+                    Faculty teaching load distribution
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {faculty.slice(0, 5).map((teacher, index) => (
+                      <div key={teacher.id} className="space-y-2">
+                        <div className="flex justify-between">
+                          <div className="font-medium">{teacher.full_name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {index + 1} {index + 1 === 1 ? "course" : "courses"}
+                          </div>
+                        </div>
+                        <Progress 
+                          value={((index + 1) / 5) * 100} 
+                          className="h-2" 
+                        />
+                      </div>
+                    ))}
+                    {faculty.length === 0 && (
+                      <p className="text-center text-muted-foreground py-4">
+                        No faculty members found
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Leaderboard Tab */}
+          <TabsContent value="leaderboard" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Coding Leaderboard</CardTitle>
+                <CardDescription>
+                  Top performing students in coding challenges
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="p-3 text-left font-medium">Rank</th>
+                        <th className="p-3 text-left font-medium">Student</th>
+                        <th className="p-3 text-left font-medium">ID</th>
+                        <th className="p-3 text-left font-medium">Score</th>
+                        <th className="p-3 text-left font-medium">Challenges</th>
+                        <th className="p-3 text-left font-medium">Badge</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students
+                        .slice(0, 10)
+                        .sort(() => Math.random() - 0.5)
+                        .map((student, index) => (
+                          <tr key={student.id} className="border-b">
+                            <td className="p-3 font-bold">#{index + 1}</td>
+                            <td className="p-3">{student.full_name}</td>
+                            <td className="p-3">{student.username || `STU${1000 + index}`}</td>
+                            <td className="p-3 font-semibold">{1000 - (index * 50)}</td>
+                            <td className="p-3">{20 - index}</td>
+                            <td className="p-3">
+                              <Badge variant={
+                                index === 0 ? "default" : 
+                                index < 3 ? "secondary" : "outline"
+                              }>
+                                {index === 0 ? "Gold" : 
+                                  index < 3 ? "Silver" : "Bronze"}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      {students.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="p-3 text-center text-muted-foreground">
+                            No students found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Academic Leaderboard</CardTitle>
+                <CardDescription>
+                  Top performing students in academic courses
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="p-3 text-left font-medium">Rank</th>
+                        <th className="p-3 text-left font-medium">Student</th>
+                        <th className="p-3 text-left font-medium">ID</th>
+                        <th className="p-3 text-left font-medium">GPA</th>
+                        <th className="p-3 text-left font-medium">Courses</th>
+                        <th className="p-3 text-left font-medium">Achievement</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students
+                        .slice(0, 10)
+                        .sort(() => Math.random() - 0.5)
+                        .map((student, index) => (
+                          <tr key={student.id} className="border-b">
+                            <td className="p-3 font-bold">#{index + 1}</td>
+                            <td className="p-3">{student.full_name}</td>
+                            <td className="p-3">{student.username || `STU${1000 + index}`}</td>
+                            <td className="p-3 font-semibold">
+                              {(4.0 - (index * 0.1)).toFixed(1)}
+                            </td>
+                            <td className="p-3">{Math.floor(Math.random() * 3) + 3}</td>
+                            <td className="p-3">
+                              <Badge variant={
+                                index === 0 ? "default" : 
+                                index < 3 ? "secondary" : "outline"
+                              }>
+                                {index === 0 ? "Dean's List" : 
+                                  index < 3 ? "Honors" : "Merit"}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      {students.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="p-3 text-center text-muted-foreground">
+                            No students found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Events Tab */}
+          <TabsContent value="events" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Upcoming Events</CardTitle>
+                    <CardDescription>
+                      Scheduled events and academic activities
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => setEventModalOpen(true)}>
+                    <Calendar className="mr-2 h-4 w-4" /> Schedule Event
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="p-3 text-left font-medium">Event</th>
+                        <th className="p-3 text-left font-medium">Date</th>
+                        <th className="p-3 text-left font-medium">Type</th>
+                        <th className="p-3 text-left font-medium">Course</th>
+                        <th className="p-3 text-left font-medium">Created By</th>
+                        <th className="p-3 text-left font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[1, 2, 3, 4].map((_, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="p-3">
+                            {["Mid-term Exam", "Final Project Submission", "Guest Lecture", "Coding Contest"][index]}
+                          </td>
+                          <td className="p-3">
+                            {format(new Date(new Date().setDate(new Date().getDate() + (index + 1) * 7)), "MMM dd, yyyy")}
+                          </td>
+                          <td className="p-3">
+                            <Badge variant={
+                              index === 0 ? "destructive" : 
+                              index === 1 ? "default" : 
+                              index === 2 ? "outline" : "secondary"
+                            }>
+                              {index === 0 ? "Exam" : 
+                                index === 1 ? "Deadline" : 
+                                index === 2 ? "Lecture" : "Contest"}
+                            </Badge>
+                          </td>
+                          <td className="p-3">
+                            {courses[index % courses.length]?.title || "General"}
+                          </td>
+                          <td className="p-3">
+                            {faculty[index % faculty.length]?.full_name || "Admin"}
+                          </td>
+                          <td className="p-3">
+                            <div className="flex gap-2">
+                              <Button variant="ghost" size="sm">Edit</Button>
+                              <Button variant="ghost" size="sm">Cancel</Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {courses.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="p-3 text-center text-muted-foreground">
+                            No events scheduled
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Plan Mock Tests / Coding Contests</CardTitle>
+                <CardDescription>
+                  Schedule and configure coding assessments
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">Data Structures Challenge</CardTitle>
+                        <CardDescription>
+                          Upcoming on {format(new Date(new Date().setDate(new Date().getDate() + 14)), "MMM dd, yyyy")}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pb-2">
+                        <p className="text-sm text-muted-foreground">
+                          A coding challenge focused on data structures implementation and algorithms.
+                        </p>
+                      </CardContent>
+                      <CardFooter>
+                        <Button variant="outline" size="sm" className="w-full">
+                          Edit Challenge
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">Web Development Hackathon</CardTitle>
+                        <CardDescription>
+                          Upcoming on {format(new Date(new Date().setDate(new Date().getDate() + 21)), "MMM dd, yyyy")}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pb-2">
+                        <p className="text-sm text-muted-foreground">
+                          A 24-hour hackathon focused on building full-stack web applications.
+                        </p>
+                      </CardContent>
+                      <CardFooter>
+                        <Button variant="outline" size="sm" className="w-full">
+                          Edit Challenge
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                    
+                    <Card className="bg-muted/30 border-dashed">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">Create New Contest</CardTitle>
+                        <CardDescription>
+                          Set up a new coding challenge or test
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pb-2">
+                        <p className="text-sm text-muted-foreground">
+                          Configure a new assessment with custom problems and evaluation criteria.
+                        </p>
+                      </CardContent>
+                      <CardFooter>
+                        <Button variant="outline" size="sm" className="w-full">
+                          <Code className="mr-2 h-4 w-4" /> Create Contest
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Export Reports</CardTitle>
+                <CardDescription>
+                  Generate and download academic and performance reports
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">Academic Performance</CardTitle>
+                      <CardDescription>
+                        Student academic metrics and grades
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <p className="text-sm text-muted-foreground">
+                        Complete academic performance data including GPA, course grades, and attendance.
+                      </p>
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Download className="mr-2 h-4 w-4" /> Export CSV
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">Coding Performance</CardTitle>
+                      <CardDescription>
+                        Student coding metrics and achievements
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <p className="text-sm text-muted-foreground">
+                        Comprehensive coding performance including challenges, submissions, and metrics.
+                      </p>
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Download className="mr-2 h-4 w-4" /> Export CSV
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">Faculty Report</CardTitle>
+                      <CardDescription>
+                        Faculty teaching load and performance
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <p className="text-sm text-muted-foreground">
+                        Faculty course assignments, evaluations, and teaching metrics.
+                      </p>
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Download className="mr-2 h-4 w-4" /> Export CSV
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
+
+      {/* Create Event Modal */}
+      <Dialog open={eventModalOpen} onOpenChange={setEventModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Schedule New Event</DialogTitle>
+            <DialogDescription>
+              Create a new academic event or activity
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="event-title">Event Title</Label>
+              <Input
+                id="event-title"
+                value={newEvent.title}
+                onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="event-description">Description</Label>
+              <Textarea
+                id="event-description"
+                value={newEvent.description}
+                onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="event-date">Event Date</Label>
+                <DatePicker
+                  selected={newEvent.event_date}
+                  onSelect={(date) => setNewEvent({...newEvent, event_date: date})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="event-type">Event Type</Label>
+                <Select
+                  value={newEvent.event_type}
+                  onValueChange={(value) => setNewEvent({...newEvent, event_type: value})}
+                >
+                  <SelectTrigger id="event-type">
+                    <SelectValue placeholder="Select event type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="exam">Exam</SelectItem>
+                    <SelectItem value="lab">Lab Session</SelectItem>
+                    <SelectItem value="lecture">Lecture</SelectItem>
+                    <SelectItem value="deadline">Deadline</SelectItem>
+                    <SelectItem value="contest">Coding Contest</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="event-course">Related Course (Optional)</Label>
+              <Select
+                value={newEvent.course_id}
+                onValueChange={(value) => setNewEvent({...newEvent, course_id: value})}
+              >
+                <SelectTrigger id="event-course">
+                  <SelectValue placeholder="Select a course" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {courses.map((course) => (
+                    <SelectItem key={course.id} value={course.id}>
+                      {course.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEventModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateEvent}>Schedule Event</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageLayout>
   );
 };
