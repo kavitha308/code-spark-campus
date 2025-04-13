@@ -21,14 +21,12 @@ import Attendance from "./pages/Attendance";
 import Faculty from "./pages/Faculty";
 import Discussions from "./pages/Discussions";
 import CodingChallenges from "./pages/CodingChallenges";
-import FacultyDashboard from "./pages/FacultyDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
 // Protected route component
-const ProtectedRoute = ({ children, allowedRoles = ["student", "teacher", "admin"] }: { children: React.ReactNode; allowedRoles?: string[] }) => {
-  const { user, profile, isLoading } = useAuth();
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, isLoading } = useAuth();
   
   // While checking authentication status, show a loading state
   if (isLoading) {
@@ -40,142 +38,101 @@ const ProtectedRoute = ({ children, allowedRoles = ["student", "teacher", "admin
     return <Navigate to="/auth" replace />;
   }
   
-  // Check role-based access
-  const userRole = profile?.role || "student";
-  
-  if (!allowedRoles.includes(userRole)) {
-    // Redirect to appropriate dashboard based on role
-    if (userRole === "teacher") {
-      return <Navigate to="/faculty-dashboard" replace />;
-    } else if (userRole === "admin") {
-      return <Navigate to="/admin-dashboard" replace />;
-    } else {
-      return <Navigate to="/" replace />;
-    }
-  }
-  
-  // If authenticated and has permission, render the children
+  // If authenticated, render the children
   return <>{children}</>;
 };
 
 // Main app component
 const AppRoutes = () => {
-  const { user, profile } = useAuth();
-  const userRole = profile?.role || "student";
-  
-  // Redirect to appropriate dashboard when root path is accessed
-  const renderHomePage = () => {
-    if (!user) return <Home />;
-    
-    if (userRole === "teacher") {
-      return <Navigate to="/faculty-dashboard" replace />;
-    } else if (userRole === "admin") {
-      return <Navigate to="/admin-dashboard" replace />;
-    } else {
-      return <Home />;
-    }
-  };
-  
   return (
     <Routes>
       <Route path="/auth" element={<Auth />} />
       
-      <Route path="/" element={renderHomePage()} />
+      <Route path="/" element={
+        <ProtectedRoute>
+          <Home />
+        </ProtectedRoute>
+      } />
       
-      {/* Student routes */}
       <Route path="/dashboard" element={
-        <ProtectedRoute allowedRoles={["student"]}>
+        <ProtectedRoute>
           <Index />
         </ProtectedRoute>
       } />
       
       <Route path="/courses" element={
-        <ProtectedRoute allowedRoles={["student", "teacher"]}>
+        <ProtectedRoute>
           <Courses />
         </ProtectedRoute>
       } />
       
       <Route path="/coding" element={
-        <ProtectedRoute allowedRoles={["student"]}>
+        <ProtectedRoute>
           <Coding />
         </ProtectedRoute>
       } />
       
       <Route path="/coding-challenges" element={
-        <ProtectedRoute allowedRoles={["student"]}>
+        <ProtectedRoute>
           <CodingChallenges />
         </ProtectedRoute>
       } />
       
       <Route path="/assignments/*" element={
-        <ProtectedRoute allowedRoles={["student"]}>
+        <ProtectedRoute>
           <Assignments />
         </ProtectedRoute>
       } />
       
       <Route path="/profile" element={
-        <ProtectedRoute allowedRoles={["student", "teacher", "admin"]}>
+        <ProtectedRoute>
           <Profile />
         </ProtectedRoute>
       } />
       
       <Route path="/leaderboard" element={
-        <ProtectedRoute allowedRoles={["student", "teacher"]}>
+        <ProtectedRoute>
           <Leaderboard />
         </ProtectedRoute>
       } />
       
       <Route path="/performance" element={
-        <ProtectedRoute allowedRoles={["student"]}>
+        <ProtectedRoute>
           <Performance />
         </ProtectedRoute>
       } />
       
       <Route path="/job-matches" element={
-        <ProtectedRoute allowedRoles={["student"]}>
+        <ProtectedRoute>
           <JobMatches />
         </ProtectedRoute>
       } />
       
       <Route path="/calendar" element={
-        <ProtectedRoute allowedRoles={["student", "teacher", "admin"]}>
+        <ProtectedRoute>
           <Calendar />
         </ProtectedRoute>
       } />
       
       <Route path="/attendance" element={
-        <ProtectedRoute allowedRoles={["student", "teacher"]}>
+        <ProtectedRoute>
           <Attendance />
         </ProtectedRoute>
       } />
       
       <Route path="/faculty" element={
-        <ProtectedRoute allowedRoles={["student", "teacher"]}>
+        <ProtectedRoute>
           <Faculty />
         </ProtectedRoute>
       } />
       
       <Route path="/discussions" element={
-        <ProtectedRoute allowedRoles={["student", "teacher"]}>
+        <ProtectedRoute>
           <Discussions />
         </ProtectedRoute>
       } />
       
-      {/* Faculty/Teacher routes */}
-      <Route path="/faculty-dashboard" element={
-        <ProtectedRoute allowedRoles={["teacher"]}>
-          <FacultyDashboard />
-        </ProtectedRoute>
-      } />
-      
-      {/* Admin routes */}
-      <Route path="/admin-dashboard" element={
-        <ProtectedRoute allowedRoles={["admin"]}>
-          <AdminDashboard />
-        </ProtectedRoute>
-      } />
-      
-      {/* Catch-all route */}
+      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -75,7 +75,6 @@ const Dashboard = () => {
               <h2 className="text-xl font-semibold mb-4">Current Assignments</h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <AssignmentCard
-                  id="assignment1"
                   title="Binary Search Implementation"
                   course="Data Structures & Algorithms"
                   dueDate="Apr 15, 2025 - 11:59 PM"
@@ -83,7 +82,6 @@ const Dashboard = () => {
                   submissionType="Code Submission"
                 />
                 <AssignmentCard
-                  id="assignment2"
                   title="React Component Architecture"
                   course="Advanced Web Development"
                   dueDate="Apr 12, 2025 - 11:59 PM"
@@ -91,7 +89,6 @@ const Dashboard = () => {
                   submissionType="Project + Report"
                 />
                 <AssignmentCard
-                  id="assignment3"
                   title="SQL Query Optimization"
                   course="Database Management Systems"
                   dueDate="Apr 10, 2025 - 11:59 PM"

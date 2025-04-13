@@ -20,11 +20,6 @@ import {
   MessageSquare,
   Briefcase,
   Home,
-  ChartBar,
-  GraduationCap,
-  FileText,
-  Database,
-  Flag
 } from "lucide-react";
 import {
   Sheet,
@@ -50,7 +45,6 @@ const MobileNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
-  const userRole = profile?.role || "student";
   const isActive = (path: string) => location.pathname === path;
 
   const handleNavigation = (path: string) => {
@@ -93,7 +87,7 @@ const MobileNav = () => {
                 <Avatar>
                   <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || "User"} />
                   <AvatarFallback className="bg-gradient-purple text-white">
-                    {profile?.full_name ? profile?.full_name.split(' ').map(n => n[0]).join('') : "U"}
+                    {profile?.full_name ? profile.full_name.split(' ').map(n => n[0]).join('') : "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
@@ -116,164 +110,50 @@ const MobileNav = () => {
               </nav>
               
               <Accordion type="single" collapsible className="w-full">
-                {/* Student Dashboard */}
-                {userRole === "student" && (
-                  <AccordionItem value="dashboard">
-                    <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/dashboard") ? "bg-purple-100 text-campus-purple" : ""}`}>
-                      <div className="flex items-center gap-2">
-                        <LayoutDashboard className="h-5 w-5" />
-                        <span>Dashboard</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="pl-9 space-y-1">
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/dashboard")}
-                        >
-                          Overview
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/performance")}
-                        >
-                          <BarChart3 className="h-4 w-4 mr-2" />
-                          Performance Analytics
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/calendar")}
-                        >
-                          <Calendar className="h-4 w-4 mr-2" />
-                          Calendar
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/attendance")}
-                        >
-                          <FileCheck className="h-4 w-4 mr-2" />
-                          Attendance
-                        </Button>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
+                <AccordionItem value="dashboard">
+                  <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/dashboard") ? "bg-purple-100 text-campus-purple" : ""}`}>
+                    <div className="flex items-center gap-2">
+                      <LayoutDashboard className="h-5 w-5" />
+                      <span>Dashboard</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pl-9 space-y-1">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/dashboard")}
+                      >
+                        Overview
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/performance")}
+                      >
+                        <BarChart3 className="h-4 w-4 mr-2" />
+                        Performance Analytics
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/calendar")}
+                      >
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Calendar
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/attendance")}
+                      >
+                        <FileCheck className="h-4 w-4 mr-2" />
+                        Attendance
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
                 
-                {/* Faculty Dashboard */}
-                {userRole === "teacher" && (
-                  <AccordionItem value="faculty-dashboard">
-                    <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/faculty-dashboard") ? "bg-purple-100 text-campus-purple" : ""}`}>
-                      <div className="flex items-center gap-2">
-                        <LayoutDashboard className="h-5 w-5" />
-                        <span>Faculty Dashboard</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="pl-9 space-y-1">
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/faculty-dashboard")}
-                        >
-                          Overview
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/faculty-dashboard?tab=attendance")}
-                        >
-                          <FileCheck className="h-4 w-4 mr-2" />
-                          Student Attendance
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/faculty-dashboard?tab=submissions")}
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          Submissions
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/faculty-dashboard?tab=academic")}
-                        >
-                          <ChartBar className="h-4 w-4 mr-2" />
-                          Academic Progress
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/faculty-dashboard?tab=coding")}
-                        >
-                          <Code className="h-4 w-4 mr-2" />
-                          Coding Progress
-                        </Button>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
-                
-                {/* Admin Dashboard */}
-                {userRole === "admin" && (
-                  <AccordionItem value="admin-dashboard">
-                    <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/admin-dashboard") ? "bg-purple-100 text-campus-purple" : ""}`}>
-                      <div className="flex items-center gap-2">
-                        <LayoutDashboard className="h-5 w-5" />
-                        <span>Admin Dashboard</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="pl-9 space-y-1">
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/admin-dashboard")}
-                        >
-                          Overview
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/admin-dashboard?tab=users")}
-                        >
-                          <Users className="h-4 w-4 mr-2" />
-                          User Management
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/admin-dashboard?tab=courses")}
-                        >
-                          <BookOpen className="h-4 w-4 mr-2" />
-                          Courses
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/admin-dashboard?tab=skills")}
-                        >
-                          <ChartBar className="h-4 w-4 mr-2" />
-                          Skill Metrics
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/admin-dashboard?tab=reports")}
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          Reports
-                        </Button>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
-                
-                {/* Academics section - for all users */}
                 <AccordionItem value="academics">
                   <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/courses") ? "bg-purple-100 text-campus-purple" : ""}`}>
                     <div className="flex items-center gap-2">
@@ -319,164 +199,62 @@ const MobileNav = () => {
                   </AccordionContent>
                 </AccordionItem>
                 
-                {/* Coding section - only for students */}
-                {userRole === "student" && (
-                  <AccordionItem value="coding">
-                    <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/coding") ? "bg-purple-100 text-campus-purple" : ""}`}>
-                      <div className="flex items-center gap-2">
-                        <Code className="h-5 w-5" />
-                        <span>Coding</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="pl-9 space-y-1">
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/coding")}
-                        >
-                          <Code className="h-4 w-4 mr-2" />
-                          Code Editor
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/coding-challenges")}
-                        >
-                          <PenTool className="h-4 w-4 mr-2" />
-                          Challenges
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/leaderboard")}
-                        >
-                          <Trophy className="h-4 w-4 mr-2" />
-                          Leaderboard
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/job-matches")}
-                        >
-                          <Briefcase className="h-4 w-4 mr-2" />
-                          Job Matches
-                        </Button>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
-                
-                {/* Admin-specific features */}
-                {userRole === "admin" && (
-                  <AccordionItem value="admin-features">
-                    <AccordionTrigger className={`px-4 py-2 rounded-md`}>
-                      <div className="flex items-center gap-2">
-                        <ChartBar className="h-5 w-5" />
-                        <span>Advanced Analytics</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="pl-9 space-y-1">
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/admin-dashboard?tab=skills")}
-                        >
-                          <ChartBar className="h-4 w-4 mr-2" />
-                          Skill Metrics
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/admin-dashboard?tab=reports")}
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          Export Reports
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/admin-dashboard?tab=overview")}
-                        >
-                          <Database className="h-4 w-4 mr-2" />
-                          System Overview
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/admin-dashboard")}
-                        >
-                          <Flag className="h-4 w-4 mr-2" />
-                          Plan Events
-                        </Button>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
-                
-                {/* Faculty-specific features */}
-                {userRole === "teacher" && (
-                  <AccordionItem value="faculty-features">
-                    <AccordionTrigger className={`px-4 py-2 rounded-md`}>
-                      <div className="flex items-center gap-2">
-                        <GraduationCap className="h-5 w-5" />
-                        <span>Student Progress</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="pl-9 space-y-1">
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/faculty-dashboard?tab=academic")}
-                        >
-                          <ChartBar className="h-4 w-4 mr-2" />
-                          Academic Progress
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/faculty-dashboard?tab=coding")}
-                        >
-                          <Code className="h-4 w-4 mr-2" />
-                          Coding Progress
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/faculty-dashboard?tab=attendance")}
-                        >
-                          <FileCheck className="h-4 w-4 mr-2" />
-                          Attendance
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start"
-                          onClick={() => handleNavigation("/faculty-dashboard?tab=submissions")}
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          Submissions
-                        </Button>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
+                <AccordionItem value="coding">
+                  <AccordionTrigger className={`px-4 py-2 rounded-md ${isActive("/coding") ? "bg-purple-100 text-campus-purple" : ""}`}>
+                    <div className="flex items-center gap-2">
+                      <Code className="h-5 w-5" />
+                      <span>Coding</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pl-9 space-y-1">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/coding")}
+                      >
+                        <Code className="h-4 w-4 mr-2" />
+                        Code Editor
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/coding-challenges")}
+                      >
+                        <PenTool className="h-4 w-4 mr-2" />
+                        Challenges
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/leaderboard")}
+                      >
+                        <Trophy className="h-4 w-4 mr-2" />
+                        Leaderboard
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={() => handleNavigation("/job-matches")}
+                      >
+                        <Briefcase className="h-4 w-4 mr-2" />
+                        Job Matches
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               </Accordion>
               
-              {/* Leaderboard - visible to students and faculty */}
-              {(userRole === "student" || userRole === "teacher") && (
-                <div className="mt-2">
-                  <Button 
-                    variant="ghost" 
-                    className={`w-full justify-start px-4 py-2 ${isActive("/leaderboard") ? "bg-purple-100 text-campus-purple" : ""}`}
-                    onClick={() => handleNavigation("/leaderboard")}
-                  >
-                    <Trophy className="h-5 w-5 mr-2" />
-                    Leaderboard
-                  </Button>
-                </div>
-              )}
+              <div className="mt-2">
+                <Button 
+                  variant="ghost" 
+                  className={`w-full justify-start px-4 py-2 ${isActive("/leaderboard") ? "bg-purple-100 text-campus-purple" : ""}`}
+                  onClick={() => handleNavigation("/leaderboard")}
+                >
+                  <Trophy className="h-5 w-5 mr-2" />
+                  Leaderboard
+                </Button>
+              </div>
               
               <Separator className="my-4" />
               

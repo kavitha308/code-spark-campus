@@ -2,812 +2,387 @@
 import React, { useState } from "react";
 import PageLayout from "@/components/layout/PageLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Search, Mail, Calendar, Star, Phone, BookOpen, GraduationCap, MapPin, Clock, Send } from "lucide-react";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
+import { Search, Mail, BookOpen, Clock, Users, Star, Filter, MessageCircle } from "lucide-react";
 
 // Sample faculty data
-const facultyMembers = [
+const facultyData = [
   {
-    id: "1",
-    name: "Dr. Robert Johnson",
-    title: "Professor",
+    id: 1,
+    name: "Dr. Sarah Johnson",
+    title: "Associate Professor",
     department: "Computer Science",
-    expertise: ["Algorithms", "Data Structures", "Machine Learning"],
-    courses: ["CS202: Data Structures & Algorithms", "CS506: Advanced Algorithms"],
-    email: "r.johnson@university.edu",
-    phone: "(555) 123-4567",
-    office: "Science Building, Room 305",
-    officeHours: "Monday & Wednesday, 2:00 PM - 4:00 PM",
-    bio: "Dr. Johnson has over 15 years of experience in computer science education and research. His primary focus is on algorithmic efficiency and machine learning applications.",
-    image: "",
+    expertise: ["Data Structures", "Algorithms", "Machine Learning"],
+    courses: ["Data Structures & Algorithms"],
+    email: "sarah.johnson@university.edu",
     rating: 4.8,
-    reviews: 45
+    students: 240,
+    image: "",
+    officeHours: "Mon, Wed 2:00-4:00 PM",
+    experience: "12 years",
+    education: "Ph.D. in Computer Science, Stanford University",
+    bio: "Dr. Johnson specializes in algorithm design and machine learning. Her research focuses on efficient data structures for large-scale applications and optimization algorithms."
   },
   {
-    id: "2",
-    name: "Prof. Emily Chen",
-    title: "Associate Professor",
+    id: 2,
+    name: "Prof. Michael Chen",
+    title: "Full Professor",
     department: "Computer Science",
-    expertise: ["Artificial Intelligence", "Neural Networks", "Computer Vision"],
-    courses: ["CS405: Machine Learning Fundamentals", "CS610: Advanced AI"],
-    email: "e.chen@university.edu",
-    phone: "(555) 123-4568",
-    office: "Science Building, Room 310",
-    officeHours: "Tuesday & Thursday, 1:00 PM - 3:00 PM",
-    bio: "Prof. Chen specializes in artificial intelligence and computer vision. Her research has been published in top-tier journals and she has worked on several industry collaborations in AI applications.",
-    image: "",
-    rating: 4.9,
-    reviews: 38
-  },
-  {
-    id: "3",
-    name: "Dr. Michael Brown",
-    title: "Professor",
-    department: "Computer Science",
-    expertise: ["Web Development", "JavaScript", "Frontend Frameworks"],
-    courses: ["CS301: Advanced Web Development", "CS420: Modern Frontend Development"],
-    email: "m.brown@university.edu",
-    phone: "(555) 123-4569",
-    office: "Tech Building, Room 205",
-    officeHours: "Wednesday & Friday, 10:00 AM - 12:00 PM",
-    bio: "Dr. Brown has extensive industry experience in web development before joining academia. He maintains close ties with tech companies and focuses on practical, industry-relevant teaching approaches.",
-    image: "",
-    rating: 4.7,
-    reviews: 52
-  },
-  {
-    id: "4",
-    name: "Dr. Sarah Williams",
-    title: "Assistant Professor",
-    department: "Computer Science",
-    expertise: ["Database Systems", "SQL", "Data Management"],
-    courses: ["CS305: Database Management Systems", "CS510: Advanced Database Concepts"],
-    email: "s.williams@university.edu",
-    phone: "(555) 123-4570",
-    office: "Tech Building, Room 210",
-    officeHours: "Monday & Thursday, 11:00 AM - 1:00 PM",
-    bio: "Dr. Williams specializes in database design and optimization. She has worked with several large organizations to improve their data management systems and brings practical knowledge to her courses.",
-    image: "",
+    expertise: ["Web Development", "UI/UX Design", "Front-end Frameworks"],
+    courses: ["Advanced Web Development"],
+    email: "michael.chen@university.edu",
     rating: 4.6,
-    reviews: 31
+    students: 310,
+    image: "",
+    officeHours: "Tue, Thu 1:00-3:00 PM",
+    experience: "15 years",
+    education: "Ph.D. in Human-Computer Interaction, MIT",
+    bio: "Prof. Chen is an expert in modern web technologies and user experience design. He has worked with major tech companies and brings practical industry insights to his teaching."
   },
   {
-    id: "5",
-    name: "Prof. David Martinez",
-    title: "Associate Professor",
-    department: "Computer Science",
-    expertise: ["Cybersecurity", "Network Security", "Ethical Hacking"],
-    courses: ["CS350: Introduction to Cybersecurity", "CS550: Advanced Network Security"],
-    email: "d.martinez@university.edu",
-    phone: "(555) 123-4571",
-    office: "Science Building, Room 315",
-    officeHours: "Tuesday & Friday, 3:00 PM - 5:00 PM",
-    bio: "Prof. Martinez has a background in cybersecurity and has consulted for government agencies. His courses focus on practical security concepts and ethical considerations in the digital age.",
-    image: "",
+    id: 3,
+    name: "Dr. Robert Garcia",
+    title: "Assistant Professor",
+    department: "Information Systems",
+    expertise: ["Database Design", "SQL", "Data Warehousing"],
+    courses: ["Database Management Systems"],
+    email: "robert.garcia@university.edu",
     rating: 4.5,
-    reviews: 29
-  },
-  {
-    id: "6",
-    name: "Dr. Jennifer Wilson",
-    title: "Professor",
-    department: "Computer Science",
-    expertise: ["Mobile Development", "iOS/Android", "Cross-platform Frameworks"],
-    courses: ["CS330: Mobile App Development", "CS530: Advanced Mobile Frameworks"],
-    email: "j.wilson@university.edu",
-    phone: "(555) 123-4572",
-    office: "Tech Building, Room 220",
-    officeHours: "Monday & Wednesday, 9:00 AM - 11:00 AM",
-    bio: "Dr. Wilson specializes in mobile application development and has released several apps in the market. She brings real-world experience to her teaching and focuses on current industry best practices.",
+    students: 180,
     image: "",
+    officeHours: "Mon, Fri 10:00 AM-12:00 PM",
+    experience: "8 years",
+    education: "Ph.D. in Information Systems, UC Berkeley",
+    bio: "Dr. Garcia focuses on database optimization and big data systems. His research explores efficient query processing and data storage solutions for enterprise applications."
+  },
+  {
+    id: 4,
+    name: "Dr. Emily Taylor",
+    title: "Associate Professor",
+    department: "Artificial Intelligence",
+    expertise: ["Machine Learning", "Neural Networks", "Computer Vision"],
+    courses: ["Machine Learning Fundamentals"],
+    email: "emily.taylor@university.edu",
+    rating: 4.9,
+    students: 290,
+    image: "",
+    officeHours: "Wed, Thu 9:00-11:00 AM",
+    experience: "10 years",
+    education: "Ph.D. in Computer Science, Carnegie Mellon University",
+    bio: "Dr. Taylor is a leading expert in neural networks and deep learning architectures. Her research has contributed to significant advancements in computer vision and natural language processing."
+  },
+  {
+    id: 5,
+    name: "Prof. James Wilson",
+    title: "Full Professor",
+    department: "Computer Science",
+    expertise: ["Operating Systems", "Distributed Systems", "Cloud Computing"],
+    courses: ["Operating Systems Design", "Cloud Architecture"],
+    email: "james.wilson@university.edu",
     rating: 4.7,
-    reviews: 40
+    students: 260,
+    image: "",
+    officeHours: "Tue, Fri 2:00-4:00 PM",
+    experience: "18 years",
+    education: "Ph.D. in Computer Science, University of Washington",
+    bio: "Prof. Wilson specializes in distributed systems and cloud computing architectures. He has extensive experience working with industry leaders in developing scalable infrastructure solutions."
+  },
+  {
+    id: 6,
+    name: "Dr. Sophia Patel",
+    title: "Assistant Professor",
+    department: "Software Engineering",
+    expertise: ["Software Architecture", "Design Patterns", "Agile Methodologies"],
+    courses: ["Software Engineering Principles", "Project Management"],
+    email: "sophia.patel@university.edu",
+    rating: 4.4,
+    students: 210,
+    image: "",
+    officeHours: "Mon, Wed 1:00-3:00 PM",
+    experience: "7 years",
+    education: "Ph.D. in Software Engineering, Georgia Tech",
+    bio: "Dr. Patel focuses on software design patterns and development methodologies. Her research aims to improve software quality and team productivity through better architectural practices."
   }
 ];
 
-// Sample reviews data (for a selected faculty member)
-const facultyReviews = [
-  {
-    id: "r1",
-    facultyId: "1",
-    student: "Alex Johnson",
-    course: "CS202: Data Structures & Algorithms",
-    date: "March 15, 2023",
-    rating: 5,
-    comment: "Dr. Johnson explains complex concepts very clearly. His examples are relevant and he's always willing to help outside of class hours."
-  },
-  {
-    id: "r2",
-    facultyId: "1",
-    student: "Maria Garcia",
-    course: "CS202: Data Structures & Algorithms",
-    date: "February 28, 2023",
-    rating: 4,
-    comment: "Very knowledgeable professor who is passionate about the subject. The assignments are challenging but very educational."
-  },
-  {
-    id: "r3",
-    facultyId: "1",
-    student: "James Wilson",
-    course: "CS506: Advanced Algorithms",
-    date: "April 5, 2023",
-    rating: 5,
-    comment: "One of the best professors in the department. His lectures are engaging and he explains difficult topics in an accessible way."
-  },
-  {
-    id: "r4",
-    facultyId: "2",
-    student: "Sarah Thompson",
-    course: "CS405: Machine Learning Fundamentals",
-    date: "March 20, 2023",
-    rating: 5,
-    comment: "Prof. Chen is incredibly knowledgeable and her passion for AI is contagious. She makes complex neural network concepts understandable."
-  },
-  {
-    id: "r5",
-    facultyId: "2",
-    student: "Michael Brown",
-    course: "CS610: Advanced AI",
-    date: "April 2, 2023",
-    rating: 5,
-    comment: "Brilliant professor who brings cutting-edge research into the classroom. Her assignments are challenging but worthwhile."
-  }
-];
-
-// AppointmentForm component for scheduling appointments with faculty
-const AppointmentForm = ({ faculty, onSubmit }: { faculty: any, onSubmit: () => void }) => {
-  const { user, profile } = useAuth();
-  const [formData, setFormData] = useState({
-    name: profile?.full_name || "",
-    email: user?.email || "",
-    date: "",
-    time: "",
-    reason: ""
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+// Faculty details component
+const FacultyDetails: React.FC<{ faculty: any, onBack: () => void }> = ({ faculty, onBack }) => (
+  <div className="space-y-6">
+    <Button variant="ghost" onClick={onBack} className="mb-2">
+      ← Back to faculty list
+    </Button>
     
-    if (!formData.name || !formData.email || !formData.date || !formData.time || !formData.reason) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    // Simulate API call to schedule appointment
-    setTimeout(() => {
-      setIsSubmitting(false);
-      onSubmit();
-      toast.success(`Appointment requested with ${faculty.name}!`);
-    }, 1500);
-  };
-  
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Full Name <span className="text-red-500">*</span></Label>
-        <Input
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="email">Email Address <span className="text-red-500">*</span></Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="date">Preferred Date <span className="text-red-500">*</span></Label>
-          <Input
-            id="date"
-            name="date"
-            type="date"
-            value={formData.date}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
+    <div className="flex flex-col md:flex-row gap-6">
+      <div className="md:w-1/3">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center text-center">
+              <Avatar className="h-24 w-24 mb-4">
+                <AvatarImage src={faculty.image} alt={faculty.name} />
+                <AvatarFallback className="text-2xl bg-campus-purple text-white">
+                  {faculty.name.split(' ').map((n: string) => n[0]).join('')}
+                </AvatarFallback>
+              </Avatar>
+              <h2 className="text-xl font-bold">{faculty.name}</h2>
+              <p className="text-muted-foreground">{faculty.title}</p>
+              <p className="text-sm text-muted-foreground">{faculty.department}</p>
+              
+              <div className="flex items-center mt-2">
+                <Star className="h-4 w-4 text-yellow-500 mr-1 fill-yellow-500" />
+                <span className="font-medium">{faculty.rating}</span>
+                <span className="text-sm text-muted-foreground ml-1">({faculty.students} students)</span>
+              </div>
+              
+              <div className="mt-4 w-full">
+                <Button className="w-full" onClick={() => window.location.href = `mailto:${faculty.email}`}>
+                  <Mail className="mr-2 h-4 w-4" /> Contact
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         
-        <div className="space-y-2">
-          <Label htmlFor="time">Preferred Time <span className="text-red-500">*</span></Label>
-          <Input
-            id="time"
-            name="time"
-            type="time"
-            value={formData.time}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle>Office Hours</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex items-start gap-2">
+              <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="font-medium">Schedule</p>
+                <p className="text-sm text-muted-foreground">{faculty.officeHours}</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <BookOpen className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="font-medium">Courses</p>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {faculty.courses.map((course: string, i: number) => (
+                    <Badge key={i} variant="outline">{course}</Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <Users className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="font-medium">Teaching Experience</p>
+                <p className="text-sm text-muted-foreground">{faculty.experience}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="reason">Reason for Appointment <span className="text-red-500">*</span></Label>
-        <Textarea
-          id="reason"
-          name="reason"
-          placeholder="Please describe the purpose of your appointment..."
-          value={formData.reason}
-          onChange={handleInputChange}
-          className="min-h-[100px]"
-          required
-        />
+      <div className="md:w-2/3">
+        <Card>
+          <CardHeader>
+            <CardTitle>About {faculty.name}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <h3 className="font-semibold mb-2">Biography</h3>
+              <p>{faculty.bio}</p>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-2">Education</h3>
+              <p>{faculty.education}</p>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-2">Areas of Expertise</h3>
+              <div className="flex flex-wrap gap-1">
+                {faculty.expertise.map((area: string, i: number) => (
+                  <Badge key={i} className="bg-campus-purple/10 text-campus-purple hover:bg-campus-purple/20">
+                    {area}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle>Courses Taught</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {faculty.courses.map((course: string, i: number) => (
+                <div key={i} className="p-3 border rounded-md flex justify-between items-center hover:bg-slate-50">
+                  <div>
+                    <div className="font-medium">{course}</div>
+                    <div className="text-sm text-muted-foreground">Current Semester</div>
+                  </div>
+                  <Button size="sm">View Syllabus</Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle>Send a Message</CardTitle>
+            <CardDescription>
+              Ask a question or schedule a meeting with {faculty.name}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium block mb-1">Subject</label>
+                <Input placeholder="Enter message subject" />
+              </div>
+              <div>
+                <label className="text-sm font-medium block mb-1">Message</label>
+                <textarea 
+                  className="w-full min-h-[100px] p-3 rounded-md border border-input resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Type your message here..."
+                ></textarea>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button className="w-full">
+              <MessageCircle className="mr-2 h-4 w-4" /> Send Message
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
-      
-      <DialogFooter className="pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Submitting..." : "Request Appointment"}
-        </Button>
-      </DialogFooter>
-    </form>
-  );
-};
-
-// MessageForm component for sending messages to faculty
-const MessageForm = ({ faculty, onSubmit }: { faculty: any, onSubmit: () => void }) => {
-  const { user, profile } = useAuth();
-  const [formData, setFormData] = useState({
-    name: profile?.full_name || "",
-    email: user?.email || "",
-    subject: "",
-    message: ""
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    // Simulate API call to send message
-    setTimeout(() => {
-      setIsSubmitting(false);
-      onSubmit();
-      toast.success(`Message sent to ${faculty.name}!`);
-    }, 1500);
-  };
-  
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Full Name <span className="text-red-500">*</span></Label>
-        <Input
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="email">Email Address <span className="text-red-500">*</span></Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="subject">Subject <span className="text-red-500">*</span></Label>
-        <Input
-          id="subject"
-          name="subject"
-          value={formData.subject}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="message">Message <span className="text-red-500">*</span></Label>
-        <Textarea
-          id="message"
-          name="message"
-          placeholder="Type your message here..."
-          value={formData.message}
-          onChange={handleInputChange}
-          className="min-h-[150px]"
-          required
-        />
-      </div>
-      
-      <DialogFooter className="pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Sending..." : "Send Message"}
-        </Button>
-      </DialogFooter>
-    </form>
-  );
-};
-
-// Label component
-const Label = ({ htmlFor, children }: { htmlFor: string, children: React.ReactNode }) => (
-  <label htmlFor={htmlFor} className="block text-sm font-medium">
-    {children}
-  </label>
+    </div>
+  </div>
 );
 
 const Faculty = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [departmentFilter, setDepartmentFilter] = useState("all");
-  const [selectedFaculty, setSelectedFaculty] = useState<any | null>(null);
-  const [showAppointmentForm, setShowAppointmentForm] = useState(false);
-  const [showMessageForm, setShowMessageForm] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedFaculty, setSelectedFaculty] = useState<any>(null);
   
-  // Filter faculty based on search term and department
-  const filteredFaculty = facultyMembers.filter(faculty => {
-    const matchesSearch = 
-      faculty.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      faculty.courses.some(course => course.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      faculty.expertise.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
+  // Filter faculty based on search query and active tab
+  const filteredFaculty = facultyData.filter(faculty => {
+    const matchesSearch = faculty.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          faculty.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          faculty.expertise.some(e => e.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    const matchesDepartment = departmentFilter === "all" || faculty.department === departmentFilter;
-    
-    return matchesSearch && matchesDepartment;
+    if (activeTab === "all") return matchesSearch;
+    return matchesSearch && faculty.department.toLowerCase().includes(activeTab.toLowerCase());
   });
-  
-  // Handle appointment form submission
-  const handleAppointmentSubmit = () => {
-    setShowAppointmentForm(false);
-  };
-  
-  // Handle message form submission
-  const handleMessageSubmit = () => {
-    setShowMessageForm(false);
-  };
-  
-  // Get reviews for selected faculty
-  const getFacultyReviews = (facultyId: string) => {
-    return facultyReviews.filter(review => review.facultyId === facultyId);
-  };
-  
-  // Render star rating
-  const renderStarRating = (rating: number) => {
-    return (
-      <div className="flex items-center">
-        {[...Array(5)].map((_, i) => (
-          <Star
-            key={i}
-            className={`h-4 w-4 ${i < Math.floor(rating) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
-          />
-        ))}
-        <span className="ml-2 text-sm">{rating}</span>
-      </div>
-    );
-  };
 
   return (
     <PageLayout>
-      <div className="container py-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Faculty Directory</h1>
-          <p className="text-muted-foreground">
-            Connect with professors, view office hours, and schedule appointments
-          </p>
-        </div>
+      <div className="container py-8">
+        <h1 className="text-3xl font-bold mb-2">Faculty Directory</h1>
+        <p className="text-muted-foreground mb-6">
+          Connect with our expert faculty members for academic guidance and research opportunities
+        </p>
         
-        <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-          <div className="flex-grow flex gap-4">
-            <div className="relative flex-grow">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search by name, course, or expertise..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+        {selectedFaculty ? (
+          <FacultyDetails 
+            faculty={selectedFaculty} 
+            onBack={() => setSelectedFaculty(null)} 
+          />
+        ) : (
+          <>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <div className="relative w-full md:w-96">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search by name, department, or expertise"
+                  className="pl-10"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Filter by:</span>
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                  <TabsList>
+                    <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="Computer Science">CS</TabsTrigger>
+                    <TabsTrigger value="Artificial Intelligence">AI</TabsTrigger>
+                    <TabsTrigger value="Information Systems">IS</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
             </div>
             
-            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filter by department" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Departments</SelectItem>
-                <SelectItem value="Computer Science">Computer Science</SelectItem>
-                <SelectItem value="Data Science">Data Science</SelectItem>
-                <SelectItem value="Information Technology">Information Technology</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredFaculty.length > 0 ? (
-            filteredFaculty.map((faculty) => (
-              <Card key={faculty.id} className="overflow-hidden">
-                <CardHeader className="pb-0">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12 border-2 border-campus-purple bg-campus-purple text-white">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredFaculty.map((faculty) => (
+                <Card key={faculty.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedFaculty(faculty)}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-4">
+                      <Avatar className="h-16 w-16">
                         <AvatarImage src={faculty.image} alt={faculty.name} />
-                        <AvatarFallback>
+                        <AvatarFallback className="text-xl bg-campus-purple text-white">
                           {faculty.name.split(' ').map(n => n[0]).join('')}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <CardTitle className="text-base">{faculty.name}</CardTitle>
-                        <CardDescription>
-                          {faculty.title} • {faculty.department}
-                        </CardDescription>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      {renderStarRating(faculty.rating)}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-sm font-medium mb-1">Areas of Expertise</h3>
-                      <div className="flex flex-wrap gap-1.5">
-                        {faculty.expertise.map((skill, index) => (
-                          <Badge key={index} variant="outline">{skill}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-medium mb-1">Courses</h3>
-                      <ul className="text-sm text-muted-foreground space-y-1">
-                        {faculty.courses.map((course, index) => (
-                          <li key={index} className="flex items-center">
-                            <BookOpen className="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-campus-purple" />
-                            {course}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                      <div className="flex items-center">
-                        <Mail className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
-                        <span className="truncate">{faculty.email}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Calendar className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
-                        <span className="truncate">{faculty.officeHours.split(',')[0]}</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-4">
-                  <div className="flex justify-between gap-2 w-full">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        setSelectedFaculty(faculty);
-                        setShowAppointmentForm(true);
-                      }}
-                    >
-                      <Calendar className="h-3.5 w-3.5 mr-1.5" />
-                      Appointment
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        setSelectedFaculty(faculty);
-                        setShowMessageForm(true);
-                      }}
-                    >
-                      <Mail className="h-3.5 w-3.5 mr-1.5" />
-                      Message
-                    </Button>
-                    <Button 
-                      size="sm"
-                      onClick={() => setSelectedFaculty(faculty)}
-                    >
-                      View Profile
-                    </Button>
-                  </div>
-                </CardFooter>
-              </Card>
-            ))
-          ) : (
-            <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
-              <GraduationCap className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium">No faculty members found</h3>
-              <p className="text-muted-foreground">
-                Try adjusting your search or filters
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Faculty Profile Dialog */}
-      <Dialog open={!!selectedFaculty && !showAppointmentForm && !showMessageForm} onOpenChange={(open) => !open && setSelectedFaculty(null)}>
-        {selectedFaculty && (
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16 border-2 border-campus-purple bg-campus-purple text-white">
-                  <AvatarImage src={selectedFaculty.image} alt={selectedFaculty.name} />
-                  <AvatarFallback className="text-xl">
-                    {selectedFaculty.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <DialogTitle className="text-xl">{selectedFaculty.name}</DialogTitle>
-                  <DialogDescription>
-                    {selectedFaculty.title} • {selectedFaculty.department}
-                  </DialogDescription>
-                </div>
-              </div>
-            </DialogHeader>
-            
-            <Tabs defaultValue="overview" className="mt-4">
-              <TabsList className="bg-campus-purple/10 text-campus-purple w-full">
-                <TabsTrigger value="overview" className="flex-1 data-[state=active]:bg-white">Overview</TabsTrigger>
-                <TabsTrigger value="courses" className="flex-1 data-[state=active]:bg-white">Courses</TabsTrigger>
-                <TabsTrigger value="reviews" className="flex-1 data-[state=active]:bg-white">Reviews</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="overview" className="mt-4">
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Biography</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedFaculty.bio}
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Areas of Expertise</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedFaculty.expertise.map((skill: string, index: number) => (
-                        <Badge key={index} variant="outline">{skill}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Contact Information</CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <ul className="space-y-2 text-sm">
-                          <li className="flex items-center">
-                            <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                            <span>{selectedFaculty.email}</span>
-                          </li>
-                          <li className="flex items-center">
-                            <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                            <span>{selectedFaculty.phone}</span>
-                          </li>
-                          <li className="flex items-center">
-                            <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                            <span>{selectedFaculty.office}</span>
-                          </li>
-                        </ul>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Office Hours</CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <ul className="space-y-2 text-sm">
-                          {selectedFaculty.officeHours.split(',').map((hours: string, index: number) => (
-                            <li key={index} className="flex items-center">
-                              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                              <span>{hours.trim()}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  </div>
-                  
-                  <div className="flex gap-2 justify-end mt-4">
-                    <Button 
-                      variant="outline"
-                      onClick={() => {
-                        setShowAppointmentForm(true);
-                      }}
-                    >
-                      <Calendar className="h-4 w-4 mr-1.5" />
-                      Schedule Appointment
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setShowMessageForm(true);
-                      }}
-                    >
-                      <Mail className="h-4 w-4 mr-1.5" />
-                      Send Message
-                    </Button>
-                  </div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="courses" className="mt-4">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium mb-2">Courses Taught</h3>
-                  
-                  <div className="grid gap-4">
-                    {selectedFaculty.courses.map((course: string, index: number) => {
-                      // Extract course code and name
-                      const [code, name] = course.split(':').map(s => s.trim());
                       
-                      return (
-                        <Card key={index}>
-                          <CardHeader className="pb-2">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <CardTitle className="text-base">{name}</CardTitle>
-                                <CardDescription>{code}</CardDescription>
-                              </div>
-                              <Badge>{index % 2 === 0 ? "Current" : "Previous"}</Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pt-0">
-                            <div className="flex justify-between items-center text-sm text-muted-foreground">
-                              <div className="flex items-center">
-                                <Calendar className="h-4 w-4 mr-1" />
-                                <span>{index % 2 === 0 ? "Spring 2023" : "Fall 2022"}</span>
-                              </div>
-                              <div className="flex items-center">
-                                <BookOpen className="h-4 w-4 mr-1" />
-                                <span>{index % 3 === 0 ? "Graduate" : "Undergraduate"}</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="reviews" className="mt-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium">Student Reviews</h3>
-                    <div className="flex items-center">
-                      <div className="flex items-center mr-2">
-                        {renderStarRating(selectedFaculty.rating)}
+                      <div className="flex-1">
+                        <h3 className="font-bold">{faculty.name}</h3>
+                        <p className="text-sm text-muted-foreground">{faculty.title}</p>
+                        <p className="text-xs text-muted-foreground">{faculty.department}</p>
+                        
+                        <div className="flex items-center mt-1">
+                          <Star className="h-3 w-3 text-yellow-500 mr-1 fill-yellow-500" />
+                          <span className="text-sm font-medium">{faculty.rating}</span>
+                        </div>
                       </div>
-                      <span className="text-sm text-muted-foreground">
-                        ({selectedFaculty.reviews} reviews)
-                      </span>
                     </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    {getFacultyReviews(selectedFaculty.id).length > 0 ? (
-                      getFacultyReviews(selectedFaculty.id).map((review) => (
-                        <Card key={review.id}>
-                          <CardHeader className="pb-2">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <CardTitle className="text-base">{review.student}</CardTitle>
-                                <CardDescription>{review.course}</CardDescription>
-                              </div>
-                              <div className="flex items-center">
-                                {renderStarRating(review.rating)}
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pt-0">
-                            <p className="text-sm text-muted-foreground mb-2">
-                              {review.comment}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {review.date}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      ))
-                    ) : (
-                      <div className="text-center py-8">
-                        <Star className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                        <h3 className="text-lg font-medium">No reviews yet</h3>
-                        <p className="text-muted-foreground">
-                          Be the first to leave a review for {selectedFaculty.name}
-                        </p>
+                    
+                    <div className="mt-3">
+                      <div className="text-sm font-medium">Expertise</div>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {faculty.expertise.slice(0, 2).map((area, i) => (
+                          <Badge key={i} variant="outline" className="text-xs">
+                            {area}
+                          </Badge>
+                        ))}
+                        {faculty.expertise.length > 2 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{faculty.expertise.length - 2} more
+                          </Badge>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                    
+                    <div className="mt-3 flex justify-between items-center">
+                      <span className="text-xs text-muted-foreground">
+                        Teaches: {faculty.courses.length} {faculty.courses.length === 1 ? 'course' : 'courses'}
+                      </span>
+                      <Button variant="ghost" size="sm" className="h-8 text-campus-purple hover:text-campus-purple hover:bg-campus-purple/10">
+                        View Profile
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              
+              {filteredFaculty.length === 0 && (
+                <div className="col-span-full py-16 text-center">
+                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium">No faculty members found</h3>
+                  <p className="text-muted-foreground">
+                    Try adjusting your search or filter criteria
+                  </p>
                 </div>
-              </TabsContent>
-            </Tabs>
-          </DialogContent>
+              )}
+            </div>
+          </>
         )}
-      </Dialog>
-      
-      {/* Appointment Form Dialog */}
-      <Dialog open={showAppointmentForm} onOpenChange={setShowAppointmentForm}>
-        {selectedFaculty && (
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Schedule Appointment</DialogTitle>
-              <DialogDescription>
-                Request an appointment with {selectedFaculty.name}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <AppointmentForm 
-              faculty={selectedFaculty} 
-              onSubmit={handleAppointmentSubmit} 
-            />
-          </DialogContent>
-        )}
-      </Dialog>
-      
-      {/* Message Form Dialog */}
-      <Dialog open={showMessageForm} onOpenChange={setShowMessageForm}>
-        {selectedFaculty && (
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Send Message</DialogTitle>
-              <DialogDescription>
-                Send a message to {selectedFaculty.name}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <MessageForm 
-              faculty={selectedFaculty} 
-              onSubmit={handleMessageSubmit} 
-            />
-          </DialogContent>
-        )}
-      </Dialog>
+      </div>
     </PageLayout>
   );
 };
