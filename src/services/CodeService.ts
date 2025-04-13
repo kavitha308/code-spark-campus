@@ -49,8 +49,8 @@ export const saveCode = async (challengeId: string, code: string, language: stri
   }
 };
 
-// Function to load saved code
-export const loadSavedCode = async (challengeId: string, language: string) => {
+// Function to load saved code - this was missing and causing the error
+export const getSavedCode = async (challengeId: string, language: string) => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -63,10 +63,10 @@ export const loadSavedCode = async (challengeId: string, language: string) => {
       .maybeSingle();
 
     if (error) throw error;
-    return data;
+    return data?.code || "";
   } catch (error) {
     console.error("Error loading saved code:", error);
-    return null;
+    return "";
   }
 };
 

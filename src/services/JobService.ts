@@ -1,143 +1,140 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Type definitions for job listings and applications
-export type JobListing = {
-  id: string;
-  company: string;
-  position: string;
-  location: string;
-  skills: string[];
-  description: string;
-  salary?: string;
-  postedDate: string;
-  deadline?: string;
-  type: 'full-time' | 'part-time' | 'internship' | 'contract';
-  logo?: string;
-};
-
-// Mock data for job listings
-const MOCK_JOB_LISTINGS: JobListing[] = [
-  {
-    id: "job1",
-    company: "TechFlow Inc",
-    position: "Frontend Developer",
-    location: "New York, NY (Remote)",
-    skills: ["React", "TypeScript", "Tailwind CSS"],
-    description: "Join our team to build cutting-edge web applications using modern frontend technologies.",
-    salary: "$80,000 - $110,000",
-    postedDate: "2025-04-01",
-    deadline: "2025-04-30",
-    type: "full-time",
-    logo: "https://via.placeholder.com/150?text=TF"
-  },
-  {
-    id: "job2",
-    company: "DataSphere",
-    position: "Machine Learning Engineer",
-    location: "San Francisco, CA",
-    skills: ["Python", "TensorFlow", "PyTorch", "SQL"],
-    description: "Help us develop state-of-the-art machine learning models for our data analytics platform.",
-    salary: "$95,000 - $130,000",
-    postedDate: "2025-04-03",
-    deadline: "2025-05-05",
-    type: "full-time",
-    logo: "https://via.placeholder.com/150?text=DS"
-  },
-  {
-    id: "job3",
-    company: "CloudNative Solutions",
-    position: "DevOps Intern",
-    location: "Remote",
-    skills: ["Docker", "Kubernetes", "AWS", "CI/CD"],
-    description: "Learn cloud infrastructure and DevOps practices in a fast-paced environment.",
-    salary: "$25/hour",
-    postedDate: "2025-04-05",
-    type: "internship",
-    logo: "https://via.placeholder.com/150?text=CNS"
-  },
-  {
-    id: "job4",
-    company: "Quantum Innovations",
-    position: "Fullstack Developer",
-    location: "Austin, TX (Hybrid)",
-    skills: ["Node.js", "React", "MongoDB", "GraphQL"],
-    description: "Develop and maintain our core product offering end-to-end solutions.",
-    salary: "$90,000 - $120,000",
-    postedDate: "2025-04-07",
-    deadline: "2025-05-10",
-    type: "full-time",
-    logo: "https://via.placeholder.com/150?text=QI"
-  },
-  {
-    id: "job5",
-    company: "FinTech Solutions",
-    position: "Mobile Developer",
-    location: "Chicago, IL",
-    skills: ["React Native", "Swift", "Kotlin", "Firebase"],
-    description: "Build our next-generation financial mobile applications.",
-    salary: "$85,000 - $115,000",
-    postedDate: "2025-04-08",
-    deadline: "2025-05-15",
-    type: "full-time",
-    logo: "https://via.placeholder.com/150?text=FTS"
+// Function to get job listings
+export const getJobListings = async (filters?: { category?: string; location?: string }) => {
+  try {
+    // This is a mock implementation since we don't have a real jobs table
+    // In a real implementation, this would fetch from an API or database
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const jobs = [
+      {
+        id: "1",
+        title: "Software Engineer",
+        company: "TechCorp",
+        location: "San Francisco, CA",
+        salary: "$120,000 - $150,000",
+        type: "Full-time",
+        description: "We're looking for a software engineer to join our team...",
+        requirements: ["3+ years of experience", "React", "Node.js", "TypeScript"],
+        postedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        matched: 92
+      },
+      {
+        id: "2",
+        title: "Data Scientist",
+        company: "DataInsights",
+        location: "Remote",
+        salary: "$130,000 - $160,000",
+        type: "Full-time",
+        description: "Join our data science team to build machine learning models...",
+        requirements: ["Statistics", "Python", "Machine Learning", "SQL"],
+        postedDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        deadline: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+        matched: 87
+      },
+      {
+        id: "3",
+        title: "Frontend Developer",
+        company: "WebWizards",
+        location: "New York, NY",
+        salary: "$110,000 - $140,000",
+        type: "Full-time",
+        description: "Help us build beautiful and responsive web applications...",
+        requirements: ["HTML/CSS", "JavaScript", "React", "UI/UX"],
+        postedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        deadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+        matched: 95
+      }
+    ];
+    
+    let filteredJobs = [...jobs];
+    
+    if (filters?.category) {
+      filteredJobs = filteredJobs.filter(job => 
+        job.title.toLowerCase().includes(filters.category.toLowerCase()) ||
+        job.requirements.some(req => req.toLowerCase().includes(filters.category.toLowerCase()))
+      );
+    }
+    
+    if (filters?.location) {
+      filteredJobs = filteredJobs.filter(job => 
+        job.location.toLowerCase().includes(filters.location.toLowerCase())
+      );
+    }
+    
+    return filteredJobs;
+  } catch (error) {
+    console.error("Error getting job listings:", error);
+    return [];
   }
-];
-
-// Function to get all job listings
-export const getJobListings = async (): Promise<JobListing[]> => {
-  // In a real implementation, this would fetch from Supabase
-  // For now, return the mock data
-  return MOCK_JOB_LISTINGS;
 };
 
-// Function to get job by id
-export const getJobById = async (id: string): Promise<JobListing | null> => {
-  const job = MOCK_JOB_LISTINGS.find(job => job.id === id);
-  return job || null;
-};
-
-// Function to get job listings matched to user skills
-export const getMatchedJobs = async (): Promise<JobListing[]> => {
-  // In a real implementation, this would match user skills with job requirements
-  // For now, just return a subset of the mock data
-  return MOCK_JOB_LISTINGS.slice(0, 3);
-};
-
-// Function to submit a job application
-export const submitJobApplication = async (
-  jobId: string,
-  companyName: string,
-  position: string,
-  fullName: string,
-  email: string,
-  resumeUrl: string,
-  coverLetter: string
-) => {
+// Function to apply for a job
+export const applyForJob = async (application: {
+  jobId: string;
+  companyName: string;
+  position: string;
+  fullName: string;
+  email: string;
+  resumeUrl?: string;
+  coverLetter?: string;
+}) => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
     const { data, error } = await supabase.from("job_applications").insert({
-      job_id: jobId,
-      company_name: companyName,
-      position: position,
-      full_name: fullName,
-      email: email,
-      resume_url: resumeUrl,
-      cover_letter: coverLetter,
-      user_id: user?.id
+      job_id: application.jobId,
+      company_name: application.companyName,
+      position: application.position,
+      full_name: application.fullName,
+      email: application.email,
+      resume_url: application.resumeUrl,
+      cover_letter: application.coverLetter,
+      user_id: user?.id,
+      status: 'submitted'
     }).select().single();
 
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error("Error submitting job application:", error);
+    console.error("Error applying for job:", error);
     return null;
   }
 };
 
-// Function to get user's job applications
-export const getUserJobApplications = async () => {
+// Function to upload resume
+export const uploadResume = async (file: File) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) throw new Error("User not authenticated");
+    
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+    
+    const { data, error } = await supabase.storage
+      .from('resumes')
+      .upload(filePath, file);
+    
+    if (error) throw error;
+    
+    // Get the public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('resumes')
+      .getPublicUrl(data.path);
+    
+    return publicUrl;
+  } catch (error) {
+    console.error("Error uploading resume:", error);
+    throw error;
+  }
+};
+
+// Function to get user job applications
+export const getUserApplications = async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -150,7 +147,13 @@ export const getUserJobApplications = async () => {
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error("Error getting user job applications:", error);
+    console.error("Error getting user applications:", error);
     return [];
   }
+};
+
+// Function to get job matches based on user profile
+export const getJobMatches = async () => {
+  // For now, just return the same jobs with match scores
+  return getJobListings();
 };

@@ -108,7 +108,7 @@ print(two_sum(nums, target))  # Expected output: [0, 1]
     try {
       const result = await executeCode(code, language);
       
-      if (result.success) {
+      if (result.error === null) {
         setOutput(result.output);
       } else {
         setOutput(`Error: ${result.error}\n\n${result.output}`);

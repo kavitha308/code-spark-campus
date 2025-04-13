@@ -95,6 +95,34 @@ export const submitAssignment = async (
   }
 };
 
+// Function to upload assignment file to Supabase storage
+export const uploadAssignmentFile = async (file: File) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) throw new Error("User not authenticated");
+    
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+    
+    const { data, error } = await supabase.storage
+      .from('assignments')
+      .upload(filePath, file);
+    
+    if (error) throw error;
+    
+    // Get the public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('assignments')
+      .getPublicUrl(data.path);
+    
+    return { url: publicUrl, fileName: file.name };
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    throw error;
+  }
+};
+
 // Function to get user submissions
 export const getUserSubmissions = async (userId?: string) => {
   try {
@@ -121,6 +149,26 @@ export const getUserSubmissions = async (userId?: string) => {
   } catch (error) {
     console.error("Error getting user submissions:", error);
     return [];
+  }
+};
+
+// Function to get a user's submission for a specific assignment
+export const getUserSubmission = async (assignmentId: string) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const { data, error } = await supabase
+      .from("submissions")
+      .select("*")
+      .eq("assignment_id", assignmentId)
+      .eq("user_id", user?.id)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error getting user submission:", error);
+    return null;
   }
 };
 

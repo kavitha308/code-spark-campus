@@ -25,6 +25,11 @@ export const getAIResponse = async (prompt: string, context?: string) => {
   }
 };
 
+// Renamed function to match import in components
+export const getAssistantResponse = async (prompt: string, context?: string) => {
+  return getAIResponse(prompt, context);
+};
+
 // Function to save chat message
 export const saveChatMessage = async (prompt: string, challengeId: string) => {
   try {
@@ -42,6 +47,11 @@ export const saveChatMessage = async (prompt: string, challengeId: string) => {
     console.error("Error saving chat message:", error);
     return null;
   }
+};
+
+// Renamed function to match import in components
+export const saveAssistantChat = async (prompt: string, challengeId: string) => {
+  return saveChatMessage(prompt, challengeId);
 };
 
 // Function to get chat history
@@ -62,4 +72,9 @@ export const getChatHistory = async (challengeId: string) => {
     console.error("Error getting chat history:", error);
     return [];
   }
+};
+
+// Renamed function to match import in components
+export const getPreviousChats = async (challengeId: string) => {
+  return getChatHistory(challengeId);
 };
