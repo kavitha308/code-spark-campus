@@ -1,173 +1,111 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Function to save code for a specific challenge
-export const saveCode = async (
-  challengeId: string,
-  code: string,
-  language: string = "javascript"
-) => {
+// Function to execute code (mock implementation)
+export const executeCode = async (code: string, language: string) => {
   try {
-    // Check if a saved code already exists for this user and challenge
-    const { data: existingCode } = await supabase
-      .from("saved_codes")
-      .select("*")
-      .eq("challenge_id", challengeId)
-      .eq("language", language)
-      .single();
+    // In a real implementation, this would send the code to a backend service
+    // for execution. For now, we'll simulate a response.
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    if (existingCode) {
-      // Update existing saved code
-      const { error } = await supabase
-        .from("saved_codes")
-        .update({ code, updated_at: new Date().toISOString() })
-        .eq("id", existingCode.id);
-
-      if (error) throw error;
-    } else {
-      // Insert new saved code
-      const { error } = await supabase.from("saved_codes").insert({
-        challenge_id: challengeId,
-        code,
-        language,
-      });
-
-      if (error) throw error;
+    if (code.trim() === "") {
+      return { output: "", error: "No code to execute" };
     }
 
-    return true;
+    // Simple output simulation based on language
+    const outputs: Record<string, string> = {
+      javascript: `// JavaScript Output\n${eval(`(function() { try { ${code} } catch(e) { return e.toString(); } })()`)}`,
+      python: `# Python Output\nExecuted Python code successfully\n(This is a simulation)`,
+      java: `// Java Output\nCompiled and executed Java code successfully\n(This is a simulation)`,
+      cpp: `// C++ Output\nCompiled and executed C++ code successfully\n(This is a simulation)`,
+    };
+
+    return { output: outputs[language] || "Code executed successfully", error: null };
   } catch (error) {
-    console.error("Error saving code:", error);
-    return false;
+    console.error("Error executing code:", error);
+    return { output: "", error: String(error) };
   }
 };
 
-// Function to get saved code for a specific challenge
-export const getSavedCode = async (
-  challengeId: string,
-  language: string = "javascript"
-) => {
+// Function to save code for a challenge
+export const saveCode = async (challengeId: string, code: string, language: string) => {
   try {
-    const { data, error } = await supabase
-      .from("saved_codes")
-      .select("code")
-      .eq("challenge_id", challengeId)
-      .eq("language", language)
-      .single();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const { data, error } = await supabase.from("saved_codes").upsert({
+      challenge_id: challengeId,
+      code,
+      language,
+      user_id: user?.id
+    }, {
+      onConflict: "user_id, challenge_id, language"
+    }).select().single();
 
-    if (error) {
-      if (error.code === "PGRST116") {
-        // No saved code found
-        return null;
-      }
-      throw error;
-    }
-
-    return data?.code || null;
+    if (error) throw error;
+    return data;
   } catch (error) {
-    console.error("Error getting saved code:", error);
+    console.error("Error saving code:", error);
     return null;
   }
 };
 
-// Function to execute code and return the result
-export const executeCode = async (code: string, language: string = "javascript") => {
+// Function to load saved code
+export const loadSavedCode = async (challengeId: string, language: string) => {
   try {
-    // This is a simplified implementation that only handles JavaScript
-    // In a real application, you would use a secure sandboxed environment or a code execution API
-    if (language === "javascript" || language === "js") {
-      // Create a safe evaluation function
-      const safeEval = (code: string) => {
-        try {
-          // Create a sandbox with console.log captured
-          let output = "";
-          const sandbox = {
-            console: {
-              log: (...args: any[]) => {
-                output += args.map(arg => 
-                  typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-                ).join(" ") + "\n";
-              },
-              error: (...args: any[]) => {
-                output += "ERROR: " + args.map(arg => 
-                  typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-                ).join(" ") + "\n";
-              },
-              info: (...args: any[]) => {
-                output += "INFO: " + args.map(arg => 
-                  typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-                ).join(" ") + "\n";
-              },
-              warn: (...args: any[]) => {
-                output += "WARNING: " + args.map(arg => 
-                  typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-                ).join(" ") + "\n";
-              }
-            },
-            setTimeout: (callback: Function, timeout: number) => {
-              // Implement a safe version of setTimeout if needed
-              return 0;
-            },
-            clearTimeout: (id: number) => {
-              // Implement a safe version of clearTimeout if needed
-            }
-          };
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const { data, error } = await supabase
+      .from("saved_codes")
+      .select("*")
+      .eq("challenge_id", challengeId)
+      .eq("language", language)
+      .eq("user_id", user?.id)
+      .maybeSingle();
 
-          // Add sandbox variables to the function scope
-          const sandboxVars = Object.keys(sandbox).map(key => key);
-          const sandboxValues = Object.values(sandbox);
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error loading saved code:", error);
+    return null;
+  }
+};
 
-          // Create a new function with the sandbox
-          const fn = new Function(...sandboxVars, `
-            "use strict";
-            try {
-              ${code}
-              return { success: true, output: {} };
-            } catch (error) {
-              return { success: false, error: error.message };
-            }
-          `);
+// Function to get coding challenges
+export const getCodingChallenges = async (filters?: { difficulty?: string; category?: string }) => {
+  try {
+    let query = supabase.from("coding_challenges").select("*");
 
-          // Execute the function with sandbox
-          const result = fn(...sandboxValues);
-          
-          // Return the result and console output
-          return {
-            success: result.success,
-            output: output || "No output",
-            error: result.error || null
-          };
-        } catch (error: any) {
-          return {
-            success: false,
-            output: "",
-            error: error.message
-          };
-        }
-      };
-
-      // Execute the code
-      return safeEval(code);
-    } else if (language === "python") {
-      // For Python, we would typically use a backend service
-      return {
-        success: false,
-        output: "",
-        error: "Python execution is not available in the browser. In a real application, this would be processed by a backend service."
-      };
-    } else {
-      return {
-        success: false,
-        output: "",
-        error: `Execution of ${language} code is not supported in this environment.`
-      };
+    if (filters?.difficulty) {
+      query = query.eq("difficulty", filters.difficulty);
     }
-  } catch (error: any) {
-    console.error("Error executing code:", error);
-    return {
-      success: false,
-      output: "",
-      error: error.message || "An error occurred while executing the code."
-    };
+
+    if (filters?.category) {
+      query = query.eq("category", filters.category);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error getting coding challenges:", error);
+    return [];
+  }
+};
+
+// Function to get a specific coding challenge
+export const getChallengeById = async (id: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("coding_challenges")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error getting challenge:", error);
+    return null;
   }
 };

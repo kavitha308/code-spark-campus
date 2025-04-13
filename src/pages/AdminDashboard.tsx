@@ -1,1466 +1,715 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PageLayout from "@/components/layout/PageLayout";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { 
+  Users, BookOpen, FileText, BarChart3, UserPlus, Trash2, Download, 
+  Edit, Search, PlusCircle, Calendar, TrendingUp, Flag, Upload as UploadIcon, Video
+} from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Progress } from "@/components/ui/progress";
+import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
-import { useAuth } from "@/contexts/AuthContext";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, LineChart, Line, Legend, AreaChart, Area, PieChart, Pie, Cell } from "recharts";
-import { 
-  Users, 
-  UserPlus, 
-  UserCog, 
-  Layers, 
-  Settings, 
-  BarChart as BarChartIcon, 
-  LayoutDashboard, 
-  Search,
-  FileText,
-  Trash2,
-  Edit,
-  BookOpen,
-  GraduationCap,
-  Bell,
-  Code,
-  PlusCircle,
-  Check,
-  X,
-  Info,
-  Download
-} from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock data for user management
-const usersMock = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    role: "student",
-    status: "active",
-    registeredDate: "2023-03-15",
-    lastLogin: "2023-04-10 08:45",
-    courses: 4,
-    avatar: ""
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    role: "student",
-    status: "active",
-    registeredDate: "2023-02-28",
-    lastLogin: "2023-04-11 10:22",
-    courses: 3,
-    avatar: ""
-  },
-  {
-    id: "3",
-    name: "Dr. Robert Johnson",
-    email: "robert.johnson@example.com",
-    role: "teacher",
-    status: "active",
-    registeredDate: "2023-01-10",
-    lastLogin: "2023-04-11 09:15",
-    courses: 2,
-    avatar: ""
-  },
-  {
-    id: "4",
-    name: "Emily Wilson",
-    email: "emily.wilson@example.com",
-    role: "student",
-    status: "inactive",
-    registeredDate: "2023-03-05",
-    lastLogin: "2023-04-02 14:30",
-    courses: 2,
-    avatar: ""
-  },
-  {
-    id: "5",
-    name: "Prof. Michael Brown",
-    email: "michael.brown@example.com",
-    role: "teacher",
-    status: "active",
-    registeredDate: "2022-12-15",
-    lastLogin: "2023-04-10 16:45",
-    courses: 3,
-    avatar: ""
-  }
-];
-
-// Mock data for analytics
-const userRegistrationsData = [
-  { month: 'Jan', count: 65 },
-  { month: 'Feb', count: 78 },
-  { month: 'Mar', count: 94 },
-  { month: 'Apr', count: 87 },
-  { month: 'May', count: 105 },
-  { month: 'Jun', count: 120 },
-  { month: 'Jul', count: 98 },
-  { month: 'Aug', count: 87 },
-  { month: 'Sep', count: 92 },
-  { month: 'Oct', count: 110 },
-  { month: 'Nov', count: 130 },
-  { month: 'Dec', count: 145 },
-];
-
-const courseEngagementData = [
-  { name: 'Data Structures', students: 46, completionRate: 78, avgScore: 84 },
-  { name: 'Web Development', students: 38, completionRate: 65, avgScore: 79 },
-  { name: 'Database Systems', students: 52, completionRate: 81, avgScore: 86 },
-  { name: 'Machine Learning', students: 35, completionRate: 72, avgScore: 82 },
-  { name: 'Network Security', students: 28, completionRate: 68, avgScore: 77 },
-];
-
-const studentsByRoleData = [
-  { name: 'Students', value: 450, color: '#8884d8' },
-  { name: 'Teachers', value: 45, color: '#82ca9d' },
-  { name: 'Admins', value: 8, color: '#ffc658' },
-];
-
-const coursesMock = [
-  {
-    id: "1",
-    name: "Data Structures & Algorithms",
-    code: "CS202",
-    teacher: "Dr. Robert Johnson",
-    enrollments: 46,
-    content: 24,
-    status: "active",
-    lastUpdated: "2023-04-10"
-  },
-  {
-    id: "2",
-    name: "Advanced Web Development",
-    code: "CS301",
-    teacher: "Prof. Michael Brown",
-    enrollments: 38,
-    content: 32,
-    status: "active",
-    lastUpdated: "2023-04-08"
-  },
-  {
-    id: "3",
-    name: "Database Management Systems",
-    code: "CS305",
-    teacher: "Dr. Sarah Williams",
-    enrollments: 52,
-    content: 28,
-    status: "active",
-    lastUpdated: "2023-04-11"
-  },
-  {
-    id: "4",
-    name: "Introduction to Machine Learning",
-    code: "CS405",
-    teacher: "Prof. Emily Chen",
-    enrollments: 35,
-    content: 22,
-    status: "draft",
-    lastUpdated: "2023-04-12"
-  }
-];
-
-// User Creator Modal Component
-const UserCreatorModal = ({ onAdd }: { onAdd: (data: any) => void }) => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState("student");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [sendEmail, setSendEmail] = useState(true);
-  
-  const handleSubmit = () => {
-    if (!name || !email || !password) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-    
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-    
-    const newUser = {
-      id: `u${Date.now()}`,
-      name,
-      email,
-      role,
-      status: "active",
-      registeredDate: new Date().toISOString().split('T')[0],
-      lastLogin: "-",
-      courses: 0,
-      avatar: ""
-    };
-    
-    onAdd(newUser);
-    
-    if (sendEmail) {
-      toast.success(`Welcome email sent to ${email}`);
-    }
-    
-    toast.success("User added successfully!");
-  };
-  
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Full Name <span className="text-red-500">*</span></Label>
-        <Input
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter user's full name"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="email">Email Address <span className="text-red-500">*</span></Label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter email address"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="role">User Role <span className="text-red-500">*</span></Label>
-        <Select value={role} onValueChange={setRole}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select user role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="student">Student</SelectItem>
-            <SelectItem value="teacher">Teacher/Faculty</SelectItem>
-            <SelectItem value="admin">Administrator</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="password">Password <span className="text-red-500">*</span></Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="confirm-password">Confirm Password <span className="text-red-500">*</span></Label>
-          <Input
-            id="confirm-password"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-        </div>
-      </div>
-      
-      <div className="flex items-center space-x-2 pt-2">
-        <Switch 
-          id="send-email" 
-          checked={sendEmail}
-          onCheckedChange={setSendEmail}
-        />
-        <Label htmlFor="send-email">Send welcome email with login instructions</Label>
-      </div>
-      
-      <DialogFooter className="mt-6">
-        <Button variant="outline">Cancel</Button>
-        <Button onClick={handleSubmit}>Create User</Button>
-      </DialogFooter>
-    </div>
-  );
-};
-
-// Course Creator Modal Component
-const CourseCreatorModal = ({ onAdd }: { onAdd: (data: any) => void }) => {
-  const [name, setName] = useState("");
-  const [code, setCode] = useState("");
-  const [description, setDescription] = useState("");
-  const [teacher, setTeacher] = useState("");
-  
-  const handleSubmit = () => {
-    if (!name || !code || !teacher) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-    
-    const newCourse = {
-      id: `c${Date.now()}`,
-      name,
-      code,
-      description,
-      teacher,
-      enrollments: 0,
-      content: 0,
-      status: "draft",
-      lastUpdated: new Date().toISOString().split('T')[0]
-    };
-    
-    onAdd(newCourse);
-    toast.success("Course created successfully!");
-  };
-  
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="course-name">Course Name <span className="text-red-500">*</span></Label>
-        <Input
-          id="course-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter course name"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="course-code">Course Code <span className="text-red-500">*</span></Label>
-        <Input
-          id="course-code"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          placeholder="e.g. CS101"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="course-description">Course Description</Label>
-        <Textarea
-          id="course-description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Enter course description"
-          className="min-h-[100px]"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="teacher">Assign Teacher <span className="text-red-500">*</span></Label>
-        <Select value={teacher} onValueChange={setTeacher}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select teacher" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Dr. Robert Johnson">Dr. Robert Johnson</SelectItem>
-            <SelectItem value="Prof. Michael Brown">Prof. Michael Brown</SelectItem>
-            <SelectItem value="Dr. Sarah Williams">Dr. Sarah Williams</SelectItem>
-            <SelectItem value="Prof. Emily Chen">Prof. Emily Chen</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="space-y-2">
-        <Label>Course Settings</Label>
-        <div className="space-y-3 border rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Switch id="enrollment" defaultChecked />
-              <Label htmlFor="enrollment">Open for enrollment</Label>
-            </div>
-            <Badge variant="outline">Default: Off</Badge>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Switch id="visibility" defaultChecked />
-              <Label htmlFor="visibility">Visible in catalog</Label>
-            </div>
-            <Badge variant="outline">Default: Off</Badge>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Switch id="certificate" />
-              <Label htmlFor="certificate">Enable certificates</Label>
-            </div>
-            <Badge variant="outline">Default: Off</Badge>
-          </div>
-        </div>
-      </div>
-      
-      <DialogFooter className="mt-6">
-        <Button variant="outline">Cancel</Button>
-        <Button onClick={handleSubmit}>Create Course</Button>
-      </DialogFooter>
-    </div>
-  );
-};
-
-// Admin Dashboard Component
 const AdminDashboard = () => {
-  const { profile } = useAuth();
-  const [users, setUsers] = useState(usersMock);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [courses, setCourses] = useState(coursesMock);
-  const [courseSearchTerm, setCourseSearchTerm] = useState("");
-  const [courseStatusFilter, setCourseStatusFilter] = useState("all");
-  const [userCreatorOpen, setUserCreatorOpen] = useState(false);
-  const [courseCreatorOpen, setCourseCreatorOpen] = useState(false);
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [userDialogOpen, setUserDialogOpen] = useState(false);
+  const [contestDialogOpen, setContestDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   
-  const handleAddUser = (newUser: any) => {
-    setUsers([newUser, ...users]);
-    setUserCreatorOpen(false);
-  };
+  // Mock user data
+  const userData = [
+    {
+      id: "user1",
+      name: "John Doe",
+      email: "john.doe@example.com",
+      role: "student",
+      joinDate: "2025-01-15",
+      avatar: "https://via.placeholder.com/40",
+      status: "active",
+    },
+    {
+      id: "user2",
+      name: "Sarah Johnson",
+      email: "sarah.johnson@example.com",
+      role: "student",
+      joinDate: "2025-01-20",
+      avatar: "https://via.placeholder.com/40",
+      status: "active",
+    },
+    {
+      id: "user3",
+      name: "Dr. Michael Brown",
+      email: "michael.brown@example.com",
+      role: "teacher",
+      joinDate: "2024-11-05",
+      avatar: "https://via.placeholder.com/40",
+      status: "active",
+    },
+    {
+      id: "user4",
+      name: "Jessica Williams",
+      email: "jessica.williams@example.com",
+      role: "student",
+      joinDate: "2025-02-10",
+      avatar: "https://via.placeholder.com/40",
+      status: "inactive",
+    },
+    {
+      id: "user5",
+      name: "Prof. Robert Garcia",
+      email: "robert.garcia@example.com",
+      role: "teacher",
+      joinDate: "2024-12-15",
+      avatar: "https://via.placeholder.com/40",
+      status: "active",
+    },
+  ];
   
-  const handleAddCourse = (newCourse: any) => {
-    setCourses([newCourse, ...courses]);
-    setCourseCreatorOpen(false);
-  };
+  // Mock course data
+  const courseData = [
+    {
+      id: "course1",
+      title: "Data Structures & Algorithms",
+      instructor: "Dr. Michael Brown",
+      students: 68,
+      created: "2024-12-10",
+      status: "active",
+    },
+    {
+      id: "course2",
+      title: "Advanced Web Development",
+      instructor: "Prof. Robert Garcia",
+      students: 52,
+      created: "2025-01-05",
+      status: "active",
+    },
+    {
+      id: "course3",
+      title: "Machine Learning Fundamentals",
+      instructor: "Dr. Emily Taylor",
+      students: 76,
+      created: "2025-01-15",
+      status: "active",
+    },
+    {
+      id: "course4",
+      title: "Database Management Systems",
+      instructor: "Prof. Robert Garcia",
+      students: 61,
+      created: "2024-11-20",
+      status: "active",
+    },
+    {
+      id: "course5",
+      title: "Cybersecurity Principles",
+      instructor: "Dr. James Wilson",
+      students: 48,
+      created: "2025-02-01",
+      status: "draft",
+    },
+  ];
   
-  const filteredUsers = users.filter(user => {
-    // Apply search filter
-    const matchesSearch = searchTerm === "" || 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Apply role filter
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    
-    // Apply status filter
-    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
-    
-    return matchesSearch && matchesRole && matchesStatus;
+  // Mock skill metrics data
+  const skillMetricsData = [
+    {
+      name: "JavaScript",
+      average: 75,
+      top: 95,
+    },
+    {
+      name: "Python",
+      average: 68,
+      top: 92,
+    },
+    {
+      name: "Java",
+      average: 62,
+      top: 88,
+    },
+    {
+      name: "SQL",
+      average: 70,
+      top: 90,
+    },
+    {
+      name: "Data Structures",
+      average: 65,
+      top: 91,
+    },
+    {
+      name: "Algorithms",
+      average: 60,
+      top: 89,
+    },
+    {
+      name: "Web Development",
+      average: 73,
+      top: 94,
+    },
+  ];
+  
+  // Mock user activity data
+  const userActivityData = [
+    {
+      date: "Apr 5",
+      active: 210,
+      newUsers: 12,
+    },
+    {
+      date: "Apr 6",
+      active: 220,
+      newUsers: 8,
+    },
+    {
+      date: "Apr 7",
+      active: 235,
+      newUsers: 15,
+    },
+    {
+      date: "Apr 8",
+      active: 225,
+      newUsers: 10,
+    },
+    {
+      date: "Apr 9",
+      active: 240,
+      newUsers: 13,
+    },
+    {
+      date: "Apr 10",
+      active: 255,
+      newUsers: 18,
+    },
+    {
+      date: "Apr 11",
+      active: 270,
+      newUsers: 20,
+    },
+  ];
+  
+  // Form state for new user
+  const [userForm, setUserForm] = useState({
+    name: "",
+    email: "",
+    role: "student",
+    password: "",
   });
   
-  const filteredCourses = courses.filter(course => {
-    // Apply search filter
-    const matchesSearch = courseSearchTerm === "" || 
-      course.name.toLowerCase().includes(courseSearchTerm.toLowerCase()) ||
-      course.code.toLowerCase().includes(courseSearchTerm.toLowerCase()) ||
-      course.teacher.toLowerCase().includes(courseSearchTerm.toLowerCase());
-    
-    // Apply status filter
-    const matchesStatus = courseStatusFilter === "all" || course.status === courseStatusFilter;
-    
-    return matchesSearch && matchesStatus;
+  // Form state for new contest/test
+  const [contestForm, setContestForm] = useState({
+    title: "",
+    description: "",
+    date: "",
+    duration: "60",
+    type: "coding",
+    difficulty: "medium",
   });
   
-  const handleDeleteUser = (userId: string) => {
-    toast.error("This action is not available in the demo");
+  // Handle creating a new user
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      // In a real implementation, create user in Supabase Auth
+      // and add user profile
+      await new Promise(res => setTimeout(res, 1000));
+      
+      toast.success(`New ${userForm.role} account created successfully!`);
+      setUserDialogOpen(false);
+      setUserForm({
+        name: "",
+        email: "",
+        role: "student",
+        password: "",
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      toast.error("Failed to create user. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
   
-  const handleDeleteCourse = (courseId: string) => {
-    toast.error("This action is not available in the demo");
+  // Handle creating a new contest/test
+  const handleCreateContest = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      // In a real implementation, create contest in database
+      await new Promise(res => setTimeout(res, 1000));
+      
+      toast.success(`New ${contestForm.type} event created successfully!`);
+      setContestDialogOpen(false);
+      setContestForm({
+        title: "",
+        description: "",
+        date: "",
+        duration: "60",
+        type: "coding",
+        difficulty: "medium",
+      });
+    } catch (error) {
+      console.error("Error creating contest:", error);
+      toast.error("Failed to create event. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
   
-  const toggleUserStatus = (userId: string) => {
-    const updatedUsers = users.map(user => {
-      if (user.id === userId) {
-        return {
-          ...user,
-          status: user.status === "active" ? "inactive" : "active"
-        };
+  // Load initial data
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // In a real implementation, fetch all users, courses, etc.
+        await new Promise(res => setTimeout(res, 1000));
+      } catch (error) {
+        console.error("Error fetching admin data:", error);
+        toast.error("Failed to load data. Please refresh the page.");
+      } finally {
+        setLoading(false);
       }
-      return user;
-    });
+    };
     
-    setUsers(updatedUsers);
-    
-    const user = users.find(u => u.id === userId);
-    toast.success(`User ${user?.name} has been ${user?.status === "active" ? "deactivated" : "activated"}`);
-  };
-  
-  const toggleCourseStatus = (courseId: string) => {
-    const updatedCourses = courses.map(course => {
-      if (course.id === courseId) {
-        return {
-          ...course,
-          status: course.status === "active" ? "draft" : "active"
-        };
-      }
-      return course;
-    });
-    
-    setCourses(updatedCourses);
-    
-    const course = courses.find(c => c.id === courseId);
-    toast.success(`Course ${course?.name} has been ${course?.status === "active" ? "set to draft" : "activated"}`);
-  };
+    fetchData();
+  }, []);
 
   return (
     <PageLayout>
       <div className="container py-6">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col md:flex-row items-start justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground">
-              Welcome back, {profile?.full_name || "Administrator"}
+            <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage users, courses, and system-wide analytics
             </p>
           </div>
-          
-          <div className="flex gap-2">
-            <Dialog open={userCreatorOpen} onOpenChange={setUserCreatorOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" /> Add User
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[550px]">
-                <DialogHeader>
-                  <DialogTitle>Add New User</DialogTitle>
-                  <DialogDescription>
-                    Create a new user account (student, teacher, or admin)
-                  </DialogDescription>
-                </DialogHeader>
-                <UserCreatorModal onAdd={handleAddUser} />
-              </DialogContent>
-            </Dialog>
-            
-            <Dialog open={courseCreatorOpen} onOpenChange={setCourseCreatorOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2" variant="outline">
-                  <BookOpen className="h-4 w-4" /> Create Course
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[550px]">
-                <DialogHeader>
-                  <DialogTitle>Create New Course</DialogTitle>
-                  <DialogDescription>
-                    Set up a new course in the system
-                  </DialogDescription>
-                </DialogHeader>
-                <CourseCreatorModal onAdd={handleAddCourse} />
-              </DialogContent>
-            </Dialog>
+          <div className="flex gap-2 mt-4 md:mt-0">
+            <Button 
+              variant="default" 
+              className="bg-campus-purple hover:bg-campus-purple/90"
+              onClick={() => setUserDialogOpen(true)}
+            >
+              <UserPlus className="mr-2 h-4 w-4" /> 
+              Add User
+            </Button>
+            <Button 
+              variant="outline" 
+              className="border-campus-purple text-campus-purple hover:bg-campus-purple/10"
+              onClick={() => setContestDialogOpen(true)}
+            >
+              <Flag className="mr-2 h-4 w-4" /> 
+              Plan Contest
+            </Button>
           </div>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <Users className="h-5 w-5 mr-2 text-campus-purple" /> 
-                Total Users
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">503</div>
-              <p className="text-muted-foreground text-sm">Active platform users</p>
-              <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
-                <div>
-                  <p className="font-medium">Students</p>
-                  <p className="text-muted-foreground">450</p>
-                </div>
-                <div>
-                  <p className="font-medium">Teachers</p>
-                  <p className="text-muted-foreground">45</p>
-                </div>
-                <div>
-                  <p className="font-medium">Admins</p>
-                  <p className="text-muted-foreground">8</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <BookOpen className="h-5 w-5 mr-2 text-campus-blue" /> 
-                Total Courses
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">24</div>
-              <p className="text-muted-foreground text-sm">Active courses</p>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <p className="font-medium">Content Count</p>
-                  <p className="text-muted-foreground">328 modules</p>
-                </div>
-                <div>
-                  <p className="font-medium">Avg. Enrollment</p>
-                  <p className="text-muted-foreground">38 students</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <BarChartIcon className="h-5 w-5 mr-2 text-campus-green" /> 
-                System Health
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">99.8%</div>
-              <p className="text-muted-foreground text-sm">Uptime last 30 days</p>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <p className="font-medium">Storage Usage</p>
-                  <p className="text-muted-foreground">36.4 GB (42%)</p>
-                </div>
-                <div>
-                  <p className="font-medium">API Responses</p>
-                  <p className="text-muted-foreground">218ms avg.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <Tabs defaultValue="dashboard" className="space-y-4">
-          <TabsList className="bg-campus-purple/10 text-campus-purple">
-            <TabsTrigger value="dashboard" className="data-[state=active]:bg-white">Dashboard</TabsTrigger>
-            <TabsTrigger value="users" className="data-[state=active]:bg-white">User Management</TabsTrigger>
-            <TabsTrigger value="courses" className="data-[state=active]:bg-white">Course Management</TabsTrigger>
-            <TabsTrigger value="content" className="data-[state=active]:bg-white">Content Review</TabsTrigger>
-            <TabsTrigger value="settings" className="data-[state=active]:bg-white">System Settings</TabsTrigger>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="courses">Courses</TabsTrigger>
+            <TabsTrigger value="skills">Skill Metrics</TabsTrigger>
+            <TabsTrigger value="reports">Reports</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="dashboard">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="text-lg">User Registrations Trend</CardTitle>
-                  <CardDescription>
-                    Monthly user registration statistics for the past year
-                  </CardDescription>
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Total Users</CardTitle>
+                  <CardDescription>Students and faculty</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart
-                        data={userRegistrationsData}
-                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                      >
-                        <defs>
-                          <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                            <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip />
-                        <Area
-                          type="monotone"
-                          dataKey="count"
-                          stroke="#8884d8"
-                          fillOpacity={1}
-                          fill="url(#colorUv)"
-                          name="Users"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                  <div className="flex items-center justify-between">
+                    <Users className="h-8 w-8 text-campus-purple" />
+                    <span className="text-3xl font-bold">325</span>
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground flex justify-between">
+                    <span>Students: 280</span>
+                    <span>Faculty: 45</span>
                   </div>
                 </CardContent>
               </Card>
               
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">User Distribution</CardTitle>
-                  <CardDescription>
-                    Breakdown of users by role
-                  </CardDescription>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Active Courses</CardTitle>
+                  <CardDescription>Current semester</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={studentsByRoleData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          paddingAngle={2}
-                          dataKey="value"
-                          label={({ name, value }) => `${name}: ${value}`}
-                        >
-                          {studentsByRoleData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
+                  <div className="flex items-center justify-between">
+                    <BookOpen className="h-8 w-8 text-campus-blue" />
+                    <span className="text-3xl font-bold">18</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 mt-2">
-                    {studentsByRoleData.map((entry, index) => (
-                      <div key={index} className="flex items-center text-sm">
-                        <div
-                          className="h-3 w-3 mr-1 rounded-sm"
-                          style={{ backgroundColor: entry.color }}
-                        />
-                        <span>{entry.name}</span>
-                      </div>
-                    ))}
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    <span>Most enrolled: Data Structures (76)</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Assignments</CardTitle>
+                  <CardDescription>Active and pending</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <FileText className="h-8 w-8 text-campus-orange" />
+                    <span className="text-3xl font-bold">48</span>
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground flex justify-between">
+                    <span>Active: 32</span>
+                    <span>Submitted: 16</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Average Grade</CardTitle>
+                  <CardDescription>All courses</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <BarChart3 className="h-8 w-8 text-campus-green" />
+                    <span className="text-3xl font-bold">84.2%</span>
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    <span>2.5% increase from last semester</span>
                   </div>
                 </CardContent>
               </Card>
             </div>
             
-            <div className="grid grid-cols-1 gap-6 mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Course Engagement Metrics</CardTitle>
-                  <CardDescription>
-                    Performance metrics for top courses
-                  </CardDescription>
+                  <CardTitle>User Activity</CardTitle>
+                  <CardDescription>Active users in the last 7 days</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-[400px]">
+                  <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
-                        data={courseEngagementData}
+                        data={userActivityData}
                         margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
+                        <XAxis dataKey="date" />
                         <YAxis />
                         <Tooltip />
                         <Legend />
-                        <Bar
-                          dataKey="students"
-                          name="Enrolled Students"
-                          fill="#8884d8"
-                        />
-                        <Bar
-                          dataKey="completionRate"
-                          name="Completion Rate (%)"
-                          fill="#82ca9d"
-                        />
-                        <Bar
-                          dataKey="avgScore"
-                          name="Average Score"
-                          fill="#ffc658"
-                        />
+                        <Bar dataKey="active" name="Active Users" fill="#8884d8" />
+                        <Bar dataKey="newUsers" name="New Registrations" fill="#82ca9d" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Recent Activity</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex gap-3">
-                        <div className="bg-blue-100 p-2 h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0">
-                          <UserPlus className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">New user registered</p>
-                          <p className="text-xs text-muted-foreground">Emma Thompson joined as Student</p>
-                          <p className="text-xs text-muted-foreground">15 minutes ago</p>
-                        </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Activity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-start space-x-4">
+                      <div className="bg-blue-100 text-blue-700 p-2 rounded-full">
+                        <UserPlus className="h-4 w-4" />
                       </div>
-                      <div className="flex gap-3">
-                        <div className="bg-green-100 p-2 h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0">
-                          <BookOpen className="h-4 w-4 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">New course published</p>
-                          <p className="text-xs text-muted-foreground">AI Fundamentals is now live</p>
-                          <p className="text-xs text-muted-foreground">2 hours ago</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <div className="bg-yellow-100 p-2 h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Bell className="h-4 w-4 text-yellow-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">System alert</p>
-                          <p className="text-xs text-muted-foreground">Storage usage reached 80%</p>
-                          <p className="text-xs text-muted-foreground">5 hours ago</p>
-                        </div>
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium">5 New Students Registered</p>
+                        <p className="text-xs text-gray-500">Today at 9:42 AM</p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">System Notifications</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div className="flex items-start gap-2">
-                          <Info className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-medium">Scheduled Maintenance</p>
-                            <p className="text-xs text-muted-foreground">System maintenance scheduled for April 15, 2023 at 2:00 AM UTC</p>
-                          </div>
-                        </div>
+                    <div className="flex items-start space-x-4">
+                      <div className="bg-purple-100 text-purple-700 p-2 rounded-full">
+                        <BookOpen className="h-4 w-4" />
                       </div>
-                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div className="flex items-start gap-2">
-                          <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-medium">New Feature Available</p>
-                            <p className="text-xs text-muted-foreground">Advanced analytics dashboard is now available for all admin users</p>
-                          </div>
-                        </div>
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium">New Course Added: Machine Learning</p>
+                        <p className="text-xs text-gray-500">Yesterday at 2:15 PM</p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Quick Actions</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button size="sm" className="h-auto py-2">
-                        <Download className="h-4 w-4 mr-1" />
-                        Export Reports
-                      </Button>
-                      <Button size="sm" className="h-auto py-2" variant="outline">
-                        <Bell className="h-4 w-4 mr-1" />
-                        Send Notifications
-                      </Button>
-                      <Button size="sm" className="h-auto py-2" variant="outline">
-                        <Settings className="h-4 w-4 mr-1" />
-                        System Settings
-                      </Button>
-                      <Button size="sm" className="h-auto py-2" variant="outline">
-                        <Users className="h-4 w-4 mr-1" />
-                        View All Users
-                      </Button>
+                    <div className="flex items-start space-x-4">
+                      <div className="bg-green-100 text-green-700 p-2 rounded-full">
+                        <FileText className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium">Assignment Deadline Extended: Web Dev Project</p>
+                        <p className="text-xs text-gray-500">Yesterday at 11:30 AM</p>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                    <div className="flex items-start space-x-4">
+                      <div className="bg-orange-100 text-orange-700 p-2 rounded-full">
+                        <Calendar className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium">Coding Contest Scheduled: April 20</p>
+                        <p className="text-xs text-gray-500">Apr 10, 2025 at 4:00 PM</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-4">
+                      <div className="bg-pink-100 text-pink-700 p-2 rounded-full">
+                        <TrendingUp className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium">Leaderboard Updated: 3 New Students in Top 10</p>
+                        <p className="text-xs text-gray-500">Apr 9, 2025 at 6:20 PM</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
           
-          <TabsContent value="users">
-            <div className="space-y-6">
+          <TabsContent value="users" className="space-y-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <CardTitle>User Management</CardTitle>
+                  <CardDescription>Manage students and faculty accounts</CardDescription>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      placeholder="Search users..."
+                      className="w-[200px] pl-8"
+                    />
+                  </div>
+                  <Button variant="outline" size="sm">
+                    <Download className="mr-2 h-4 w-4" />
+                    Export
+                  </Button>
+                  <Button size="sm" onClick={() => setUserDialogOpen(true)}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Add User
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="py-3 px-4 text-left font-medium">User</th>
+                          <th className="py-3 px-4 text-left font-medium">Email</th>
+                          <th className="py-3 px-4 text-left font-medium">Role</th>
+                          <th className="py-3 px-4 text-left font-medium">Joined</th>
+                          <th className="py-3 px-4 text-left font-medium">Status</th>
+                          <th className="py-3 px-4 text-center font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {userData.map((user) => (
+                          <tr key={user.id} className="border-t">
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-3">
+                                <Avatar>
+                                  <AvatarImage src={user.avatar} alt={user.name} />
+                                  <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                </Avatar>
+                                <div>{user.name}</div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">{user.email}</td>
+                            <td className="py-3 px-4">
+                              <Badge 
+                                variant="outline" 
+                                className={
+                                  user.role === "admin" 
+                                    ? "bg-red-100 text-red-800 border-red-200" 
+                                    : user.role === "teacher" 
+                                    ? "bg-purple-100 text-purple-800 border-purple-200" 
+                                    : "bg-blue-100 text-blue-800 border-blue-200"
+                                }
+                              >
+                                {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4">{user.joinDate}</td>
+                            <td className="py-3 px-4">
+                              <Badge 
+                                variant="outline" 
+                                className={
+                                  user.status === "active" 
+                                    ? "bg-green-100 text-green-800 border-green-200" 
+                                    : "bg-red-100 text-red-800 border-red-200"
+                                }
+                              >
+                                {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex justify-center space-x-2">
+                                <Button variant="ghost" size="icon">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="text-red-500">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <div className="text-sm text-muted-foreground">
+                  Showing 5 of 325 users
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm" disabled>
+                    Previous
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Next
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="courses" className="space-y-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <CardTitle>Course Management</CardTitle>
+                  <CardDescription>Manage courses and educational content</CardDescription>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      placeholder="Search courses..."
+                      className="w-[200px] pl-8"
+                    />
+                  </div>
+                  <Button size="sm">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Course
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="py-3 px-4 text-left font-medium">Course</th>
+                          <th className="py-3 px-4 text-left font-medium">Instructor</th>
+                          <th className="py-3 px-4 text-left font-medium">Students</th>
+                          <th className="py-3 px-4 text-left font-medium">Created</th>
+                          <th className="py-3 px-4 text-left font-medium">Status</th>
+                          <th className="py-3 px-4 text-center font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {courseData.map((course) => (
+                          <tr key={course.id} className="border-t">
+                            <td className="py-3 px-4">
+                              <div className="font-medium">{course.title}</div>
+                            </td>
+                            <td className="py-3 px-4">{course.instructor}</td>
+                            <td className="py-3 px-4">{course.students}</td>
+                            <td className="py-3 px-4">{course.created}</td>
+                            <td className="py-3 px-4">
+                              <Badge 
+                                variant="outline" 
+                                className={
+                                  course.status === "active" 
+                                    ? "bg-green-100 text-green-800 border-green-200" 
+                                    : "bg-yellow-100 text-yellow-800 border-yellow-200"
+                                }
+                              >
+                                {course.status.charAt(0).toUpperCase() + course.status.slice(1)}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex justify-center space-x-2">
+                                <Button variant="ghost" size="icon">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="text-red-500">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <CardHeader>
-                  <div className="flex justify-between items-center">
+                  <CardTitle>Content Overview</CardTitle>
+                  <CardDescription>Files and materials uploaded per course</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
                     <div>
-                      <CardTitle className="text-lg">User Management</CardTitle>
-                      <CardDescription>
-                        Add, edit, or remove users from the platform
-                      </CardDescription>
-                    </div>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button>
-                          <UserPlus className="h-4 w-4 mr-2" /> Add New User
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[550px]">
-                        <DialogHeader>
-                          <DialogTitle>Add New User</DialogTitle>
-                          <DialogDescription>
-                            Create a new user account (student, teacher, or admin)
-                          </DialogDescription>
-                        </DialogHeader>
-                        <UserCreatorModal onAdd={handleAddUser} />
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex flex-col md:flex-row justify-between gap-4">
-                      <div className="flex gap-2 flex-grow">
-                        <div className="relative flex-grow">
-                          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            type="search"
-                            placeholder="Search users..."
-                            className="pl-8"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                          />
-                        </div>
-                        <Select value={roleFilter} onValueChange={setRoleFilter}>
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Roles</SelectItem>
-                            <SelectItem value="student">Students</SelectItem>
-                            <SelectItem value="teacher">Teachers</SelectItem>
-                            <SelectItem value="admin">Administrators</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Statuses</SelectItem>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="inactive">Inactive</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Data Structures & Algorithms</span>
+                        <span className="text-sm font-medium">24 files</span>
                       </div>
-                      
-                      <div className="flex gap-2">
-                        <Button variant="outline">
-                          <Download className="h-4 w-4 mr-1" /> Export
-                        </Button>
-                        <Button variant="outline">
-                          <UserPlus className="h-4 w-4 mr-1" /> Bulk Import
-                        </Button>
-                      </div>
+                      <Progress value={80} className="h-2" />
                     </div>
-                    
-                    <div className="border rounded-lg overflow-x-auto">
-                      <table className="min-w-full">
-                        <thead className="bg-muted/50">
-                          <tr>
-                            <th className="px-4 py-2 text-left text-sm font-medium">User</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Email</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Role</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Status</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Registered</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Last Login</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                          {filteredUsers.map((user) => (
-                            <tr key={user.id}>
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarImage src={user.avatar} />
-                                    <AvatarFallback className="bg-campus-purple text-white">
-                                      {user.name.split(' ').map(n => n[0]).join('')}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span className="font-medium text-sm">{user.name}</span>
-                                </div>
-                              </td>
-                              <td className="px-4 py-3 text-sm">{user.email}</td>
-                              <td className="px-4 py-3 text-sm">
-                                {user.role === "student" && (
-                                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                    <GraduationCap className="h-3 w-3 mr-1" /> Student
-                                  </Badge>
-                                )}
-                                {user.role === "teacher" && (
-                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                    <BookOpen className="h-3 w-3 mr-1" /> Teacher
-                                  </Badge>
-                                )}
-                                {user.role === "admin" && (
-                                  <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                                    <UserCog className="h-3 w-3 mr-1" /> Admin
-                                  </Badge>
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-sm">
-                                {user.status === "active" ? (
-                                  <Badge className="bg-green-500">Active</Badge>
-                                ) : (
-                                  <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Inactive</Badge>
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-sm">{user.registeredDate}</td>
-                              <td className="px-4 py-3 text-sm">{user.lastLogin}</td>
-                              <td className="px-4 py-3 text-sm">
-                                <div className="flex gap-2">
-                                  <Button size="sm" variant="ghost">
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost" 
-                                    onClick={() => toggleUserStatus(user.id)}
-                                  >
-                                    {user.status === "active" ? (
-                                      <X className="h-4 w-4 text-red-500" />
-                                    ) : (
-                                      <Check className="h-4 w-4 text-green-500" />
-                                    )}
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost"
-                                    onClick={() => handleDeleteUser(user.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                  </Button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    
-                    {filteredUsers.length === 0 && (
-                      <div className="text-center py-8">
-                        <Users className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                        <h3 className="text-lg font-medium">No users found</h3>
-                        <p className="text-muted-foreground">
-                          Try adjusting your search or filters
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Bulk User Operations</CardTitle>
-                  <CardDescription>
-                    Perform actions on multiple users at once
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Card>
-                        <CardHeader className="p-4 pb-2">
-                          <CardTitle className="text-base">Import Users</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Bulk import users from a CSV or Excel file
-                          </p>
-                          <Button className="w-full mt-2">
-                            <Upload className="h-4 w-4 mr-1" /> Upload File
-                          </Button>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="p-4 pb-2">
-                          <CardTitle className="text-base">Mass Enrollment</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Enroll multiple users in courses at once
-                          </p>
-                          <Button variant="outline" className="w-full mt-2">
-                            Manage Enrollments
-                          </Button>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="p-4 pb-2">
-                          <CardTitle className="text-base">Bulk Notifications</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Send notifications to multiple users
-                          </p>
-                          <Button variant="outline" className="w-full mt-2">
-                            <Bell className="h-4 w-4 mr-1" /> Send Notifications
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="courses">
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
                     <div>
-                      <CardTitle className="text-lg">Course Management</CardTitle>
-                      <CardDescription>
-                        Manage all courses on the platform
-                      </CardDescription>
-                    </div>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button>
-                          <PlusCircle className="h-4 w-4 mr-2" /> Create New Course
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[550px]">
-                        <DialogHeader>
-                          <DialogTitle>Create New Course</DialogTitle>
-                          <DialogDescription>
-                            Set up a new course in the system
-                          </DialogDescription>
-                        </DialogHeader>
-                        <CourseCreatorModal onAdd={handleAddCourse} />
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex flex-col md:flex-row justify-between gap-4">
-                      <div className="flex gap-2 flex-grow">
-                        <div className="relative flex-grow">
-                          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            type="search"
-                            placeholder="Search courses..."
-                            className="pl-8"
-                            value={courseSearchTerm}
-                            onChange={(e) => setCourseSearchTerm(e.target.value)}
-                          />
-                        </div>
-                        <Select value={courseStatusFilter} onValueChange={setCourseStatusFilter}>
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Statuses</SelectItem>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="draft">Draft</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Advanced Web Development</span>
+                        <span className="text-sm font-medium">18 files</span>
                       </div>
-                      
-                      <div className="flex gap-2">
-                        <Button variant="outline">
-                          <Download className="h-4 w-4 mr-1" /> Export
-                        </Button>
-                      </div>
+                      <Progress value={60} className="h-2" />
                     </div>
-                    
-                    <div className="border rounded-lg overflow-x-auto">
-                      <table className="min-w-full">
-                        <thead className="bg-muted/50">
-                          <tr>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Course</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Code</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Teacher</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Enrollments</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Content</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Status</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Last Updated</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                          {filteredCourses.map((course) => (
-                            <tr key={course.id}>
-                              <td className="px-4 py-3">
-                                <div className="font-medium text-sm">{course.name}</div>
-                              </td>
-                              <td className="px-4 py-3 text-sm">{course.code}</td>
-                              <td className="px-4 py-3 text-sm">{course.teacher}</td>
-                              <td className="px-4 py-3 text-sm">{course.enrollments}</td>
-                              <td className="px-4 py-3 text-sm">{course.content} modules</td>
-                              <td className="px-4 py-3 text-sm">
-                                {course.status === "active" ? (
-                                  <Badge className="bg-green-500">Active</Badge>
-                                ) : (
-                                  <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Draft</Badge>
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-sm">{course.lastUpdated}</td>
-                              <td className="px-4 py-3 text-sm">
-                                <div className="flex gap-2">
-                                  <Button size="sm" variant="ghost">
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost" 
-                                    onClick={() => toggleCourseStatus(course.id)}
-                                  >
-                                    {course.status === "active" ? (
-                                      <X className="h-4 w-4 text-red-500" />
-                                    ) : (
-                                      <Check className="h-4 w-4 text-green-500" />
-                                    )}
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost"
-                                    onClick={() => handleDeleteCourse(course.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                  </Button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    
-                    {filteredCourses.length === 0 && (
-                      <div className="text-center py-8">
-                        <BookOpen className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                        <h3 className="text-lg font-medium">No courses found</h3>
-                        <p className="text-muted-foreground">
-                          Try adjusting your search or filters
-                        </p>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Machine Learning Fundamentals</span>
+                        <span className="text-sm font-medium">15 files</span>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Course Categories</CardTitle>
-                  <CardDescription>
-                    Organize courses by categories
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-4">
-                    <Card className="w-full md:w-[calc(33.33%-1rem)]">
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base">Computer Science</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <p className="text-sm text-muted-foreground">
-                          8 active courses
-                        </p>
-                        <div className="flex justify-between mt-2">
-                          <Badge variant="outline">126 students</Badge>
-                          <Badge className="bg-green-500">Active</Badge>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="p-4 pt-0">
-                        <Button variant="outline" size="sm" className="w-full">
-                          Manage Courses
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                    
-                    <Card className="w-full md:w-[calc(33.33%-1rem)]">
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base">Data Science</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <p className="text-sm text-muted-foreground">
-                          6 active courses
-                        </p>
-                        <div className="flex justify-between mt-2">
-                          <Badge variant="outline">94 students</Badge>
-                          <Badge className="bg-green-500">Active</Badge>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="p-4 pt-0">
-                        <Button variant="outline" size="sm" className="w-full">
-                          Manage Courses
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                    
-                    <Card className="w-full md:w-[calc(33.33%-1rem)]">
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base">Web Development</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <p className="text-sm text-muted-foreground">
-                          7 active courses
-                        </p>
-                        <div className="flex justify-between mt-2">
-                          <Badge variant="outline">112 students</Badge>
-                          <Badge className="bg-green-500">Active</Badge>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="p-4 pt-0">
-                        <Button variant="outline" size="sm" className="w-full">
-                          Manage Courses
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                    
-                    <Card className="w-full md:w-[calc(33.33%-1rem)] border-dashed">
-                      <CardContent className="p-4 flex flex-col items-center justify-center min-h-[168px]">
-                        <PlusCircle className="h-8 w-8 text-muted-foreground mb-2" />
-                        <p className="text-muted-foreground text-sm">Add New Category</p>
-                        <Button variant="outline" size="sm" className="mt-2">
-                          Create Category
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="content">
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Content Review Queue</CardTitle>
-                  <CardDescription>
-                    Review and approve content submitted by faculty
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex flex-col md:flex-row justify-between gap-4">
-                      <div className="flex gap-2 flex-grow">
-                        <div className="relative flex-grow">
-                          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            type="search"
-                            placeholder="Search content..."
-                            className="pl-8"
-                          />
-                        </div>
-                        <Select defaultValue="all">
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Types</SelectItem>
-                            <SelectItem value="video">Videos</SelectItem>
-                            <SelectItem value="document">Documents</SelectItem>
-                            <SelectItem value="assignment">Assignments</SelectItem>
-                            <SelectItem value="quiz">Quizzes</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Select defaultValue="pending">
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending Review</SelectItem>
-                            <SelectItem value="approved">Approved</SelectItem>
-                            <SelectItem value="rejected">Rejected</SelectItem>
-                            <SelectItem value="all">All Statuses</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <Progress value={50} className="h-2" />
                     </div>
-                    
-                    <div className="border rounded-lg overflow-x-auto">
-                      <table className="min-w-full">
-                        <thead className="bg-muted/50">
-                          <tr>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Content</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Type</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Course</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Submitted By</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Date</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Status</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                          <tr>
-                            <td className="px-4 py-3">
-                              <div className="font-medium text-sm">Introduction to Binary Trees</div>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                                <Video className="h-3 w-3 mr-1" /> Video
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">CS202: Data Structures</td>
-                            <td className="px-4 py-3 text-sm">Dr. Robert Johnson</td>
-                            <td className="px-4 py-3 text-sm">Apr 10, 2023</td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                                Pending
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="ghost">
-                                  Review
-                                </Button>
-                                <Button size="sm" variant="ghost" className="text-green-500">
-                                  <Check className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" variant="ghost" className="text-red-500">
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-3">
-                              <div className="font-medium text-sm">Web Development Final Project</div>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                                <Code className="h-3 w-3 mr-1" /> Assignment
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">CS301: Web Development</td>
-                            <td className="px-4 py-3 text-sm">Prof. Michael Brown</td>
-                            <td className="px-4 py-3 text-sm">Apr 11, 2023</td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                                Pending
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="ghost">
-                                  Review
-                                </Button>
-                                <Button size="sm" variant="ghost" className="text-green-500">
-                                  <Check className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" variant="ghost" className="text-red-500">
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-4 py-3">
-                              <div className="font-medium text-sm">Database Normalization</div>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                <FileText className="h-3 w-3 mr-1" /> Document
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">CS305: Database Systems</td>
-                            <td className="px-4 py-3 text-sm">Dr. Sarah Williams</td>
-                            <td className="px-4 py-3 text-sm">Apr 12, 2023</td>
-                            <td className="px-4 py-3 text-sm">
-                              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                                Pending
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="ghost">
-                                  Review
-                                </Button>
-                                <Button size="sm" variant="ghost" className="text-green-500">
-                                  <Check className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" variant="ghost" className="text-red-500">
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Database Management Systems</span>
+                        <span className="text-sm font-medium">21 files</span>
+                      </div>
+                      <Progress value={70} className="h-2" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Cybersecurity Principles</span>
+                        <span className="text-sm font-medium">9 files</span>
+                      </div>
+                      <Progress value={30} className="h-2" />
                     </div>
                   </div>
                 </CardContent>
@@ -1468,75 +717,45 @@ const AdminDashboard = () => {
               
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Content Stats</CardTitle>
-                  <CardDescription>
-                    Overview of content on the platform
-                  </CardDescription>
+                  <CardTitle>Content Types</CardTitle>
+                  <CardDescription>Distribution of educational material formats</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="text-center space-y-1">
-                          <Video className="h-6 w-6 mx-auto mb-1 text-campus-purple" />
-                          <p className="text-2xl font-bold">156</p>
-                          <p className="text-xs text-muted-foreground">Videos</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="text-center space-y-1">
-                          <FileText className="h-6 w-6 mx-auto mb-1 text-campus-blue" />
-                          <p className="text-2xl font-bold">243</p>
-                          <p className="text-xs text-muted-foreground">Documents</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="text-center space-y-1">
-                          <Code className="h-6 w-6 mx-auto mb-1 text-campus-green" />
-                          <p className="text-2xl font-bold">87</p>
-                          <p className="text-xs text-muted-foreground">Assignments</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="text-center space-y-1">
-                          <Check className="h-6 w-6 mx-auto mb-1 text-campus-orange" />
-                          <p className="text-2xl font-bold">112</p>
-                          <p className="text-xs text-muted-foreground">Quizzes</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                  
-                  <div className="mt-6">
-                    <h3 className="text-sm font-medium mb-2">Recently Approved Content</h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center p-3 border rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <Video className="h-4 w-4 text-campus-purple" />
-                          <span className="text-sm font-medium">SQL Joins and Their Types</span>
-                        </div>
-                        <Badge className="bg-green-500">Approved</Badge>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded bg-blue-500"></div>
+                        <span>PDF Documents</span>
                       </div>
-                      <div className="flex justify-between items-center p-3 border rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-campus-blue" />
-                          <span className="text-sm font-medium">React State Management</span>
-                        </div>
-                        <Badge className="bg-green-500">Approved</Badge>
+                      <span className="font-medium">42%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded bg-purple-500"></div>
+                        <span>Video Lectures</span>
                       </div>
-                      <div className="flex justify-between items-center p-3 border rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <Code className="h-4 w-4 text-campus-green" />
-                          <span className="text-sm font-medium">Graph Implementation Assignment</span>
-                        </div>
-                        <Badge className="bg-green-500">Approved</Badge>
+                      <span className="font-medium">28%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded bg-green-500"></div>
+                        <span>Quizzes & Tests</span>
                       </div>
+                      <span className="font-medium">15%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded bg-yellow-500"></div>
+                        <span>Presentations</span>
+                      </div>
+                      <span className="font-medium">10%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded bg-red-500"></div>
+                        <span>Other Formats</span>
+                      </div>
+                      <span className="font-medium">5%</span>
                     </div>
                   </div>
                 </CardContent>
@@ -1544,249 +763,494 @@ const AdminDashboard = () => {
             </div>
           </TabsContent>
           
-          <TabsContent value="settings">
-            <div className="space-y-6">
+          <TabsContent value="skills" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Student Skill Metrics</CardTitle>
+                <CardDescription>Performance analytics across skill areas</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[400px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={skillMetricsData}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="average" name="Class Average" fill="#8884d8" />
+                      <Bar dataKey="top" name="Top Performers" fill="#82ca9d" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">System Settings</CardTitle>
-                  <CardDescription>
-                    Configure platform-wide settings
-                  </CardDescription>
+                  <CardTitle>Top Programming Languages</CardTitle>
+                  <CardDescription>Most proficient languages by students</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     <div>
-                      <h3 className="text-base font-medium mb-4">General Settings</h3>
-                      <div className="space-y-4 border rounded-lg p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="site-name">Platform Name</Label>
-                            <Input 
-                              id="site-name" 
-                              defaultValue="Campus Bridge" 
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="timezone">Default Timezone</Label>
-                            <Select defaultValue="UTC">
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select timezone" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="UTC">UTC</SelectItem>
-                                <SelectItem value="EST">Eastern Time (EST)</SelectItem>
-                                <SelectItem value="CST">Central Time (CST)</SelectItem>
-                                <SelectItem value="PST">Pacific Time (PST)</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="site-description">Platform Description</Label>
-                          <Textarea 
-                            id="site-description" 
-                            defaultValue="Campus Bridge - Your integrated academic and coding platform for students and faculty."
-                          />
-                        </div>
-                        
-                        <Separator className="my-4" />
-                        
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="maintenance-mode" />
-                              <Label htmlFor="maintenance-mode">Maintenance Mode</Label>
-                            </div>
-                            <Badge variant="outline">Currently: Off</Badge>
-                          </div>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="user-registration" defaultChecked />
-                              <Label htmlFor="user-registration">Allow New User Registration</Label>
-                            </div>
-                            <Badge variant="outline">Currently: On</Badge>
-                          </div>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="email-verification" defaultChecked />
-                              <Label htmlFor="email-verification">Require Email Verification</Label>
-                            </div>
-                            <Badge variant="outline">Currently: On</Badge>
-                          </div>
-                        </div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">JavaScript</span>
+                        <span className="text-sm font-medium">75%</span>
                       </div>
+                      <Progress value={75} className="h-2" />
                     </div>
-                    
                     <div>
-                      <h3 className="text-base font-medium mb-4">Email Settings</h3>
-                      <div className="space-y-4 border rounded-lg p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="from-email">From Email Address</Label>
-                            <Input 
-                              id="from-email" 
-                              defaultValue="noreply@campusbridge.edu" 
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="admin-email">Admin Email Address</Label>
-                            <Input 
-                              id="admin-email" 
-                              defaultValue="admin@campusbridge.edu" 
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="welcome-email" defaultChecked />
-                              <Label htmlFor="welcome-email">Send Welcome Email</Label>
-                            </div>
-                            <Badge variant="outline">Currently: On</Badge>
-                          </div>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="course-notifications" defaultChecked />
-                              <Label htmlFor="course-notifications">Course Update Notifications</Label>
-                            </div>
-                            <Badge variant="outline">Currently: On</Badge>
-                          </div>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="assignment-notifications" defaultChecked />
-                              <Label htmlFor="assignment-notifications">Assignment Notifications</Label>
-                            </div>
-                            <Badge variant="outline">Currently: On</Badge>
-                          </div>
-                        </div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Python</span>
+                        <span className="text-sm font-medium">68%</span>
                       </div>
+                      <Progress value={68} className="h-2" />
                     </div>
-                    
                     <div>
-                      <h3 className="text-base font-medium mb-4">Security Settings</h3>
-                      <div className="space-y-4 border rounded-lg p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="session-timeout">Session Timeout (minutes)</Label>
-                            <Input 
-                              id="session-timeout" 
-                              type="number"
-                              defaultValue="60" 
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="max-login-attempts">Max Login Attempts</Label>
-                            <Input 
-                              id="max-login-attempts" 
-                              type="number"
-                              defaultValue="5" 
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="two-factor" />
-                              <Label htmlFor="two-factor">Require Two-Factor Authentication</Label>
-                            </div>
-                            <Badge variant="outline">Currently: Off</Badge>
-                          </div>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Switch id="password-policy" defaultChecked />
-                              <Label htmlFor="password-policy">Enforce Strong Password Policy</Label>
-                            </div>
-                            <Badge variant="outline">Currently: On</Badge>
-                          </div>
-                        </div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Java</span>
+                        <span className="text-sm font-medium">62%</span>
                       </div>
+                      <Progress value={62} className="h-2" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">SQL</span>
+                        <span className="text-sm font-medium">70%</span>
+                      </div>
+                      <Progress value={70} className="h-2" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">C++</span>
+                        <span className="text-sm font-medium">58%</span>
+                      </div>
+                      <Progress value={58} className="h-2" />
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="flex justify-end gap-2">
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Top Technical Concepts</CardTitle>
+                  <CardDescription>Strongest technical areas</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Data Structures</span>
+                        <span className="text-sm font-medium">65%</span>
+                      </div>
+                      <Progress value={65} className="h-2" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Algorithms</span>
+                        <span className="text-sm font-medium">60%</span>
+                      </div>
+                      <Progress value={60} className="h-2" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Web Development</span>
+                        <span className="text-sm font-medium">73%</span>
+                      </div>
+                      <Progress value={73} className="h-2" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Database Design</span>
+                        <span className="text-sm font-medium">68%</span>
+                      </div>
+                      <Progress value={68} className="h-2" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">System Design</span>
+                        <span className="text-sm font-medium">55%</span>
+                      </div>
+                      <Progress value={55} className="h-2" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Improvement Areas</CardTitle>
+                  <CardDescription>Skills needing most development</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Dynamic Programming</span>
+                        <span className="text-sm font-medium">45%</span>
+                      </div>
+                      <Progress value={45} className="h-2" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Security Principles</span>
+                        <span className="text-sm font-medium">48%</span>
+                      </div>
+                      <Progress value={48} className="h-2" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Cloud Infrastructure</span>
+                        <span className="text-sm font-medium">42%</span>
+                      </div>
+                      <Progress value={42} className="h-2" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Machine Learning</span>
+                        <span className="text-sm font-medium">38%</span>
+                      </div>
+                      <Progress value={38} className="h-2" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">DevOps</span>
+                        <span className="text-sm font-medium">35%</span>
+                      </div>
+                      <Progress value={35} className="h-2" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="reports" className="space-y-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <CardTitle>Analytics & Reports</CardTitle>
+                  <CardDescription>Generate and export platform analytics</CardDescription>
+                </div>
+                <div className="flex items-center space-x-2">
                   <Button variant="outline">
-                    Reset to Defaults
+                    <Download className="mr-2 h-4 w-4" />
+                    Export All
                   </Button>
-                  <Button>
-                    Save Settings
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">System Maintenance</CardTitle>
-                  <CardDescription>
-                    Perform system maintenance tasks
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card>
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base flex items-center">
-                          <Download className="h-4 w-4 mr-2 text-campus-blue" />
-                          Backup System
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Create a full backup of the platform data
-                        </p>
-                        <Button variant="outline" className="w-full">
-                          Create Backup
-                        </Button>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base flex items-center">
-                          <Layers className="h-4 w-4 mr-2 text-campus-green" />
-                          Clear Cache
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Clear system cache to improve performance
-                        </p>
-                        <Button variant="outline" className="w-full">
-                          Clear Cache
-                        </Button>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base flex items-center">
-                          <Settings className="h-4 w-4 mr-2 text-campus-purple" />
-                          System Logs
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <p className="text-sm text-muted-foreground mb-4">
-                          View and download system logs
-                        </p>
-                        <Button variant="outline" className="w-full">
-                          View Logs
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">Academic Performance Report</CardTitle>
+                      <CardDescription>Grades and assignment completion data</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Comprehensive data on student grades, assignment submission rates, and 
+                        academic progress across all courses.
+                      </p>
+                      <Button variant="outline" size="sm">
+                        <Download className="mr-2 h-4 w-4" />
+                        Export CSV
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">Attendance & Participation Report</CardTitle>
+                      <CardDescription>Student attendance and engagement metrics</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Data on student attendance rates, class participation, and engagement 
+                        with course materials and discussions.
+                      </p>
+                      <Button variant="outline" size="sm">
+                        <Download className="mr-2 h-4 w-4" />
+                        Export CSV
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">Coding Skills Report</CardTitle>
+                      <CardDescription>Programming and technical proficiency data</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Detailed metrics on coding challenge completion, technical skills assessment,
+                        and programming language proficiency.
+                      </p>
+                      <Button variant="outline" size="sm">
+                        <Download className="mr-2 h-4 w-4" />
+                        Export CSV
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">Faculty Performance Report</CardTitle>
+                      <CardDescription>Teaching effectiveness and student feedback</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Analysis of teaching effectiveness, student satisfaction ratings, and
+                        course material quality assessments.
+                      </p>
+                      <Button variant="outline" size="sm">
+                        <Download className="mr-2 h-4 w-4" />
+                        Export CSV
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">System Usage Report</CardTitle>
+                      <CardDescription>Platform engagement and activity data</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Statistics on platform usage, feature engagement, and user activity 
+                        patterns across the system.
+                      </p>
+                      <Button variant="outline" size="sm">
+                        <Download className="mr-2 h-4 w-4" />
+                        Export CSV
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">Custom Report</CardTitle>
+                      <CardDescription>Generate a custom analytics report</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Create a custom report by selecting specific metrics, date ranges,
+                        and user groups to analyze.
+                      </p>
+                      <Button variant="default" size="sm">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Create Custom Report
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Dialog for adding a new user */}
+      <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription>
+              Create a new student or faculty account
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateUser}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Full Name
+                </Label>
+                <Input
+                  id="name"
+                  placeholder="Full name"
+                  className="col-span-3"
+                  value={userForm.name}
+                  onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Email address"
+                  className="col-span-3"
+                  value={userForm.email}
+                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="role" className="text-right">
+                  Role
+                </Label>
+                <Select
+                  value={userForm.role}
+                  onValueChange={(value) => setUserForm({ ...userForm, role: value })}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="student">Student</SelectItem>
+                    <SelectItem value="teacher">Faculty/Teacher</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="password" className="text-right">
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Temporary password"
+                  className="col-span-3"
+                  value={userForm.password}
+                  onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setUserDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Creating..." : "Create User"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog for creating a new contest/test */}
+      <Dialog open={contestDialogOpen} onOpenChange={setContestDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Plan New Contest</DialogTitle>
+            <DialogDescription>
+              Schedule a coding contest or mock test for students
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateContest}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="title" className="text-right">
+                  Title
+                </Label>
+                <Input
+                  id="title"
+                  placeholder="Contest title"
+                  className="col-span-3"
+                  value={contestForm.title}
+                  onChange={(e) => setContestForm({ ...contestForm, title: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description" className="text-right">
+                  Description
+                </Label>
+                <Textarea
+                  id="description"
+                  placeholder="Contest details and instructions"
+                  className="col-span-3"
+                  value={contestForm.description}
+                  onChange={(e) => setContestForm({ ...contestForm, description: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="date" className="text-right">
+                  Date & Time
+                </Label>
+                <Input
+                  id="date"
+                  type="datetime-local"
+                  className="col-span-3"
+                  value={contestForm.date}
+                  onChange={(e) => setContestForm({ ...contestForm, date: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="duration" className="text-right">
+                  Duration (min)
+                </Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  min="15"
+                  className="col-span-3"
+                  value={contestForm.duration}
+                  onChange={(e) => setContestForm({ ...contestForm, duration: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="type" className="text-right">
+                  Event Type
+                </Label>
+                <Select
+                  value={contestForm.type}
+                  onValueChange={(value) => setContestForm({ ...contestForm, type: value })}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select event type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="coding">Coding Contest</SelectItem>
+                    <SelectItem value="hackathon">Hackathon</SelectItem>
+                    <SelectItem value="quiz">Mock Quiz</SelectItem>
+                    <SelectItem value="test">Mock Test</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="difficulty" className="text-right">
+                  Difficulty
+                </Label>
+                <Select
+                  value={contestForm.difficulty}
+                  onValueChange={(value) => setContestForm({ ...contestForm, difficulty: value })}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="easy">Easy</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="hard">Hard</SelectItem>
+                    <SelectItem value="mixed">Mixed Levels</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setContestDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Creating..." : "Create Event"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </PageLayout>
   );
 };

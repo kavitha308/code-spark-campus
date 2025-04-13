@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Function to create a new discussion
 export const createDiscussion = async (
@@ -8,10 +9,13 @@ export const createDiscussion = async (
   courseId?: string
 ) => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
     const { data, error } = await supabase.from("discussions").insert({
       title,
       content,
-      course_id: courseId
+      course_id: courseId,
+      author_id: user?.id
     }).select("*").single();
 
     if (error) throw error;
@@ -75,9 +79,12 @@ export const getDiscussionById = async (id: string) => {
 // Function to add a reply to a discussion
 export const addReply = async (discussionId: string, content: string) => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
     const { data, error } = await supabase.from("replies").insert({
       discussion_id: discussionId,
-      content
+      content,
+      author_id: user?.id
     }).select("*").single();
 
     if (error) throw error;

@@ -1,543 +1,429 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import PageLayout from "@/components/layout/PageLayout";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format } from "date-fns";
+import { Search, ThumbsUp, MessageSquare } from "lucide-react";
 import { 
-  MessageSquare, 
-  ThumbsUp, 
-  Send, 
-  Search, 
-  Filter,
-  ChevronDown, 
-  User 
-} from "lucide-react";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
 } from "@/components/ui/select";
+import { getDiscussions, getDiscussionById, createDiscussion, addReply } from "@/services/DiscussionService";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { createDiscussion, getDiscussions, getDiscussionById, addReply } from "@/services/DiscussionService";
+
+const initialDiscussions = [
+  {
+    id: "discussion1",
+    title: "Database Normalization Help",
+    content: "Can someone explain the difference between 2NF and 3NF with examples? I'm preparing for the midterm exam.",
+    author: {
+      id: "author1",
+      full_name: "Michael Brown",
+      avatar_url: "",
+      role: "student"
+    },
+    created_at: "2023-04-20T10:30:00Z",
+    replies: [],
+    tags: ["Databases", "SQL", "Normalization"]
+  },
+  {
+    id: "discussion2",
+    title: "Question about React Hooks",
+    content: "I'm confused about the dependency array in useEffect. When should I include dependencies and when should I leave it empty?",
+    author: {
+      id: "author2",
+      full_name: "Sarah Johnson",
+      avatar_url: "",
+      role: "student"
+    },
+    created_at: "2023-04-17T14:45:00Z",
+    replies: [
+      {
+        id: "reply1",
+        content: "The dependency array tells React when to re-run the effect. Empty array means run only once on mount, no array means run after every render, and with dependencies it runs when those values change.",
+        author: {
+          id: "author3",
+          full_name: "Prof. Roberts",
+          avatar_url: "",
+          role: "teacher"
+        },
+        created_at: "2023-04-17T16:20:00Z"
+      }
+    ],
+    tags: ["React", "JavaScript", "Hooks"]
+  },
+  {
+    id: "discussion3",
+    title: "Recursion vs Iteration",
+    content: "What are the pros and cons of using recursion versus iteration? When should I use one over the other?",
+    author: {
+      id: "author4",
+      full_name: "Alex Chen",
+      avatar_url: "",
+      role: "student"
+    },
+    created_at: "2023-04-15T09:10:00Z",
+    replies: [],
+    tags: ["Algorithms", "Programming", "Performance"]
+  }
+];
 
 const Discussions = () => {
-  const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const [discussions, setDiscussions] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [newPost, setNewPost] = useState({ title: "", content: "", course: "", tags: "" });
+  const [discussions, setDiscussions] = useState(initialDiscussions);
   const [activeTab, setActiveTab] = useState("all");
-  const [selectedDiscussion, setSelectedDiscussion] = useState<any>(null);
-  const [newComment, setNewComment] = useState("");
-  const [sortBy, setSortBy] = useState("recent");
-  const [filterBy, setFilterBy] = useState("all");
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState("recent");
+  const [topicFilter, setTopicFilter] = useState("all");
   
-  // Load discussions from the database
+  // New discussion form
+  const [newDiscussion, setNewDiscussion] = useState({
+    title: "",
+    content: "",
+    course: "",
+    tags: ""
+  });
+  
+  // Reply input state
+  const [replyText, setReplyText] = useState("");
+  const [replyingTo, setReplyingTo] = useState("");
+  
+  // Fetch discussions from the API
   useEffect(() => {
-    const loadDiscussions = async () => {
-      setIsLoading(true);
+    const fetchDiscussions = async () => {
+      setLoading(true);
       try {
-        const discussionsData = await getDiscussions();
-        setDiscussions(discussionsData.map((disc: any) => ({
-          ...disc,
-          id: disc.id,
-          title: disc.title,
-          content: disc.content,
-          author: {
-            id: disc.author?.id || "unknown",
-            name: disc.author?.full_name || "Unknown User",
-            role: disc.author?.role || "Student",
-            avatar: disc.author?.avatar_url || ""
-          },
-          timestamp: new Date(disc.created_at),
-          likes: 0, // We'll implement likes in a more comprehensive version
-          comments: disc.replies || [],
-          tags: disc.tags || ["General"],
-          course: disc.course || "General Discussion"
-        })));
+        const data = await getDiscussions();
+        // If there's data from the API, use it; otherwise, use the initial data
+        if (data && data.length > 0) {
+          setDiscussions(data);
+        }
       } catch (error) {
-        console.error("Error loading discussions:", error);
-        toast.error("Failed to load discussions");
+        console.error("Error fetching discussions:", error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
     
-    loadDiscussions();
+    fetchDiscussions();
   }, []);
   
-  const handleSearch = (e: React.FormEvent) => {
+  // Handle creating a new discussion
+  const handleCreateDiscussion = async (e) => {
     e.preventDefault();
-    // Filter discussions based on search term - client-side filtering
-    if (searchTerm.trim() === "") {
-      // Reset to all discussions
-      getDiscussions().then(discussionsData => {
-        setDiscussions(discussionsData.map((disc: any) => ({
-          ...disc,
-          id: disc.id,
-          title: disc.title,
-          content: disc.content,
-          author: {
-            id: disc.author?.id || "unknown",
-            name: disc.author?.full_name || "Unknown User",
-            role: disc.author?.role || "Student",
-            avatar: disc.author?.avatar_url || ""
-          },
-          timestamp: new Date(disc.created_at),
-          likes: 0,
-          comments: disc.replies || [],
-          tags: disc.tags || ["General"],
-          course: disc.course || "General Discussion"
-        })));
-      });
-    } else {
-      const filtered = discussions.filter(
-        (disc: any) => 
-          disc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          disc.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          disc.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-      setDiscussions(filtered);
-    }
-  };
-  
-  const handleCreatePost = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user) {
-      toast.error("Please log in to create a post");
-      return;
-    }
-    
-    if (!newPost.title.trim() || !newPost.content.trim()) {
-      toast.error("Please provide both title and content for your post");
-      return;
-    }
+    setLoading(true);
     
     try {
-      const createdDiscussion = await createDiscussion(
-        newPost.title,
-        newPost.content,
-        undefined // courseId is optional
+      // Call API to create discussion
+      const result = await createDiscussion(
+        newDiscussion.title,
+        newDiscussion.content,
+        newDiscussion.course || undefined
       );
       
-      if (createdDiscussion) {
-        // Add the new discussion to the list
-        const newDiscussion = {
-          ...createdDiscussion,
-          author: {
-            id: user.id,
-            name: profile?.full_name || user.email?.split("@")[0] || "Anonymous",
-            role: profile?.role || "Student",
-            avatar: profile?.avatar_url || ""
-          },
-          timestamp: new Date(createdDiscussion.created_at),
-          likes: 0,
-          comments: [],
-          tags: newPost.tags.split(",").map(tag => tag.trim()),
-          course: newPost.course
-        };
+      if (result) {
+        toast.success("Discussion created successfully!");
+        // Refresh discussions
+        const updatedDiscussions = await getDiscussions();
+        setDiscussions(updatedDiscussions);
         
-        setDiscussions([newDiscussion, ...discussions]);
-        setNewPost({ title: "", content: "", course: "", tags: "" });
-        toast.success("Discussion posted successfully!");
-      } else {
-        toast.error("Failed to create discussion");
+        // Reset form
+        setNewDiscussion({
+          title: "",
+          content: "",
+          course: "",
+          tags: ""
+        });
       }
     } catch (error) {
       console.error("Error creating discussion:", error);
-      toast.error("Failed to create discussion");
+      toast.error("Failed to create discussion. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
   
-  const handleCommentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Handle submitting a reply
+  const handleAddReply = async (discussionId) => {
+    if (!replyText.trim()) return;
     
-    if (!user) {
-      toast.error("Please log in to comment");
-      return;
-    }
-    
-    if (!newComment.trim()) {
-      toast.error("Please enter a comment");
-      return;
-    }
-    
+    setLoading(true);
     try {
-      const reply = await addReply(selectedDiscussion.id, newComment);
+      // Call API to add reply
+      const result = await addReply(discussionId, replyText);
       
-      if (reply) {
-        // Update the selected discussion with the new comment
-        const newCommentObj = {
-          id: reply.id,
-          content: reply.content,
-          author: {
-            id: user.id,
-            name: profile?.full_name || user.email?.split("@")[0] || "Anonymous",
-            role: profile?.role || "Student",
-            avatar: profile?.avatar_url || ""
-          },
-          timestamp: new Date(reply.created_at),
-          likes: 0
-        };
+      if (result) {
+        toast.success("Reply added successfully!");
+        // Refresh discussion with new reply
+        const updatedDiscussion = await getDiscussionById(discussionId);
         
-        setSelectedDiscussion({
-          ...selectedDiscussion,
-          comments: [...selectedDiscussion.comments, newCommentObj]
-        });
+        // Update the discussions state
+        setDiscussions(discussions.map(d => 
+          d.id === discussionId ? updatedDiscussion : d
+        ));
         
-        // Also update in the main discussions list
-        setDiscussions(discussions.map((disc: any) => {
-          if (disc.id === selectedDiscussion.id) {
-            return {
-              ...disc,
-              comments: [...disc.comments, newCommentObj]
-            };
-          }
-          return disc;
-        }));
-        
-        setNewComment("");
-        toast.success("Comment added successfully!");
-      } else {
-        toast.error("Failed to add comment");
+        // Reset reply form
+        setReplyText("");
+        setReplyingTo("");
       }
     } catch (error) {
-      console.error("Error adding comment:", error);
-      toast.error("Failed to add comment");
+      console.error("Error adding reply:", error);
+      toast.error("Failed to add reply. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
   
-  const handleLike = (discussionId: string) => {
-    // In a real app, this would call an API to update the likes in the database
-    // For now, we'll just update the UI
-    setDiscussions(discussions.map((disc: any) => {
-      if (disc.id === discussionId) {
-        return {
-          ...disc,
-          likes: disc.likes + 1
-        };
-      }
-      return disc;
-    }));
-    
-    // Update selected discussion if it's the one being liked
-    if (selectedDiscussion && selectedDiscussion.id === discussionId) {
-      setSelectedDiscussion({
-        ...selectedDiscussion,
-        likes: selectedDiscussion.likes + 1
-      });
-    }
-    
-    toast.success("Post liked!");
-  };
+  // Filter discussions based on active tab
+  const filteredDiscussions = discussions.filter(discussion => {
+    if (activeTab === "all") return true;
+    if (activeTab === "my" && discussion.author.id === user?.id) return true;
+    if (activeTab === "unanswered" && (!discussion.replies || discussion.replies.length === 0)) return true;
+    return false;
+  });
   
-  const handleLikeComment = (discussionId: string, commentId: string) => {
-    // In a real app, this would call an API to update the likes in the database
-    // For now, we'll just update the UI
-    setDiscussions(discussions.map((disc: any) => {
-      if (disc.id === discussionId) {
-        return {
-          ...disc,
-          comments: disc.comments.map((comment: any) => {
-            if (comment.id === commentId) {
-              return {
-                ...comment,
-                likes: comment.likes + 1
-              };
-            }
-            return comment;
-          })
-        };
-      }
-      return disc;
-    }));
+  // Filter by search query
+  const searchedDiscussions = filteredDiscussions.filter(discussion => {
+    if (!searchQuery) return true;
     
-    // Update selected discussion if it's the one with the comment being liked
-    if (selectedDiscussion && selectedDiscussion.id === discussionId) {
-      setSelectedDiscussion({
-        ...selectedDiscussion,
-        comments: selectedDiscussion.comments.map((comment: any) => {
-          if (comment.id === commentId) {
-            return {
-              ...comment,
-              likes: comment.likes + 1
-            };
-          }
-          return comment;
-        })
-      });
-    }
-    
-    toast.success("Comment liked!");
-  };
+    const query = searchQuery.toLowerCase();
+    return (
+      discussion.title.toLowerCase().includes(query) ||
+      discussion.content.toLowerCase().includes(query) ||
+      discussion.author.full_name.toLowerCase().includes(query) ||
+      (discussion.tags && discussion.tags.some(tag => tag.toLowerCase().includes(query)))
+    );
+  });
   
-  const sortedDiscussions = () => {
-    let filtered = [...discussions];
-    
-    // Apply filters
-    if (filterBy !== "all") {
-      filtered = filtered.filter((disc: any) => 
-        disc.tags.some((tag: string) => tag.toLowerCase() === filterBy.toLowerCase())
-      );
+  // Sort discussions
+  const sortedDiscussions = [...searchedDiscussions].sort((a, b) => {
+    if (sortOrder === "recent") {
+      return new Date(b.created_at) - new Date(a.created_at);
+    } else {
+      // Most replies
+      return (b.replies?.length || 0) - (a.replies?.length || 0);
     }
-    
-    // Apply active tab filtering
-    if (activeTab === "my-posts") {
-      filtered = filtered.filter((disc: any) => disc.author.id === user?.id);
-    } else if (activeTab === "unanswered") {
-      filtered = filtered.filter((disc: any) => disc.comments.length === 0);
-    }
-    
-    // Apply sorting
-    return filtered.sort((a: any, b: any) => {
-      if (sortBy === "recent") {
-        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-      } else if (sortBy === "popular") {
-        return b.likes - a.likes;
-      } else {
-        return b.comments.length - a.comments.length;
-      }
-    });
-  };
-
+  });
+  
   return (
     <PageLayout>
       <div className="container py-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">Academic Discussions</h1>
-          <p className="text-muted-foreground">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Academic Discussions</h1>
+          <p className="text-muted-foreground mt-1">
             Ask questions, share insights, and collaborate with peers and faculty
           </p>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Discussion Area */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
           <div className="lg:col-span-2">
-            {selectedDiscussion ? (
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between">
-                    <div>
-                      <CardTitle>{selectedDiscussion.title}</CardTitle>
-                      <CardDescription>
-                        Posted in {selectedDiscussion.course} • {format(new Date(selectedDiscussion.timestamp), "MMM d, yyyy 'at' h:mm a")}
-                      </CardDescription>
-                    </div>
-                    <Button variant="outline" onClick={() => setSelectedDiscussion(null)}>
-                      Back to Discussions
-                    </Button>
-                  </div>
-                  <div className="flex items-center mt-2 gap-2">
-                    <Avatar>
-                      <AvatarImage src={selectedDiscussion.author.avatar} />
-                      <AvatarFallback>{selectedDiscussion.author.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">{selectedDiscussion.author.name}</div>
-                      <Badge variant="outline">{selectedDiscussion.author.role}</Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-6">
-                    <p className="whitespace-pre-wrap">{selectedDiscussion.content}</p>
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      {selectedDiscussion.tags.map((tag: string, index: number) => (
-                        <Badge key={index} variant="secondary">{tag}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="mt-2 flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleLike(selectedDiscussion.id)}>
-                      <ThumbsUp className="h-4 w-4 mr-1" /> {selectedDiscussion.likes}
-                    </Button>
-                  </div>
-                  
-                  <div className="mt-8">
-                    <h3 className="text-lg font-medium mb-4">Comments ({selectedDiscussion.comments.length})</h3>
-                    {selectedDiscussion.comments.length === 0 ? (
-                      <div className="text-center py-6 text-muted-foreground">
-                        No comments yet. Be the first to comment!
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {selectedDiscussion.comments.map((comment: any) => (
-                          <Card key={comment.id} className="border-l-4 border-l-purple-200">
-                            <CardHeader className="py-3">
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-8 w-8">
-                                  <AvatarImage src={comment.author.avatar} />
-                                  <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <div className="text-sm font-medium">{comment.author.name}</div>
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="text-xs">{comment.author.role}</Badge>
-                                    <span className="text-xs text-muted-foreground">
-                                      {format(new Date(comment.timestamp), "MMM d, yyyy 'at' h:mm a")}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="py-2">
-                              <p className="text-sm">{comment.content}</p>
-                            </CardContent>
-                            <CardFooter className="py-2">
-                              <Button variant="ghost" size="sm" onClick={() => handleLikeComment(selectedDiscussion.id, comment.id)}>
-                                <ThumbsUp className="h-3 w-3 mr-1" /> {comment.likes}
-                              </Button>
-                            </CardFooter>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="mt-6">
-                    <h3 className="text-lg font-medium mb-2">Add a Comment</h3>
-                    <form onSubmit={handleCommentSubmit}>
-                      <Textarea 
-                        placeholder="Write your comment here..." 
-                        className="min-h-[100px]"
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                      />
-                      <div className="mt-2 flex justify-end">
-                        <Button type="submit">
-                          <Send className="h-4 w-4 mr-1" /> Post Comment
-                        </Button>
-                      </div>
-                    </form>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <>
-                <div className="flex justify-between items-center mb-4">
-                  <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList>
-                      <TabsTrigger value="all">All Discussions</TabsTrigger>
-                      <TabsTrigger value="my-posts">My Posts</TabsTrigger>
-                      <TabsTrigger value="unanswered">Unanswered</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                  
-                  <div className="flex items-center gap-2">
-                    <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue placeholder="Sort by" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="recent">Most Recent</SelectItem>
-                        <SelectItem value="popular">Most Popular</SelectItem>
-                        <SelectItem value="active">Most Active</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    
-                    <Select value={filterBy} onValueChange={setFilterBy}>
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue placeholder="Filter by" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Topics</SelectItem>
-                        <SelectItem value="Algorithms">Algorithms</SelectItem>
-                        <SelectItem value="Databases">Databases</SelectItem>
-                        <SelectItem value="React">React</SelectItem>
-                        <SelectItem value="Python">Python</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+              <TabsList>
+                <TabsTrigger value="all">All Discussions</TabsTrigger>
+                <TabsTrigger value="my">My Posts</TabsTrigger>
+                <TabsTrigger value="unanswered">Unanswered</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            
+            <div className="flex justify-between items-center mb-6">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search discussions..."
+                  className="w-[300px] pl-8"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Select value={sortOrder} onValueChange={setSortOrder}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="recent">Most Recent</SelectItem>
+                    <SelectItem value="replies">Most Replies</SelectItem>
+                  </SelectContent>
+                </Select>
                 
-                <div className="mb-4">
-                  <form onSubmit={handleSearch} className="flex gap-2">
-                    <Input 
-                      type="text" 
-                      placeholder="Search discussions..." 
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="flex-grow"
-                    />
-                    <Button type="submit">
-                      <Search className="h-4 w-4 mr-1" /> Search
-                    </Button>
-                  </form>
-                </div>
-                
-                <div className="space-y-4 mb-4">
-                  {sortedDiscussions().length > 0 ? (
-                    sortedDiscussions().map((discussion) => (
-                      <Card 
-                        key={discussion.id} 
-                        className="cursor-pointer hover:border-primary transition-colors"
-                        onClick={() => setSelectedDiscussion(discussion)}
-                      >
-                        <CardHeader className="py-4">
-                          <div className="flex justify-between">
-                            <CardTitle className="text-lg">{discussion.title}</CardTitle>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline">
-                                <MessageSquare className="h-3 w-3 mr-1" /> {discussion.comments.length}
-                              </Badge>
-                              <Badge variant="outline">
-                                <ThumbsUp className="h-3 w-3 mr-1" /> {discussion.likes}
-                              </Badge>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarImage src={discussion.author.avatar} />
-                              <AvatarFallback>{discussion.author.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <CardDescription>
-                              {discussion.author.name} • {format(new Date(discussion.timestamp), "MMM d, yyyy")}
-                            </CardDescription>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="py-0">
-                          <p className="line-clamp-2">{discussion.content}</p>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {discussion.tags.map((tag, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs">{tag}</Badge>
-                            ))}
-                          </div>
-                        </CardContent>
-                        <CardFooter className="py-3">
-                          <Button variant="link" className="p-0 h-auto text-sm">
-                            <MessageSquare className="h-3 w-3 mr-1" /> Read more & reply
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                    ))
-                  ) : (
-                    <div className="text-center py-10 border rounded-lg bg-muted/30">
-                      <MessageSquare className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
-                      <h3 className="text-lg font-medium">No discussions found</h3>
-                      <p className="text-muted-foreground">
-                        {searchTerm ? "Try a different search term" : "Be the first to start a discussion"}
+                <Select value={topicFilter} onValueChange={setTopicFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="All Topics" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Topics</SelectItem>
+                    <SelectItem value="algorithms">Algorithms</SelectItem>
+                    <SelectItem value="databases">Databases</SelectItem>
+                    <SelectItem value="webdev">Web Development</SelectItem>
+                    <SelectItem value="ai">AI & ML</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              {loading ? (
+                <Card>
+                  <CardContent className="py-8">
+                    <div className="flex justify-center">
+                      <div className="animate-spin h-8 w-8 border-4 border-campus-purple border-t-transparent rounded-full"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : sortedDiscussions.length === 0 ? (
+                <Card>
+                  <CardContent className="py-8">
+                    <div className="text-center">
+                      <h3 className="font-medium text-lg">No discussions found</h3>
+                      <p className="text-muted-foreground mt-1">
+                        {searchQuery 
+                          ? "Try adjusting your search query or filters" 
+                          : "Be the first to start a discussion!"}
                       </p>
                     </div>
-                  )}
-                </div>
-              </>
-            )}
+                  </CardContent>
+                </Card>
+              ) : (
+                sortedDiscussions.map((discussion) => (
+                  <Card key={discussion.id} className="overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="p-6">
+                        <div className="flex justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={discussion.author.avatar_url} alt={discussion.author.full_name} />
+                              <AvatarFallback>
+                                {discussion.author.full_name.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium text-sm flex items-center gap-2">
+                                {discussion.author.full_name}
+                                {discussion.author.role === "teacher" && (
+                                  <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
+                                    Faculty
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {new Date(discussion.created_at).toLocaleDateString()} • {new Date(discussion.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Badge variant="outline" className="flex items-center gap-1">
+                              <MessageSquare className="h-3 w-3" />
+                              <span>{discussion.replies?.length || 0}</span>
+                            </Badge>
+                            <Badge variant="outline" className="flex items-center gap-1">
+                              <ThumbsUp className="h-3 w-3" />
+                              <span>0</span>
+                            </Badge>
+                          </div>
+                        </div>
+                        
+                        <h3 className="text-xl font-semibold mb-2">{discussion.title}</h3>
+                        <p className="text-muted-foreground mb-4">{discussion.content}</p>
+                        
+                        {discussion.tags && (
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {discussion.tags.map((tag, index) => (
+                              <Badge key={index} variant="secondary" className="bg-muted">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {replyingTo === discussion.id ? (
+                          <div className="mt-4">
+                            <Textarea
+                              placeholder="Write your reply..."
+                              className="mb-2"
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  setReplyingTo("");
+                                  setReplyText("");
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                              <Button 
+                                size="sm"
+                                onClick={() => handleAddReply(discussion.id)}
+                                disabled={loading || !replyText.trim()}
+                              >
+                                Post Reply
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <Button 
+                            variant="ghost" 
+                            className="text-campus-purple"
+                            onClick={() => setReplyingTo(discussion.id)}
+                          >
+                            <MessageSquare className="h-4 w-4 mr-1" /> Reply
+                          </Button>
+                        )}
+                      </div>
+                      
+                      {discussion.replies && discussion.replies.length > 0 && (
+                        <div className="border-t p-6 bg-muted/30">
+                          <h4 className="font-medium mb-4">Replies</h4>
+                          <div className="space-y-4">
+                            {discussion.replies.map((reply) => (
+                              <div key={reply.id} className="border-b pb-4 last:border-0 last:pb-0">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarImage src={reply.author.avatar_url} alt={reply.author.full_name} />
+                                    <AvatarFallback>
+                                      {reply.author.full_name.split(' ').map(n => n[0]).join('')}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="font-medium text-sm flex items-center gap-2">
+                                    {reply.author.full_name}
+                                    {reply.author.role === "teacher" && (
+                                      <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200 text-xs py-0 px-1">
+                                        Faculty
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {new Date(reply.created_at).toLocaleDateString()}
+                                  </div>
+                                </div>
+                                <p className="text-sm">{reply.content}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
           </div>
           
-          {/* Sidebar */}
           <div>
             <Card>
               <CardHeader>
@@ -547,73 +433,42 @@ const Discussions = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleCreatePost} className="space-y-4">
-                  <div className="space-y-2">
-                    <Input 
-                      type="text" 
-                      placeholder="Title" 
-                      value={newPost.title}
-                      onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                <form onSubmit={handleCreateDiscussion} className="space-y-4">
+                  <div>
+                    <Input
+                      placeholder="Title"
+                      value={newDiscussion.title}
+                      onChange={(e) => setNewDiscussion({ ...newDiscussion, title: e.target.value })}
+                      required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Textarea 
-                      placeholder="What would you like to discuss?" 
-                      className="min-h-[150px]"
-                      value={newPost.content}
-                      onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
+                  <div>
+                    <Textarea
+                      placeholder="What would you like to discuss?"
+                      className="min-h-[120px]"
+                      value={newDiscussion.content}
+                      onChange={(e) => setNewDiscussion({ ...newDiscussion, content: e.target.value })}
+                      required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Input 
-                      type="text" 
-                      placeholder="Course (e.g. CS101: Intro to Programming)" 
-                      value={newPost.course}
-                      onChange={(e) => setNewPost({ ...newPost, course: e.target.value })}
+                  <div>
+                    <Input
+                      placeholder="Course (e.g. CS101: Intro to Programming)"
+                      value={newDiscussion.course}
+                      onChange={(e) => setNewDiscussion({ ...newDiscussion, course: e.target.value })}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Input 
-                      type="text" 
-                      placeholder="Tags (comma-separated, e.g. React, JavaScript)" 
-                      value={newPost.tags}
-                      onChange={(e) => setNewPost({ ...newPost, tags: e.target.value })}
+                  <div>
+                    <Input
+                      placeholder="Tags (comma-separated, e.g. React, JavaScript)"
+                      value={newDiscussion.tags}
+                      onChange={(e) => setNewDiscussion({ ...newDiscussion, tags: e.target.value })}
                     />
                   </div>
-                  <Button type="submit" className="w-full">
-                    Post Discussion
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Posting..." : "Post Discussion"}
                   </Button>
                 </form>
-              </CardContent>
-            </Card>
-            
-            <Card className="mt-4">
-              <CardHeader>
-                <CardTitle>Discussion Guidelines</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-start gap-2">
-                    <div className="min-w-4 mt-0.5 text-green-500">•</div>
-                    <p>Be respectful and supportive of your peers</p>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="min-w-4 mt-0.5 text-green-500">•</div>
-                    <p>Provide as much context as possible in your questions</p>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="min-w-4 mt-0.5 text-green-500">•</div>
-                    <p>Use appropriate tags to categorize your discussion</p>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="min-w-4 mt-0.5 text-green-500">•</div>
-                    <p>Upvote helpful answers and discussions</p>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="min-w-4 mt-0.5 text-green-500">•</div>
-                    <p>Share code examples using code formatting</p>
-                  </li>
-                </ul>
               </CardContent>
             </Card>
           </div>

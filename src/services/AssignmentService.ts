@@ -2,16 +2,19 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // Function to get all assignments
-export const getAssignments = async () => {
+export const getAssignments = async (courseId?: string) => {
   try {
-    const { data, error } = await supabase
-      .from("assignments")
-      .select(`
-        *,
-        instructor:instructor_id(id, full_name, avatar_url, role),
-        course:course_id(id, title)
-      `)
-      .order("due_date", { ascending: true });
+    let query = supabase.from("assignments").select(`
+      *,
+      instructor:instructor_id(id, full_name, avatar_url),
+      course:course_id(id, title)
+    `);
+
+    if (courseId) {
+      query = query.eq("course_id", courseId);
+    }
+
+    const { data, error } = await query.order("due_date", { ascending: true });
 
     if (error) throw error;
     return data || [];
@@ -28,7 +31,7 @@ export const getAssignmentById = async (id: string) => {
       .from("assignments")
       .select(`
         *,
-        instructor:instructor_id(id, full_name, avatar_url, role),
+        instructor:instructor_id(id, full_name, avatar_url),
         course:course_id(id, title)
       `)
       .eq("id", id)
@@ -42,6 +45,32 @@ export const getAssignmentById = async (id: string) => {
   }
 };
 
+// Function to create a new assignment (for teachers)
+export const createAssignment = async (assignment: {
+  title: string;
+  description?: string;
+  course_id: string;
+  due_date: string;
+  total_marks: number;
+  submission_type?: string;
+  page_limit?: number;
+}) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const { data, error } = await supabase.from("assignments").insert({
+      ...assignment,
+      instructor_id: user?.id
+    }).select("*").single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error creating assignment:", error);
+    return null;
+  }
+};
+
 // Function to submit an assignment
 export const submitAssignment = async (
   assignmentId: string,
@@ -49,109 +78,74 @@ export const submitAssignment = async (
   fileName: string
 ) => {
   try {
-    // Check if a submission already exists
-    const { data: existingSubmission } = await supabase
-      .from("submissions")
-      .select("*")
-      .eq("assignment_id", assignmentId)
-      .single();
-
-    if (existingSubmission) {
-      // Update existing submission
-      const { error } = await supabase
-        .from("submissions")
-        .update({
-          file_url: fileUrl,
-          file_name: fileName,
-          submission_date: new Date().toISOString(),
-          status: "submitted"
-        })
-        .eq("id", existingSubmission.id);
-
-      if (error) throw error;
-      return true;
-    } else {
-      // Create new submission
-      const { error } = await supabase.from("submissions").insert({
-        assignment_id: assignmentId,
-        file_url: fileUrl,
-        file_name: fileName
-      });
-
-      if (error) throw error;
-      return true;
-    }
-  } catch (error) {
-    console.error("Error submitting assignment:", error);
-    return false;
-  }
-};
-
-// Function to get submissions for an assignment
-export const getSubmissionsByAssignmentId = async (assignmentId: string) => {
-  try {
-    const { data, error } = await supabase
-      .from("submissions")
-      .select(`
-        *,
-        user:user_id(id, full_name, avatar_url, role)
-      `)
-      .eq("assignment_id", assignmentId);
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const { data, error } = await supabase.from("submissions").insert({
+      assignment_id: assignmentId,
+      file_url: fileUrl,
+      file_name: fileName,
+      user_id: user?.id
+    }).select("*").single();
 
     if (error) throw error;
-    return data || [];
-  } catch (error) {
-    console.error("Error getting submissions:", error);
-    return [];
-  }
-};
-
-// Function to get user's submission for an assignment
-export const getUserSubmission = async (assignmentId: string) => {
-  try {
-    const { data, error } = await supabase
-      .from("submissions")
-      .select("*")
-      .eq("assignment_id", assignmentId)
-      .single();
-
-    if (error) {
-      if (error.code === "PGRST116") {
-        // No submission found
-        return null;
-      }
-      throw error;
-    }
-
     return data;
   } catch (error) {
-    console.error("Error getting user submission:", error);
+    console.error("Error submitting assignment:", error);
     return null;
   }
 };
 
-// Function to upload assignment file
-export const uploadAssignmentFile = async (file: File, assignmentId: string) => {
+// Function to get user submissions
+export const getUserSubmissions = async (userId?: string) => {
   try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${assignmentId}_${Date.now()}.${fileExt}`;
-    const filePath = `${assignmentId}/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('assignments')
-      .upload(filePath, file);
-
-    if (uploadError) throw uploadError;
-
-    // Get the public URL for the file
-    const { data } = supabase.storage.from('assignments').getPublicUrl(filePath);
+    const { data: { user } } = await supabase.auth.getUser();
+    const actualUserId = userId || user?.id;
     
-    return {
-      fileUrl: data.publicUrl,
-      fileName: file.name
-    };
+    const { data, error } = await supabase
+      .from("submissions")
+      .select(`
+        *,
+        assignment:assignment_id(
+          id,
+          title,
+          due_date,
+          total_marks,
+          course_id(id, title)
+        )
+      `)
+      .eq("user_id", actualUserId)
+      .order("submission_date", { ascending: false });
+
+    if (error) throw error;
+    return data || [];
   } catch (error) {
-    console.error("Error uploading file:", error);
+    console.error("Error getting user submissions:", error);
+    return [];
+  }
+};
+
+// Function for faculty to grade a submission
+export const gradeSubmission = async (
+  submissionId: string,
+  marksAwarded: number,
+  feedback?: string
+) => {
+  try {
+    const { data, error } = await supabase
+      .from("submissions")
+      .update({
+        marks_awarded: marksAwarded,
+        feedback: feedback,
+        status: "graded"
+      })
+      .eq("id", submissionId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error grading submission:", error);
     return null;
   }
 };
