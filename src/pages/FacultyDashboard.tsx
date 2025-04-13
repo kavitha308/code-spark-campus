@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, Users, BookOpen, GraduationCap, FileText, BarChart3, Code } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { toast } from "sonner";
+import { toast } from 'sonner';
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { getAllStudents, getStudentProgress } from "@/services/UserService";
@@ -43,7 +43,8 @@ const FacultyDashboard = () => {
     description: "",
     category: "",
     duration: "",
-    status: "available"
+    status: "available",
+    image_url: "" // Added image_url field
   });
   
   const [newAssignment, setNewAssignment] = useState({
@@ -167,7 +168,8 @@ const FacultyDashboard = () => {
         description: "",
         category: "",
         duration: "",
-        status: "available"
+        status: "available",
+        image_url: ""
       });
     } catch (error) {
       console.error("Error creating course:", error);
@@ -875,6 +877,15 @@ const FacultyDashboard = () => {
                   placeholder="e.g. 8 weeks"
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="image_url">Image URL</Label>
+              <Input
+                id="image_url"
+                value={newCourse.image_url}
+                onChange={(e) => setNewCourse({...newCourse, image_url: e.target.value})}
+                placeholder="https://example.com/image.jpg"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>

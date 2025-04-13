@@ -93,7 +93,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       toast.success("Logged in successfully!");
-      navigate('/');
+      
+      // Get user profile to determine role for redirection
+      const { data: user } = await supabase.auth.getUser();
+      if (user && user.user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.user.id)
+          .single();
+        
+        if (profileData) {
+          // Redirect based on role
+          if (profileData.role === 'admin') {
+            navigate('/admin-dashboard');
+          } else if (profileData.role === 'teacher') {
+            navigate('/faculty-dashboard');
+          } else {
+            navigate('/');
+          }
+        } else {
+          navigate('/');
+        }
+      }
     } catch (error: any) {
       console.error('Error signing in:', error.message);
       throw error;
@@ -113,6 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             username: userData.username || email.split('@')[0],
             full_name: userData.full_name || '',
             avatar_url: userData.avatar_url || '',
+            role: userData.userType || 'student' // Store the user type
           }
         }
       });

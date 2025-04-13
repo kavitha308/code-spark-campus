@@ -13,7 +13,7 @@ import {
 
 interface DatePickerProps {
   selected?: Date;
-  onSelect?: (date: Date) => void;
+  onSelect?: (date: Date | undefined) => void;
   disabled?: boolean;
   placeholder?: string;
 }
