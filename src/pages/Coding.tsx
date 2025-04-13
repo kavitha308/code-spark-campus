@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import PageLayout from "@/components/layout/PageLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,11 +7,51 @@ import { Button } from "@/components/ui/button";
 import { Code, Brain, Users, ArrowRight, Star, Clock } from "lucide-react";
 import CodeEditor from "@/components/coding/CodeEditor";
 import AiAssistantWithContext from "@/components/coding/AiAssistantWithContext";
-import { useNavigate } from "react-router-dom";
+import CodingChallenges from "@/components/coding/CodingChallenges";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CodingPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+  const [challenges, setChallenges] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentChallenge, setCurrentChallenge] = useState<string>("55555555-5555-5555-5555-555555555555");
+  
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const challengeId = searchParams.get("challenge");
+    if (challengeId) {
+      setCurrentChallenge(challengeId);
+    }
+  }, [location.search]);
+  
+  useEffect(() => {
+    const loadChallenges = async () => {
+      if (!user) return;
+      
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("coding_challenges")
+          .select("*")
+          .order("created_at", { ascending: false });
+        
+        if (error) throw error;
+        setChallenges(data || []);
+      } catch (error) {
+        console.error("Error loading coding challenges:", error);
+        toast.error("Failed to load coding challenges");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadChallenges();
+  }, [user]);
 
   return (
     <PageLayout>
@@ -80,12 +119,14 @@ const CodingPage = () => {
                     </CardContent>
                   </Card>
 
-                  <CodeEditor />
+                  <CodeEditor challengeId={currentChallenge} />
 
                   <div className="flex justify-end">
                     <Button 
                       className="bg-campus-purple hover:bg-campus-purple/90"
-                      onClick={() => toast.success("Solution submitted successfully!")}
+                      onClick={() => {
+                        toast.success("Solution submitted successfully!");
+                      }}
                     >
                       Submit Solution
                     </Button>
@@ -100,128 +141,7 @@ const CodingPage = () => {
           </TabsContent>
 
           <TabsContent value="challenges" className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="card-hover">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between">
-                    <Badge className="bg-green-100 text-green-800">Easy</Badge>
-                    <Badge variant="outline" className="bg-campus-purple/10">Arrays</Badge>
-                  </div>
-                  <CardTitle className="mt-2">Valid Parentheses</CardTitle>
-                  <CardDescription>Check if the input string has valid parentheses ordering</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Users className="h-4 w-4" />
-                      <span>892 solved</span>
-                      <Star className="h-4 w-4 text-yellow-500 ml-2" />
-                      <span>4.8/5 rating</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline">Strings</Badge>
-                      <Badge variant="outline">Stacks</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-3">
-                  <Button className="w-full" onClick={() => navigate('/coding')}>
-                    Solve Challenge <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card className="card-hover">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between">
-                    <Badge className="bg-yellow-100 text-yellow-800">Medium</Badge>
-                    <Badge variant="outline" className="bg-campus-purple/10">Algorithms</Badge>
-                  </div>
-                  <CardTitle className="mt-2">LRU Cache</CardTitle>
-                  <CardDescription>Design and implement a Least Recently Used (LRU) cache mechanism</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Users className="h-4 w-4" />
-                      <span>654 solved</span>
-                      <Star className="h-4 w-4 text-yellow-500 ml-2" />
-                      <span>4.6/5 rating</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline">Hash Table</Badge>
-                      <Badge variant="outline">Linked List</Badge>
-                      <Badge variant="outline">Design</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-3">
-                  <Button className="w-full" onClick={() => navigate('/coding')}>
-                    Solve Challenge <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card className="card-hover">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between">
-                    <Badge className="bg-red-100 text-red-800">Hard</Badge>
-                    <Badge variant="outline" className="bg-campus-purple/10">Graph Theory</Badge>
-                  </div>
-                  <CardTitle className="mt-2">Word Ladder</CardTitle>
-                  <CardDescription>Find shortest transformation sequence from start word to end word</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Users className="h-4 w-4" />
-                      <span>375 solved</span>
-                      <Star className="h-4 w-4 text-yellow-500 ml-2" />
-                      <span>4.9/5 rating</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline">BFS</Badge>
-                      <Badge variant="outline">Dictionary</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-3">
-                  <Button className="w-full" onClick={() => navigate('/coding')}>
-                    Solve Challenge <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card className="card-hover">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between">
-                    <Badge className="bg-yellow-100 text-yellow-800">Medium</Badge>
-                    <Badge variant="outline" className="bg-campus-purple/10">Trees</Badge>
-                  </div>
-                  <CardTitle className="mt-2">Binary Tree Level Order Traversal</CardTitle>
-                  <CardDescription>Traverse a binary tree in level order (breadth-first search)</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Users className="h-4 w-4" />
-                      <span>729 solved</span>
-                      <Star className="h-4 w-4 text-yellow-500 ml-2" />
-                      <span>4.7/5 rating</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline">BFS</Badge>
-                      <Badge variant="outline">Binary Tree</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-3">
-                  <Button className="w-full" onClick={() => navigate('/coding')}>
-                    Solve Challenge <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
+            <CodingChallenges challenges={challenges} isLoading={isLoading} />
           </TabsContent>
 
           <TabsContent value="tracks" className="space-y-8">

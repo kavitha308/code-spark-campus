@@ -28,101 +28,12 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { toast } from "sonner";
-
-// Mock discussions data
-const discussionsMock = [
-  {
-    id: 1,
-    title: "Help with Data Structures Assignment",
-    content: "I'm having trouble understanding recursive tree traversal. Can someone help explain how a post-order traversal works?",
-    author: {
-      id: "user1",
-      name: "John Doe",
-      role: "Student",
-      avatar: ""
-    },
-    timestamp: new Date(2023, 3, 15, 10, 30),
-    likes: 5,
-    comments: [
-      {
-        id: 101,
-        content: "Post-order traversal visits left subtree, right subtree, then root. It's useful when you need to delete nodes or evaluate expressions.",
-        author: {
-          id: "user2",
-          name: "Professor Smith",
-          role: "Teacher",
-          avatar: ""
-        },
-        timestamp: new Date(2023, 3, 15, 11, 45),
-        likes: 3
-      },
-      {
-        id: 102,
-        content: "I found this visualization helpful: [link to visualization]. It shows step by step how the algorithm works.",
-        author: {
-          id: "user3",
-          name: "Emily Chen",
-          role: "Student",
-          avatar: ""
-        },
-        timestamp: new Date(2023, 3, 15, 14, 20),
-        likes: 2
-      }
-    ],
-    tags: ["Data Structures", "Algorithms", "Trees"],
-    course: "CS202: Data Structures & Algorithms"
-  },
-  {
-    id: 2,
-    title: "Question about React Hooks",
-    content: "I'm confused about the dependency array in useEffect. When should I include dependencies and when should I leave it empty?",
-    author: {
-      id: "user4",
-      name: "Sarah Johnson",
-      role: "Student",
-      avatar: ""
-    },
-    timestamp: new Date(2023, 3, 17, 15, 10),
-    likes: 8,
-    comments: [
-      {
-        id: 103,
-        content: "The dependency array tells React when to re-run the effect. Empty array means 'run once after mounting', no array means 'run after every render', and an array with values means 'run when these values change'.",
-        author: {
-          id: "user5",
-          name: "Dr. Rodriguez",
-          role: "Teacher",
-          avatar: ""
-        },
-        timestamp: new Date(2023, 3, 17, 16, 30),
-        likes: 6
-      }
-    ],
-    tags: ["React", "JavaScript", "Web Development"],
-    course: "CS301: Frontend Development"
-  },
-  {
-    id: 3,
-    title: "Database Normalization Help",
-    content: "Can someone explain the difference between 2NF and 3NF with examples? I'm preparing for the midterm exam.",
-    author: {
-      id: "user6",
-      name: "Michael Brown",
-      role: "Student",
-      avatar: ""
-    },
-    timestamp: new Date(2023, 3, 20, 9, 15),
-    likes: 4,
-    comments: [],
-    tags: ["Databases", "SQL", "Normalization"],
-    course: "CS305: Database Management Systems"
-  }
-];
+import { createDiscussion, getDiscussions, getDiscussionById, addReply } from "@/services/DiscussionService";
 
 const Discussions = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const [discussions, setDiscussions] = useState(discussionsMock);
+  const [discussions, setDiscussions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [newPost, setNewPost] = useState({ title: "", content: "", course: "", tags: "" });
   const [activeTab, setActiveTab] = useState("all");
@@ -130,96 +41,188 @@ const Discussions = () => {
   const [newComment, setNewComment] = useState("");
   const [sortBy, setSortBy] = useState("recent");
   const [filterBy, setFilterBy] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Load discussions from the database
+  useEffect(() => {
+    const loadDiscussions = async () => {
+      setIsLoading(true);
+      try {
+        const discussionsData = await getDiscussions();
+        setDiscussions(discussionsData.map((disc: any) => ({
+          ...disc,
+          id: disc.id,
+          title: disc.title,
+          content: disc.content,
+          author: {
+            id: disc.author?.id || "unknown",
+            name: disc.author?.full_name || "Unknown User",
+            role: disc.author?.role || "Student",
+            avatar: disc.author?.avatar_url || ""
+          },
+          timestamp: new Date(disc.created_at),
+          likes: 0, // We'll implement likes in a more comprehensive version
+          comments: disc.replies || [],
+          tags: disc.tags || ["General"],
+          course: disc.course || "General Discussion"
+        })));
+      } catch (error) {
+        console.error("Error loading discussions:", error);
+        toast.error("Failed to load discussions");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadDiscussions();
+  }, []);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Filter discussions based on search term
+    // Filter discussions based on search term - client-side filtering
     if (searchTerm.trim() === "") {
-      setDiscussions(discussionsMock);
+      // Reset to all discussions
+      getDiscussions().then(discussionsData => {
+        setDiscussions(discussionsData.map((disc: any) => ({
+          ...disc,
+          id: disc.id,
+          title: disc.title,
+          content: disc.content,
+          author: {
+            id: disc.author?.id || "unknown",
+            name: disc.author?.full_name || "Unknown User",
+            role: disc.author?.role || "Student",
+            avatar: disc.author?.avatar_url || ""
+          },
+          timestamp: new Date(disc.created_at),
+          likes: 0,
+          comments: disc.replies || [],
+          tags: disc.tags || ["General"],
+          course: disc.course || "General Discussion"
+        })));
+      });
     } else {
-      const filtered = discussionsMock.filter(
-        (disc) => 
+      const filtered = discussions.filter(
+        (disc: any) => 
           disc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           disc.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          disc.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+          disc.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
       );
       setDiscussions(filtered);
     }
   };
   
-  const handleCreatePost = (e: React.FormEvent) => {
+  const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast.error("Please log in to create a post");
+      return;
+    }
     
     if (!newPost.title.trim() || !newPost.content.trim()) {
       toast.error("Please provide both title and content for your post");
       return;
     }
     
-    const newDiscussion = {
-      id: discussions.length + 1,
-      title: newPost.title,
-      content: newPost.content,
-      author: {
-        id: user?.id || "guest",
-        name: profile?.full_name || user?.email?.split("@")[0] || "Anonymous",
-        role: profile?.role || "Student",
-        avatar: profile?.avatar_url || ""
-      },
-      timestamp: new Date(),
-      likes: 0,
-      comments: [],
-      tags: newPost.tags.split(",").map(tag => tag.trim()),
-      course: newPost.course
-    };
-    
-    setDiscussions([newDiscussion, ...discussions]);
-    setNewPost({ title: "", content: "", course: "", tags: "" });
-    toast.success("Discussion posted successfully!");
+    try {
+      const createdDiscussion = await createDiscussion(
+        newPost.title,
+        newPost.content,
+        undefined // courseId is optional
+      );
+      
+      if (createdDiscussion) {
+        // Add the new discussion to the list
+        const newDiscussion = {
+          ...createdDiscussion,
+          author: {
+            id: user.id,
+            name: profile?.full_name || user.email?.split("@")[0] || "Anonymous",
+            role: profile?.role || "Student",
+            avatar: profile?.avatar_url || ""
+          },
+          timestamp: new Date(createdDiscussion.created_at),
+          likes: 0,
+          comments: [],
+          tags: newPost.tags.split(",").map(tag => tag.trim()),
+          course: newPost.course
+        };
+        
+        setDiscussions([newDiscussion, ...discussions]);
+        setNewPost({ title: "", content: "", course: "", tags: "" });
+        toast.success("Discussion posted successfully!");
+      } else {
+        toast.error("Failed to create discussion");
+      }
+    } catch (error) {
+      console.error("Error creating discussion:", error);
+      toast.error("Failed to create discussion");
+    }
   };
   
-  const handleCommentSubmit = (e: React.FormEvent) => {
+  const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast.error("Please log in to comment");
+      return;
+    }
     
     if (!newComment.trim()) {
       toast.error("Please enter a comment");
       return;
     }
     
-    const newCommentObj = {
-      id: Math.floor(Math.random() * 1000),
-      content: newComment,
-      author: {
-        id: user?.id || "guest",
-        name: profile?.full_name || user?.email?.split("@")[0] || "Anonymous",
-        role: profile?.role || "Student",
-        avatar: profile?.avatar_url || ""
-      },
-      timestamp: new Date(),
-      likes: 0
-    };
-    
-    const updatedDiscussions = discussions.map(disc => {
-      if (disc.id === selectedDiscussion.id) {
-        return {
-          ...disc,
-          comments: [...disc.comments, newCommentObj]
+    try {
+      const reply = await addReply(selectedDiscussion.id, newComment);
+      
+      if (reply) {
+        // Update the selected discussion with the new comment
+        const newCommentObj = {
+          id: reply.id,
+          content: reply.content,
+          author: {
+            id: user.id,
+            name: profile?.full_name || user.email?.split("@")[0] || "Anonymous",
+            role: profile?.role || "Student",
+            avatar: profile?.avatar_url || ""
+          },
+          timestamp: new Date(reply.created_at),
+          likes: 0
         };
+        
+        setSelectedDiscussion({
+          ...selectedDiscussion,
+          comments: [...selectedDiscussion.comments, newCommentObj]
+        });
+        
+        // Also update in the main discussions list
+        setDiscussions(discussions.map((disc: any) => {
+          if (disc.id === selectedDiscussion.id) {
+            return {
+              ...disc,
+              comments: [...disc.comments, newCommentObj]
+            };
+          }
+          return disc;
+        }));
+        
+        setNewComment("");
+        toast.success("Comment added successfully!");
+      } else {
+        toast.error("Failed to add comment");
       }
-      return disc;
-    });
-    
-    setDiscussions(updatedDiscussions);
-    setNewComment("");
-    
-    // Update the selected discussion to show the new comment
-    const updatedDiscussion = updatedDiscussions.find(d => d.id === selectedDiscussion.id);
-    setSelectedDiscussion(updatedDiscussion);
-    
-    toast.success("Comment added successfully!");
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      toast.error("Failed to add comment");
+    }
   };
   
-  const handleLike = (discussionId: number) => {
-    const updatedDiscussions = discussions.map(disc => {
+  const handleLike = (discussionId: string) => {
+    // In a real app, this would call an API to update the likes in the database
+    // For now, we'll just update the UI
+    setDiscussions(discussions.map((disc: any) => {
       if (disc.id === discussionId) {
         return {
           ...disc,
@@ -227,23 +230,27 @@ const Discussions = () => {
         };
       }
       return disc;
-    });
-    
-    setDiscussions(updatedDiscussions);
+    }));
     
     // Update selected discussion if it's the one being liked
     if (selectedDiscussion && selectedDiscussion.id === discussionId) {
-      const updatedDiscussion = updatedDiscussions.find(d => d.id === discussionId);
-      setSelectedDiscussion(updatedDiscussion);
+      setSelectedDiscussion({
+        ...selectedDiscussion,
+        likes: selectedDiscussion.likes + 1
+      });
     }
+    
+    toast.success("Post liked!");
   };
   
-  const handleLikeComment = (discussionId: number, commentId: number) => {
-    const updatedDiscussions = discussions.map(disc => {
+  const handleLikeComment = (discussionId: string, commentId: string) => {
+    // In a real app, this would call an API to update the likes in the database
+    // For now, we'll just update the UI
+    setDiscussions(discussions.map((disc: any) => {
       if (disc.id === discussionId) {
         return {
           ...disc,
-          comments: disc.comments.map(comment => {
+          comments: disc.comments.map((comment: any) => {
             if (comment.id === commentId) {
               return {
                 ...comment,
@@ -255,15 +262,25 @@ const Discussions = () => {
         };
       }
       return disc;
-    });
-    
-    setDiscussions(updatedDiscussions);
+    }));
     
     // Update selected discussion if it's the one with the comment being liked
     if (selectedDiscussion && selectedDiscussion.id === discussionId) {
-      const updatedDiscussion = updatedDiscussions.find(d => d.id === discussionId);
-      setSelectedDiscussion(updatedDiscussion);
+      setSelectedDiscussion({
+        ...selectedDiscussion,
+        comments: selectedDiscussion.comments.map((comment: any) => {
+          if (comment.id === commentId) {
+            return {
+              ...comment,
+              likes: comment.likes + 1
+            };
+          }
+          return comment;
+        })
+      });
     }
+    
+    toast.success("Comment liked!");
   };
   
   const sortedDiscussions = () => {
@@ -271,20 +288,20 @@ const Discussions = () => {
     
     // Apply filters
     if (filterBy !== "all") {
-      filtered = filtered.filter(disc => 
-        disc.tags.some(tag => tag.toLowerCase() === filterBy.toLowerCase())
+      filtered = filtered.filter((disc: any) => 
+        disc.tags.some((tag: string) => tag.toLowerCase() === filterBy.toLowerCase())
       );
     }
     
     // Apply active tab filtering
     if (activeTab === "my-posts") {
-      filtered = filtered.filter(disc => disc.author.id === user?.id);
+      filtered = filtered.filter((disc: any) => disc.author.id === user?.id);
     } else if (activeTab === "unanswered") {
-      filtered = filtered.filter(disc => disc.comments.length === 0);
+      filtered = filtered.filter((disc: any) => disc.comments.length === 0);
     }
     
     // Apply sorting
-    return filtered.sort((a, b) => {
+    return filtered.sort((a: any, b: any) => {
       if (sortBy === "recent") {
         return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
       } else if (sortBy === "popular") {
