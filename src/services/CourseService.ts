@@ -123,7 +123,7 @@ export const enrollInCourse = async (courseId: string): Promise<void> => {
 };
 
 // Create a new course
-export const createCourse = async (courseData: Omit<Course, "id" | "faculty_id" | "created_at">): Promise<Course> => {
+export const createCourse = async (courseData: Omit<Course, "id" | "faculty_id" | "created_at" | "updated_at">): Promise<Course> => {
   try {
     const { data: user } = await supabase.auth.getUser();
     
@@ -135,7 +135,8 @@ export const createCourse = async (courseData: Omit<Course, "id" | "faculty_id" 
       .from('courses')
       .insert({
         ...courseData,
-        faculty_id: user.user.id
+        faculty_id: user.user.id,
+        status: 'published'
       })
       .select()
       .single();
