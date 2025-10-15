@@ -19,6 +19,9 @@ import {
   MessageSquare,
   Trophy,
   Home,
+  Plus,
+  Video,
+  BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -115,6 +118,39 @@ export const TeacherNavItems: React.FC = () => {
                   <div>
                     <div className="font-medium">Courses</div>
                     <p className="text-sm text-muted-foreground">Manage your courses</p>
+                  </div>
+                </Link>
+              </NavigationMenuLink>
+            </li>
+            <li>
+              <NavigationMenuLink asChild>
+                <Link to="/course/create" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
+                  <Plus className="h-5 w-5 text-campus-blue" />
+                  <div>
+                    <div className="font-medium">Create Course</div>
+                    <p className="text-sm text-muted-foreground">Create a new course</p>
+                  </div>
+                </Link>
+              </NavigationMenuLink>
+            </li>
+            <li>
+              <NavigationMenuLink asChild>
+                <Link to="/course/addlecture" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
+                  <Video className="h-5 w-5 text-campus-purple" />
+                  <div>
+                    <div className="font-medium">Add Lecture</div>
+                    <p className="text-sm text-muted-foreground">Add lecture to a course</p>
+                  </div>
+                </Link>
+              </NavigationMenuLink>
+            </li>
+            <li>
+              <NavigationMenuLink asChild>
+                <Link to="/teacher/analytics" className="flex p-3 items-start gap-3 rounded-md hover:bg-muted">
+                  <BarChart3 className="h-5 w-5 text-campus-orange" />
+                  <div>
+                    <div className="font-medium">Analytics</div>
+                    <p className="text-sm text-muted-foreground">View student progress</p>
                   </div>
                 </Link>
               </NavigationMenuLink>

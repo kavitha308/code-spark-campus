@@ -23,6 +23,9 @@ import Discussions from "./pages/Discussions";
 import CodingChallenges from "./pages/CodingChallenges";
 import FacultyDashboard from "./pages/FacultyDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import CreateCourse from "./pages/CreateCourse";
+import AddLecture from "./pages/AddLecture";
+import TeacherAnalytics from "./pages/TeacherAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -172,6 +175,25 @@ const AppRoutes = () => {
       <Route path="/admin-dashboard" element={
         <ProtectedRoute allowedRoles={["admin"]}>
           <AdminDashboard />
+        </ProtectedRoute>
+      } />
+      
+      {/* Teacher-specific routes */}
+      <Route path="/course/create" element={
+        <ProtectedRoute allowedRoles={["teacher", "admin"]}>
+          <CreateCourse />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/course/addlecture" element={
+        <ProtectedRoute allowedRoles={["teacher", "admin"]}>
+          <AddLecture />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/teacher/analytics" element={
+        <ProtectedRoute allowedRoles={["teacher", "admin"]}>
+          <TeacherAnalytics />
         </ProtectedRoute>
       } />
       

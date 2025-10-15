@@ -23,10 +23,11 @@ export const saveChatMessage = async (prompt: string, response: string, challeng
       .from('assistant_chats')
       .insert({
         user_id: user.user.id,
+        message: prompt,
         prompt,
         response,
         challenge_id: challengeId || null
-      })
+      } as any)
       .select();
       
     if (error) throw error;

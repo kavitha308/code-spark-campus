@@ -87,16 +87,18 @@ export const createEvent = async (
       throw new Error("User not authenticated");
     }
     
-    const { data, error } = await supabase
+    const { data, error} = await supabase
       .from('calendar_events')
       .insert({
         title,
         description,
+        start_time: eventDate,
+        end_time: eventDate,
         event_date: eventDate,
         event_type: eventType,
         course_id: courseId || null,
         created_by: user.user.id
-      })
+      } as any)
       .select();
       
     if (error) throw error;

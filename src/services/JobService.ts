@@ -36,6 +36,7 @@ export const submitJobApplication = async (
       .from('job_applications')
       .insert({
         job_id: jobId,
+        job_title: position,
         user_id: user.user.id,
         position,
         company_name: companyName,
@@ -44,7 +45,7 @@ export const submitJobApplication = async (
         resume_url: resumeUrl,
         cover_letter: coverLetter,
         status: 'submitted'
-      })
+      } as any)
       .select();
       
     if (error) throw error;
