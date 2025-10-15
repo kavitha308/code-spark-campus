@@ -292,7 +292,45 @@ const FacultyDashboard = () => {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Quick Actions */}
+            <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+                <CardDescription>
+                  Manage your courses and content
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Button 
+                    onClick={() => navigate('/course/create')}
+                    className="h-24 flex flex-col items-center justify-center gap-2"
+                  >
+                    <BookOpen className="h-6 w-6" />
+                    <span>Create Course</span>
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/course/addlecture')}
+                    variant="secondary"
+                    className="h-24 flex flex-col items-center justify-center gap-2"
+                  >
+                    <FileText className="h-6 w-6" />
+                    <span>Add Lecture</span>
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/teacher/analytics')}
+                    variant="outline"
+                    className="h-24 flex flex-col items-center justify-center gap-2"
+                  >
+                    <BarChart3 className="h-6 w-6" />
+                    <span>View Analytics</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -301,6 +339,7 @@ const FacultyDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{students.length}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Enrolled across all courses</p>
                 </CardContent>
               </Card>
               <Card>
@@ -311,6 +350,7 @@ const FacultyDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{courses.length}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Active courses</p>
                 </CardContent>
               </Card>
               <Card>
@@ -323,6 +363,18 @@ const FacultyDashboard = () => {
                   <div className="text-2xl font-bold">
                     {assignments.filter(a => new Date(a.due_date) > new Date()).length}
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1">Pending submissions</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Avg Progress
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">78%</div>
+                  <p className="text-xs text-muted-foreground mt-1">Overall student progress</p>
                 </CardContent>
               </Card>
             </div>
