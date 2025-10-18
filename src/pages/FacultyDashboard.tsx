@@ -301,13 +301,13 @@ const FacultyDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   <Button 
                     onClick={() => navigate('/course/create')}
                     className="h-24 flex flex-col items-center justify-center gap-2"
                   >
                     <BookOpen className="h-6 w-6" />
-                    <span>Create Course</span>
+                    <span className="text-xs">Create Course</span>
                   </Button>
                   <Button 
                     onClick={() => navigate('/course/addlecture')}
@@ -315,7 +315,31 @@ const FacultyDashboard = () => {
                     className="h-24 flex flex-col items-center justify-center gap-2"
                   >
                     <FileText className="h-6 w-6" />
-                    <span>Add Lecture</span>
+                    <span className="text-xs">Add Lecture</span>
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/assignment/create')}
+                    variant="secondary"
+                    className="h-24 flex flex-col items-center justify-center gap-2"
+                  >
+                    <FileText className="h-6 w-6" />
+                    <span className="text-xs">Create Assignment</span>
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/quiz/create')}
+                    variant="secondary"
+                    className="h-24 flex flex-col items-center justify-center gap-2"
+                  >
+                    <FileText className="h-6 w-6" />
+                    <span className="text-xs">Create Quiz</span>
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/assignment/review')}
+                    variant="outline"
+                    className="h-24 flex flex-col items-center justify-center gap-2"
+                  >
+                    <GraduationCap className="h-6 w-6" />
+                    <span className="text-xs">Review Submissions</span>
                   </Button>
                   <Button 
                     onClick={() => navigate('/teacher/analytics')}
@@ -323,7 +347,7 @@ const FacultyDashboard = () => {
                     className="h-24 flex flex-col items-center justify-center gap-2"
                   >
                     <BarChart3 className="h-6 w-6" />
-                    <span>View Analytics</span>
+                    <span className="text-xs">View Analytics</span>
                   </Button>
                 </div>
               </CardContent>

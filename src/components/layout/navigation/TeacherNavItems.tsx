@@ -21,7 +21,9 @@ import {
   Home,
   Plus,
   Video,
-  BarChart3
+  BarChart3,
+  CheckCircle,
+  ClipboardList
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -60,24 +62,10 @@ export const TeacherNavItems: React.FC = () => {
             <li>
               <NavigationMenuLink asChild>
                 <Link
-                  to="/assignments"
-                  className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-blue/20 to-campus-purple/20 p-6 no-underline outline-none focus:shadow-md"
-                >
-                  <FileText className="h-6 w-6 text-campus-purple" />
-                  <div className="mb-2 mt-4 text-lg font-medium">All Assignments</div>
-                  <p className="text-sm text-muted-foreground">
-                    View and manage all assignments
-                  </p>
-                </Link>
-              </NavigationMenuLink>
-            </li>
-            <li>
-              <NavigationMenuLink asChild>
-                <Link
-                  to="/assignments/create"
+                  to="/assignment/create"
                   className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-green/20 to-campus-blue/20 p-6 no-underline outline-none focus:shadow-md"
                 >
-                  <Upload className="h-6 w-6 text-campus-blue" />
+                  <Plus className="h-6 w-6 text-campus-blue" />
                   <div className="mb-2 mt-4 text-lg font-medium">Create Assignment</div>
                   <p className="text-sm text-muted-foreground">
                     Create and assign new assignments to students
@@ -88,13 +76,27 @@ export const TeacherNavItems: React.FC = () => {
             <li>
               <NavigationMenuLink asChild>
                 <Link
-                  to="/assignments/submissions"
+                  to="/assignment/review"
                   className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-yellow/20 to-campus-orange/20 p-6 no-underline outline-none focus:shadow-md"
                 >
-                  <Folder className="h-6 w-6 text-campus-orange" />
-                  <div className="mb-2 mt-4 text-lg font-medium">Submissions</div>
+                  <CheckCircle className="h-6 w-6 text-campus-orange" />
+                  <div className="mb-2 mt-4 text-lg font-medium">Review Submissions</div>
                   <p className="text-sm text-muted-foreground">
                     Review and grade student submissions
+                  </p>
+                </Link>
+              </NavigationMenuLink>
+            </li>
+            <li>
+              <NavigationMenuLink asChild>
+                <Link
+                  to="/quiz/create"
+                  className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-campus-purple/20 to-campus-pink/20 p-6 no-underline outline-none focus:shadow-md"
+                >
+                  <ClipboardList className="h-6 w-6 text-campus-purple" />
+                  <div className="mb-2 mt-4 text-lg font-medium">Create Quiz</div>
+                  <p className="text-sm text-muted-foreground">
+                    Create quizzes and tests for students
                   </p>
                 </Link>
               </NavigationMenuLink>

@@ -26,6 +26,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import CreateCourse from "./pages/CreateCourse";
 import AddLecture from "./pages/AddLecture";
 import TeacherAnalytics from "./pages/TeacherAnalytics";
+import CreateAssignment from "./pages/CreateAssignment";
+import ReviewSubmissions from "./pages/ReviewSubmissions";
+import CreateQuiz from "./pages/CreateQuiz";
 
 const queryClient = new QueryClient();
 
@@ -194,6 +197,24 @@ const AppRoutes = () => {
       <Route path="/teacher/analytics" element={
         <ProtectedRoute allowedRoles={["teacher", "admin"]}>
           <TeacherAnalytics />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/assignment/create" element={
+        <ProtectedRoute allowedRoles={["teacher", "admin"]}>
+          <CreateAssignment />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/assignment/review" element={
+        <ProtectedRoute allowedRoles={["teacher", "admin"]}>
+          <ReviewSubmissions />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/quiz/create" element={
+        <ProtectedRoute allowedRoles={["teacher", "admin"]}>
+          <CreateQuiz />
         </ProtectedRoute>
       } />
       
